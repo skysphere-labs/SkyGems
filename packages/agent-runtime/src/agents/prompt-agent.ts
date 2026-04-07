@@ -10,6 +10,7 @@ import { z } from "zod";
 import { resolveDesignDna } from "../skills/dna-resolve.ts";
 import { compilePromptBundle } from "../skills/prompt-compile.ts";
 import type { AgentDefinition, PromptAgentInput } from "../types.ts";
+import type { ViewPlan } from "../packs/types.ts";
 
 export const PromptAgentInputSchema = z.object({
   mode: z.enum(["generate", "refine"]),
@@ -23,11 +24,11 @@ export const PromptAgentInputSchema = z.object({
 
 export const promptAgentDefinition: AgentDefinition<PromptAgentInput, PromptAgentOutput> = {
   agentId: "prompt-agent",
-  version: "1.0.0",
+  version: "1.1.0",
   description: "Normalizes create input, resolves design DNA, and compiles the prompt bundle.",
   requiredPacks: ["prompt-pack"],
   requiredProviders: ["prompt_compilation"],
-  skills: ["dna-resolve", "prompt-compile"],
+  skills: ["dna-resolve", "view-plan", "jewelry-rules", "prompt-compile"],
   inputSchema: PromptAgentInputSchema,
   outputSchema: PromptAgentOutputSchema,
   timeoutMs: 5_000,
@@ -38,11 +39,16 @@ export const promptAgentDefinition: AgentDefinition<PromptAgentInput, PromptAgen
     const combinedUserNotes = [normalizedInput.userNotes, input.refinementInstruction]
       .filter((value): value is string => Boolean(value?.trim()))
       .join(" ");
+    const viewPlan = await ctx.skillRegistry.run<ViewPlan>("view-plan", {
+      jewelryType: designDna.jewelryType,
+      viewPack: ctx.viewPack,
+    });
     const promptBundle = compilePromptBundle({
       designDna,
       userNotes: combinedUserNotes || undefined,
       provider: input.provider ?? ctx.provider,
       promptPack: ctx.promptPack,
+      viewPlan,
     });
 
     return PromptAgentOutputSchema.parse({

@@ -260,6 +260,7 @@ test("design detail, project designs, and selection responses lock the explicit 
     selectedDesignId: "dsn_01J0F8M0G7J0F8M0G7J0F8M0G8",
     canSelect: true,
     design,
+    latestSpec: null,
     recentGenerations: [
       {
         generationId: "gen_01J0F8M0G7J0F8M0G7J0F8M0G7",
@@ -287,6 +288,7 @@ test("design detail, project designs, and selection responses lock the explicit 
     ...detail,
     previousSelectedDesignId: "dsn_01J0F8M0G7J0F8M0G7J0F8M0G8",
     selectionChanged: true,
+    latestSpec: null,
   });
 
   assert.equal(detail.design.sourceGenerationId, "gen_01J0F8M0G7J0F8M0G7J0F8M0G7");

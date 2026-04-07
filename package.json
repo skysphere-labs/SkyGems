@@ -15,7 +15,7 @@
     "build:web": "npm run build --workspace @skygems/web",
     "cf:typegen": "npm run cf:typegen --workspace @skygems/api",
     "typecheck": "npm run cf:typegen && npm run typecheck --workspace @skygems/shared && npm run typecheck --workspace @skygems/agent-runtime && npm run typecheck --workspace @skygems/api && npm run typecheck --workspace @skygems/web",
-    "test": "node --experimental-strip-types --test packages/shared/src/**/*.test.ts apps/api/test/**/*.test.ts",
+    "test": "node --experimental-strip-types --test packages/shared/src/**/*.test.ts packages/agent-runtime/src/**/*.test.ts apps/api/test/**/*.test.ts",
     "validate": "npm run typecheck && npm run test && npm run build:web"
   },
   "devDependencies": {

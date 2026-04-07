@@ -29,6 +29,8 @@ import {
   PromptPreviewResponseSchema,
   RefineRequestSchema,
   RefineResponseSchema,
+  SpecAgentOutputSchema,
+  SpecRequestSchema,
   SpecQueuePayloadSchema,
   StageStatusesSchema,
   WorkflowStageResponseSchema,
@@ -40,6 +42,7 @@ import {
   type PromptAgentOutput,
   type RefineResponse,
   type ProjectResponse,
+  type SpecAgentOutput,
   type StageStatuses,
 } from "@skygems/shared";
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from "cloudflare:workers";
@@ -157,6 +160,16 @@ interface WorkflowRow {
   updated_at: string;
 }
 
+interface DesignSpecRow {
+  id: string;
+  agent_output_json: string | null;
+  risk_flags_json: string;
+  unknowns_json: string;
+  spec_version: number;
+  completed_at: string | null;
+  updated_at: string;
+}
+
 interface CountRow {
   count: number;
 }
@@ -209,6 +222,51 @@ function buildDesignDnaPreview(designDna: PromptAgentOutput["designDna"]) {
     stonePosition: designDna.stonePosition,
     profile: designDna.profile,
     motif: designDna.motif,
+  });
+}
+
+async function rebuildPromptAgentOutputFromDesign(
+  design: DesignRow,
+  provider: "xai" | "google",
+): Promise<PromptAgentOutput> {
+  const designDna = DesignDnaSchema.parse(JSON.parse(design.design_dna_json));
+  const promptMode = design.source_kind === "refine" ? "refine" : "generate";
+  const promptAgentRun = await agentExecutor.run<PromptAgentOutput>("prompt-agent", {
+    mode: promptMode,
+    projectId: design.project_id,
+    designId: design.id,
+    input: {
+      projectId: design.project_id,
+      jewelryType: designDna.jewelryType,
+      metal: designDna.metal,
+      gemstones: designDna.gemstones,
+      style: designDna.style,
+      complexity: designDna.complexity,
+      pairStandardVersion: "pair_v1",
+    },
+    sourceDesignId: design.parent_design_id ?? undefined,
+    provider,
+  });
+
+  return PromptAgentOutputSchema.parse({
+    schemaVersion: "prompt_agent.v1",
+    mode: promptMode,
+    projectId: design.project_id,
+    designId: design.id,
+    sourceDesignId: design.parent_design_id ?? undefined,
+    pairStandardVersion: "pair_v1",
+    normalizedInput: {
+      jewelryType: designDna.jewelryType,
+      metal: designDna.metal,
+      gemstones: designDna.gemstones,
+      style: designDna.style,
+      complexity: designDna.complexity,
+      pairStandardVersion: "pair_v1",
+    },
+    designDna,
+    promptBundle: promptAgentRun.output.promptBundle,
+    blocked: false,
+    blockReasons: [],
   });
 }
 
@@ -320,6 +378,42 @@ async function loadWorkflow(db: D1Database, workflowRunId: string | null): Promi
      FROM design_workflow_runs
      WHERE id = ?`,
     [workflowRunId],
+  );
+}
+
+async function loadLatestSpec(db: D1Database, specId: string | null) {
+  if (!specId) {
+    return null;
+  }
+
+  const spec = await queryFirst<DesignSpecRow>(
+    db,
+    `SELECT id, agent_output_json, risk_flags_json, unknowns_json, spec_version, completed_at, updated_at
+     FROM design_specs
+     WHERE id = ?`,
+    [specId],
+  );
+
+  if (!spec?.agent_output_json) {
+    return null;
+  }
+
+  return SpecAgentOutputSchema.parse(JSON.parse(spec.agent_output_json));
+}
+
+async function loadLatestGenerationForDesign(
+  db: D1Database,
+  designId: string,
+  tenantId: string,
+) {
+  return queryFirst<GenerationRow>(
+    db,
+    `SELECT *
+     FROM generations
+     WHERE design_id = ? AND tenant_id = ?
+     ORDER BY created_at DESC
+     LIMIT 1`,
+    [designId, tenantId],
   );
 }
 
@@ -660,12 +754,14 @@ async function buildDesignDetailResponse(
   origin: string,
 ) {
   const workflow = await loadWorkflow(db, design.latest_workflow_run_id);
+  const latestSpec = await loadLatestSpec(db, design.latest_spec_id);
 
   return DesignDetailResponseSchema.parse({
     projectId: project.id,
     selectedDesignId: project.selected_design_id,
     canSelect: canSelectDesign(design),
     design: await buildDesignSummary(db, design, workflow, origin),
+    latestSpec,
     recentGenerations: await loadRecentDesignGenerations(db, design),
   });
 }
@@ -1007,6 +1103,187 @@ async function handleRefineDesign(
   );
 
   return jsonResponse(idempotentResult.body, idempotentResult.status);
+}
+
+async function handleSpecStage(
+  request: Request,
+  env: ApiEnv,
+  auth: AuthContext,
+  designId: string,
+): Promise<Response> {
+  const design = await requireDesign(env.SKYGEMS_DB, auth.tenantId, designId);
+  const project = await requireProjectWriteAccess(env.SKYGEMS_DB, auth, design.project_id);
+  const payload = await parseJsonBody(request, SpecRequestSchema);
+  const promptProvider = resolvePromptProviderSelection(env);
+
+  if (!design.latest_pair_id) {
+    throw new HttpError(409, "conflict", "A completed generation pair is required before spec generation.");
+  }
+
+  if (design.latest_spec_id && !payload.forceRegenerate) {
+    const workflow = await loadWorkflow(env.SKYGEMS_DB, design.latest_workflow_run_id);
+    return jsonResponse(
+      WorkflowStageResponseSchema.parse({
+        workflowRunId: design.latest_workflow_run_id,
+        designId: design.id,
+        projectId: project.id,
+        selectionState: design.selection_state,
+        requestedTargetStage: "spec",
+        currentStage: workflow?.current_stage ?? "spec",
+        workflowStatus: workflow?.workflow_status ?? "succeeded",
+        stageStatuses: stageStatusesFromDesign(design, workflow),
+        latestSpecId: design.latest_spec_id,
+        latestTechnicalSheetId: design.latest_technical_sheet_id,
+        latestSvgAssetId: design.latest_svg_asset_id,
+        latestCadJobId: design.latest_cad_job_id,
+        updatedAt: workflow?.updated_at ?? design.updated_at,
+      }),
+    );
+  }
+
+  const latestGeneration = await loadLatestGenerationForDesign(env.SKYGEMS_DB, design.id, auth.tenantId);
+  if (!latestGeneration) {
+    throw new HttpError(409, "conflict", "Prompt agent output is required before spec generation.");
+  }
+  let promptAgentOutput: PromptAgentOutput;
+  try {
+    if (!latestGeneration.prompt_agent_output_json) {
+      throw new Error("missing prompt agent output");
+    }
+    promptAgentOutput = PromptAgentOutputSchema.parse(
+      JSON.parse(latestGeneration.prompt_agent_output_json),
+    );
+  } catch {
+    promptAgentOutput = await rebuildPromptAgentOutputFromDesign(
+      design,
+      promptProvider.active,
+    );
+  }
+
+  const workflowRunId = generatePrefixedId("wfr");
+  const specId = generatePrefixedId("spc");
+  const now = nowIso();
+  const versionRow = await queryFirst<{ version: number }>(
+    env.SKYGEMS_DB,
+    `SELECT COALESCE(MAX(spec_version), 0) AS version
+     FROM design_specs
+     WHERE design_id = ? AND tenant_id = ?`,
+    [design.id, auth.tenantId],
+  );
+  const specVersion = (versionRow?.version ?? 0) + 1;
+
+  await executeStatement(
+    env.SKYGEMS_DB,
+    `INSERT INTO design_workflow_runs (
+       id, tenant_id, project_id, design_id, requested_by_user_id, requested_target_stage, current_stage,
+       workflow_status, spec_status, technical_sheet_status, svg_status, cad_status,
+       latest_spec_id, latest_technical_sheet_id, latest_svg_asset_id, latest_cad_job_id,
+       force_regenerate, last_error_code, last_error_message, created_at, started_at, completed_at, updated_at
+     ) VALUES (?, ?, ?, ?, ?, 'spec', 'spec', 'running', 'running', 'not_requested', 'not_requested', 'not_requested', NULL, NULL, NULL, NULL, ?, NULL, NULL, ?, ?, NULL, ?)`,
+    [
+      workflowRunId,
+      auth.tenantId,
+      project.id,
+      design.id,
+      auth.userId,
+      payload.forceRegenerate ? 1 : 0,
+      now,
+      now,
+      now,
+    ],
+  );
+
+  await executeStatement(
+    env.SKYGEMS_DB,
+    `INSERT INTO design_specs (
+       id, tenant_id, project_id, design_id, workflow_run_id, source_pair_id, spec_version,
+       status, spec_standard_version, agent_output_json, risk_flags_json, unknowns_json, created_at, completed_at, updated_at
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, 'running', 'spec_v1', NULL, '[]', '[]', ?, NULL, ?)`,
+    [
+      specId,
+      auth.tenantId,
+      project.id,
+      design.id,
+      workflowRunId,
+      design.latest_pair_id,
+      specVersion,
+      now,
+      now,
+    ],
+  );
+
+  const specAgentRun = await agentExecutor.run<SpecAgentOutput>("spec-agent", {
+    promptAgentOutput,
+    pairId: design.latest_pair_id,
+  });
+  const specOutput = SpecAgentOutputSchema.parse(specAgentRun.output);
+  const completedAt = nowIso();
+
+  await executeStatement(
+    env.SKYGEMS_DB,
+    `UPDATE design_specs
+     SET status = 'succeeded',
+         agent_output_json = ?,
+         risk_flags_json = ?,
+         unknowns_json = ?,
+         completed_at = ?,
+         updated_at = ?
+     WHERE id = ?`,
+    [
+      asJsonText(specOutput),
+      asJsonText(specOutput.riskFlags),
+      asJsonText(specOutput.unknowns),
+      completedAt,
+      completedAt,
+      specId,
+    ],
+  );
+
+  await executeStatement(
+    env.SKYGEMS_DB,
+    `UPDATE design_workflow_runs
+     SET current_stage = 'complete',
+         workflow_status = 'succeeded',
+         spec_status = 'succeeded',
+         latest_spec_id = ?,
+         completed_at = ?,
+         updated_at = ?
+     WHERE id = ?`,
+    [specId, completedAt, completedAt, workflowRunId],
+  );
+
+  await executeStatement(
+    env.SKYGEMS_DB,
+    `UPDATE designs
+     SET latest_spec_id = ?,
+         latest_workflow_run_id = ?,
+         updated_at = ?
+     WHERE id = ?`,
+    [specId, workflowRunId, completedAt, design.id],
+  );
+
+  return jsonResponse(
+    WorkflowStageResponseSchema.parse({
+      workflowRunId,
+      designId: design.id,
+      projectId: project.id,
+      selectionState: design.selection_state,
+      requestedTargetStage: "spec",
+      currentStage: "complete",
+      workflowStatus: "succeeded",
+      stageStatuses: {
+        spec: "succeeded",
+        technicalSheet: "not_requested",
+        svg: "not_requested",
+        cad: "not_requested",
+      },
+      latestSpecId: specId,
+      latestTechnicalSheetId: null,
+      latestSvgAssetId: null,
+      latestCadJobId: null,
+      updatedAt: completedAt,
+    }),
+  );
 }
 
 async function handleGenerationStatus(
@@ -1366,6 +1643,9 @@ async function routeRequest(
       DesignIdSchema.parse(downstreamMatch[1]),
     );
     await requireProjectWriteAccess(env.SKYGEMS_DB, auth, design.project_id);
+    if (downstreamMatch[2] === "spec") {
+      return handleSpecStage(request, env, auth, design.id);
+    }
     return stubbedRoute(
       "Downstream workflow execution is intentionally stubbed in Phase 2A foundation.",
     );

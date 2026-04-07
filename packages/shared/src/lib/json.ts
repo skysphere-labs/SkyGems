@@ -4,11 +4,14 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 
 export function stableStringify(value: unknown): string {
   if (value === null || typeof value !== "object") {
-    return JSON.stringify(value);
+    const serialized = JSON.stringify(value);
+    return serialized ?? "null";
   }
 
   if (Array.isArray(value)) {
-    return `[${value.map((item) => stableStringify(item)).join(",")}]`;
+    return `[${value
+      .map((item) => (item === undefined ? "null" : stableStringify(item)))
+      .join(",")}]`;
   }
 
   if (!isPlainObject(value)) {
@@ -20,6 +23,7 @@ export function stableStringify(value: unknown): string {
   );
 
   return `{${entries
+    .filter(([, entryValue]) => entryValue !== undefined)
     .map(([key, entryValue]) => `${JSON.stringify(key)}:${stableStringify(entryValue)}`)
     .join(",")}}`;
 }

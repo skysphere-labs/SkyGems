@@ -7,6 +7,7 @@ import type {
   ProjectDesignsResponse,
   ProjectResponse,
   PromptPreviewResponse,
+  SpecAgentOutput,
 } from "@skygems/shared";
 
 import type {
@@ -317,6 +318,66 @@ function buildStageSnapshot(
   };
 }
 
+function mapRiskSeverity(
+  severity: SpecAgentOutput["riskFlags"][number]["severity"],
+): "blocking" | "warning" | "informational" {
+  switch (severity) {
+    case "high":
+      return "blocking";
+    case "medium":
+      return "warning";
+    case "low":
+    default:
+      return "informational";
+  }
+}
+
+function mapSpecOutputToSpecData(spec: SpecAgentOutput | null): Design["specData"] {
+  if (!spec) {
+    return {
+      versionLabel: "Not generated",
+      summary: "Specification has not been requested yet.",
+      geometry: [],
+      materials: [],
+      gemstones: [],
+      constructionNotes: [],
+      riskFlags: [],
+      missingInformation: [],
+    };
+  }
+
+  return {
+    versionLabel: "Latest generated spec",
+    summary: spec.summary,
+    geometry: [
+      { label: "Overall Length", value: spec.dimensions.overallLength?.value ? `${spec.dimensions.overallLength.value} ${spec.dimensions.overallLength.unit}` : "TBD", state: spec.dimensions.overallLength?.value ? "complete" : "tbd" },
+      { label: "Overall Width", value: spec.dimensions.overallWidth?.value ? `${spec.dimensions.overallWidth.value} ${spec.dimensions.overallWidth.unit}` : "TBD", state: spec.dimensions.overallWidth?.value ? "complete" : "tbd" },
+      { label: "Overall Height", value: spec.dimensions.overallHeight?.value ? `${spec.dimensions.overallHeight.value} ${spec.dimensions.overallHeight.unit}` : "TBD", state: spec.dimensions.overallHeight?.value ? "complete" : "tbd" },
+      { label: "Band Width", value: spec.dimensions.bandWidth?.value ? `${spec.dimensions.bandWidth.value} ${spec.dimensions.bandWidth.unit}` : "TBD", state: spec.dimensions.bandWidth?.value ? "complete" : "tbd" },
+      { label: "Band Thickness", value: spec.dimensions.bandThickness?.value ? `${spec.dimensions.bandThickness.value} ${spec.dimensions.bandThickness.unit}` : "TBD", state: spec.dimensions.bandThickness?.value ? "complete" : "tbd" },
+    ],
+    materials: [
+      { label: "Metal", value: spec.materials.metal, state: "complete" },
+      { label: "Finish", value: spec.materials.finish ?? "TBD", state: spec.materials.finish ? "complete" : "tbd" },
+      { label: "Manufacturing Method", value: spec.construction.manufacturingMethod, state: "complete" },
+      { label: "Setting Type", value: spec.construction.settingType ?? "TBD", state: spec.construction.settingType ? "complete" : "tbd" },
+      { label: "Profile", value: spec.construction.profile ?? "TBD", state: spec.construction.profile ? "complete" : "tbd" },
+    ],
+    gemstones: spec.materials.gemstones.map((gemstone) => ({
+      label: `${gemstone.role} stone`,
+      value: gemstone.shape ? `${gemstone.stoneType} / ${gemstone.shape}` : `${gemstone.stoneType}`,
+      state: "complete",
+    })),
+    constructionNotes: spec.construction.assemblyNotes,
+    riskFlags: spec.riskFlags.map((flag) => ({
+      severity: mapRiskSeverity(flag.severity),
+      message: flag.message,
+      field: flag.code,
+    })),
+    missingInformation: spec.unknowns,
+  };
+}
+
 function summarizeStage(
   label: string,
   status: Design["stages"]["spec"]["status"],
@@ -355,6 +416,7 @@ function mapDesignSummaryToDesign(
   summary: DesignSummaryPayload,
   options?: {
     recentGenerationId?: string | null;
+    latestSpec?: SpecAgentOutput | null;
   },
 ): Design {
   const sourceGenerationId =
@@ -424,16 +486,18 @@ function mapDesignSummaryToDesign(
         ? "This design is the active project selection."
         : "This design remains available as a candidate within the project.",
     ],
-    specData: {
-      versionLabel: summary.latestSpecId ? "Latest generated spec" : "Not generated",
-      summary: summarizeStage("Specification", specStatus, Boolean(summary.latestSpecId)),
-      geometry: [],
-      materials: [],
-      gemstones: [],
-      constructionNotes: [],
-      riskFlags: [],
-      missingInformation: [],
-    },
+    specData: options?.latestSpec
+      ? mapSpecOutputToSpecData(options.latestSpec)
+      : {
+          versionLabel: summary.latestSpecId ? "Latest generated spec" : "Not generated",
+          summary: summarizeStage("Specification", specStatus, Boolean(summary.latestSpecId)),
+          geometry: [],
+          materials: [],
+          gemstones: [],
+          constructionNotes: [],
+          riskFlags: [],
+          missingInformation: [],
+        },
     technicalSheetData: {
       versionLabel: summary.latestTechnicalSheetId ? "Latest technical sheet" : "Not generated",
       generatedAt: formatDisplayTimestamp(summary.updatedAt),
@@ -903,6 +967,7 @@ export async function fetchDesign(designId: string): Promise<Design> {
     const mapped = mapDesignSummaryToDesign(payload.design, {
       recentGenerationId:
         payload.recentGenerations[0]?.generationId ?? payload.design.sourceGenerationId,
+      latestSpec: payload.latestSpec,
     });
     stubDesigns[designId] = mapped;
     return mapped;
@@ -1020,6 +1085,28 @@ export async function postRefineDesign(input: {
       source: "fallback" as const,
     };
   }
+}
+
+export async function postGenerateSpec(designId: string) {
+  return requestJson<{
+    workflowRunId: string;
+    designId: string;
+    projectId: string;
+    requestedTargetStage: "spec";
+    currentStage: "complete" | "spec";
+    workflowStatus: "queued" | "running" | "succeeded" | "failed" | "canceled";
+    latestSpecId: string | null;
+    updatedAt: string;
+  }>(`/v1/designs/${designId}/spec`, {
+    method: "POST",
+    headers: {
+      "Idempotency-Key": buildIdempotencyKey(),
+    },
+    body: JSON.stringify({
+      manufacturingIntent: "prototype",
+      forceRegenerate: false,
+    }),
+  });
 }
 
 export async function postGallerySearch(input: {

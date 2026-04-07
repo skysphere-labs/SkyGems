@@ -1,5 +1,7 @@
 import { PackResolver } from "./packs/resolver.ts";
+import { ProviderRouter } from "./providers/router.ts";
 import { AgentRegistry } from "./registry.ts";
+import { SkillRegistry } from "./skills/registry.ts";
 import { parseWithSchema } from "./validation.ts";
 import type { AgentRunResult } from "./types.ts";
 
@@ -7,6 +9,8 @@ export class AgentExecutor {
   constructor(
     private readonly registry: AgentRegistry,
     private readonly packResolver = new PackResolver(),
+    private readonly providerRouter = new ProviderRouter(),
+    private readonly skillRegistry = new SkillRegistry(),
   ) {}
 
   async run<TOutput>(
@@ -25,9 +29,13 @@ export class AgentExecutor {
 
     const parsedInput = parseWithSchema(definition.inputSchema, input, `${agentId} input`);
     const promptPack = this.packResolver.resolvePromptPack(options?.promptPackId);
+    const viewPack = this.packResolver.resolveViewPack();
     const output = await definition.execute(parsedInput, {
       promptPack,
+      viewPack,
       provider: options?.provider,
+      providerRouter: this.providerRouter,
+      skillRegistry: this.skillRegistry,
       metadata: options?.metadata,
     });
     const parsedOutput = parseWithSchema(definition.outputSchema, output, `${agentId} output`);

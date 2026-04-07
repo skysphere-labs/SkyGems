@@ -4,13 +4,14 @@ import { Link, useParams } from "react-router";
 
 import { Button, Card, CardContent, CardHeader, CardTitle } from "@skygems/ui";
 
-import { fetchDesign } from "../contracts/api";
+import { fetchDesign, postGenerateSpec } from "../contracts/api";
 import type { Design } from "../contracts/types";
 import { appRoutes } from "../lib/routes";
 
 export function SpecScreen() {
   const { designId, projectId } = useParams();
   const [design, setDesign] = useState<Design | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     if (!designId) {
@@ -36,6 +37,8 @@ export function SpecScreen() {
     ["Gemstones", design.specData.gemstones],
   ] as const;
 
+  const needsSpec = design.stages.spec.status !== "ready";
+
   return (
     <div className="space-y-6">
       <Card className="border-white/6 bg-[var(--bg-secondary)]">
@@ -49,12 +52,29 @@ export function SpecScreen() {
               Review the structured spec package and resolve any missing or risky fields before technical-sheet generation.
             </p>
           </div>
-          <Button asChild>
-            <Link to={appRoutes.technicalSheet(projectId, design.id)}>
-              Continue to Technical Sheet
-              <ArrowRight className="size-4" />
-            </Link>
-          </Button>
+          <div className="flex flex-wrap gap-3">
+            <Button
+              variant={needsSpec ? "default" : "outline"}
+              disabled={isGenerating}
+              onClick={async () => {
+                setIsGenerating(true);
+                try {
+                  await postGenerateSpec(design.id);
+                  setDesign(await fetchDesign(design.id));
+                } finally {
+                  setIsGenerating(false);
+                }
+              }}
+            >
+              {isGenerating ? "Generating Spec..." : needsSpec ? "Generate Spec" : "Refresh Spec"}
+            </Button>
+            <Button asChild>
+              <Link to={appRoutes.technicalSheet(projectId, design.id)}>
+                Continue to Technical Sheet
+                <ArrowRight className="size-4" />
+              </Link>
+            </Button>
+          </div>
         </CardContent>
       </Card>
 

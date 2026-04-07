@@ -122,6 +122,23 @@ interface GenerationPairRow {
   render_artifact_id: string;
 }
 
+function resolvePromptBundleForGeneration(
+  generation: GenerationRow,
+  design: DesignRow,
+) {
+  if (generation.prompt_agent_output_json) {
+    try {
+      return PromptAgentOutputSchema.parse(
+        JSON.parse(generation.prompt_agent_output_json),
+      ).promptBundle;
+    } catch (error) {
+      console.warn("Falling back to shared prompt bundle because stored prompt agent output was invalid.", error);
+    }
+  }
+
+  return buildPromptBundle(DesignDnaSchema.parse(JSON.parse(design.design_dna_json)));
+}
+
 function escapeXml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -272,9 +289,7 @@ async function insertPairArtifacts(
   let sketchImage: { bytes: Uint8Array; contentType: "image/png" } | null = null;
 
   try {
-    const promptBundle = generation.prompt_agent_output_json
-      ? PromptAgentOutputSchema.parse(JSON.parse(generation.prompt_agent_output_json)).promptBundle
-      : buildPromptBundle(DesignDnaSchema.parse(JSON.parse(design.design_dna_json)));
+    const promptBundle = resolvePromptBundleForGeneration(generation, design);
     // Generate render image (primary output)
     renderImage = await generateImageWithXai(env, promptBundle.renderPrompt);
     // Generate sketch image

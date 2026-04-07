@@ -5,13 +5,18 @@ import type {
 } from "@skygems/shared";
 import type { ZodType } from "zod";
 
-import type { PromptPackRelease } from "./packs/types.ts";
+import type { PromptPackRelease, ViewPackRelease } from "./packs/types.ts";
+import type { ProviderRouter } from "./providers/router.ts";
+import type { SkillRegistry } from "./skills/registry.ts";
 
 export type ProviderKind = "prompt_compilation";
 
 export interface AgentContext {
   promptPack: PromptPackRelease;
+  viewPack: ViewPackRelease;
   provider?: PromptPreviewProvider;
+  providerRouter: ProviderRouter;
+  skillRegistry: SkillRegistry;
   metadata?: Record<string, string | number | boolean | null | undefined>;
 }
 
