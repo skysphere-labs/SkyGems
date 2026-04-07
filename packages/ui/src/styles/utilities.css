@@ -1,0 +1,71 @@
+@layer utilities {
+  .skeleton-shimmer {
+    background: linear-gradient(90deg, var(--muted) 25%, var(--accent) 50%, var(--muted) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite ease-in-out;
+  }
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  /* Gold accent utilities */
+  .sg-gradient { background: var(--sg-gradient); }
+  .sg-gradient-hover:hover { background: var(--sg-gradient-hover); }
+  .sg-gradient-text {
+    background: var(--sg-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Gold glow — for active/focus elements */
+  .gold-glow {
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.15), 0 0 40px rgba(212, 175, 55, 0.05);
+  }
+
+  /* Subtle border that brightens on hover */
+  .border-subtle {
+    border: 1px solid var(--border-default);
+    transition: border-color var(--duration-normal) var(--ease-default);
+  }
+  .border-subtle:hover {
+    border-color: var(--border-hover);
+  }
+
+  /* Eyebrow label — gold-accented uppercase */
+  .eyebrow {
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent-gold);
+  }
+
+  /* Display text — Playfair serif for luxury headings */
+  .text-display {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(1.75rem, 4vw, 3rem);
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+  }
+
+  /* Gold CTA button */
+  .btn-gold {
+    background: var(--sg-gradient);
+    color: var(--text-inverse);
+    font-weight: 600;
+    transition: all var(--duration-normal) var(--ease-default);
+  }
+  .btn-gold:hover {
+    background: var(--sg-gradient-hover);
+    box-shadow: 0 4px 16px rgba(212, 175, 55, 0.25);
+  }
+  .btn-gold:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+}

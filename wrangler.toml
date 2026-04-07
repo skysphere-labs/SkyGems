@@ -1,0 +1,64 @@
+"$schema" = "./node_modules/wrangler/config-schema.json"
+name = "skygems-api"
+main = "apps/api/src/index.ts"
+compatibility_date = "2026-04-05"
+
+[observability]
+enabled = true
+
+[vars]
+SKYGEMS_PROVIDER_PRIMARY = "xai"
+SKYGEMS_PROVIDER_SECONDARY = "google"
+SKYGEMS_GENERATE_EXECUTION_MODE = "auto"
+SKYGEMS_AUTH0_ISSUER = "https://gemstudio.auth0.com/"
+SKYGEMS_AUTH0_AUDIENCE = "https://api.skyslab.ai"
+SKYGEMS_AUTH0_CLAIMS_NAMESPACE = "https://gemstudio.ai/"
+SKYGEMS_ENABLE_DEV_BOOTSTRAP = "false"
+
+[ai]
+binding = "AI_GATEWAY"
+
+[[d1_databases]]
+binding = "SKYGEMS_DB"
+database_name = "skygems"
+database_id = "d21c67b6-353b-4600-8501-db6fde7e3084"
+migrations_dir = "apps/api/migrations"
+
+[[r2_buckets]]
+binding = "SKYGEMS_ARTIFACTS"
+bucket_name = "skygems-artifacts"
+
+[[queues.producers]]
+binding = "GENERATE_QUEUE"
+queue = "skygems-generate"
+
+[[queues.producers]]
+binding = "REFINE_QUEUE"
+queue = "skygems-refine"
+
+[[queues.producers]]
+binding = "SPEC_QUEUE"
+queue = "skygems-spec"
+
+[[queues.consumers]]
+queue = "skygems-generate"
+max_batch_size = 10
+max_batch_timeout = 30
+max_retries = 5
+
+[[queues.consumers]]
+queue = "skygems-refine"
+max_batch_size = 10
+max_batch_timeout = 30
+max_retries = 5
+
+[[queues.consumers]]
+queue = "skygems-spec"
+max_batch_size = 10
+max_batch_timeout = 30
+max_retries = 5
+
+[[workflows]]
+binding = "DESIGN_PIPELINE_WORKFLOW"
+name = "skygems-design-pipeline"
+class_name = "DesignPipelineWorkflow"
