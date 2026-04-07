@@ -32,6 +32,7 @@ import {
   PromptBundleSchema,
   Sha256Schema,
   SpecStandardVersion,
+  TechStandardVersion,
 } from "./primitives.ts";
 
 export const MeasuredValueSchema = z.object({
@@ -124,8 +125,59 @@ export const CadPrepAgentOutputSchema = z.object({
   requiresHumanReview: z.boolean(),
 });
 
+export const BomLineItemSchema = z.object({
+  item: z.string().min(1).max(120),
+  quantity: z.number().nonnegative(),
+  unitCost: z.number().nonnegative(),
+  totalCost: z.number().nonnegative(),
+  source: z.string().min(1).max(120),
+});
+
+export const EstimatedRetailPriceSchema = z.object({
+  low: z.number().nonnegative(),
+  mid: z.number().nonnegative(),
+  high: z.number().nonnegative(),
+  currency: z.string().length(3).default("USD"),
+});
+
+export const TechSheetAgentOutputSchema = z.object({
+  schemaVersion: z.literal(TechStandardVersion),
+  designId: DesignIdSchema,
+  specId: SpecIdSchema,
+  geometryAndDimensions: z.array(
+    z.object({
+      label: z.string().min(1).max(120),
+      value: z.string().min(1).max(240),
+    }),
+  ),
+  materialsAndMetalDetails: z.array(
+    z.object({
+      material: z.string().min(1).max(120),
+      weight_g: z.number().nonnegative(),
+      purity: z.string().min(1).max(80),
+      finish: z.string().min(1).max(120),
+    }),
+  ),
+  gemstoneSchedule: z.array(
+    z.object({
+      stone: z.string().min(1).max(80),
+      cut: z.string().min(1).max(80),
+      caratWeight: z.number().nonnegative(),
+      dimensions: z.string().min(1).max(120),
+      setting: z.string().min(1).max(120),
+    }),
+  ),
+  constructionNotes: z.array(z.string().min(1).max(500)),
+  billOfMaterials: z.array(BomLineItemSchema),
+  estimatedRetailPrice: EstimatedRetailPriceSchema,
+  riskFlags: z.array(z.string().min(1).max(240)),
+});
+
 export type MeasuredValue = z.infer<typeof MeasuredValueSchema>;
 export type PromptAgentOutput = z.infer<typeof PromptAgentOutputSchema>;
 export type RiskFlag = z.infer<typeof RiskFlagSchema>;
 export type SpecAgentOutput = z.infer<typeof SpecAgentOutputSchema>;
+export type TechSheetAgentOutput = z.infer<typeof TechSheetAgentOutputSchema>;
+export type BomLineItem = z.infer<typeof BomLineItemSchema>;
+export type EstimatedRetailPrice = z.infer<typeof EstimatedRetailPriceSchema>;
 export type CadPrepAgentOutput = z.infer<typeof CadPrepAgentOutputSchema>;

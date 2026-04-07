@@ -10,6 +10,7 @@ import { ComplexityControl } from "../components/create-flow/ComplexityControl";
 import { GemstonePicker } from "../components/create-flow/GemstonePicker";
 import { JewelryTypePicker } from "../components/create-flow/JewelryTypePicker";
 import { MetalPicker } from "../components/create-flow/MetalPicker";
+import { RenderModePicker } from "../components/create-flow/RenderModePicker";
 import { StylePicker } from "../components/create-flow/StylePicker";
 import { PromptPreviewStatusCard } from "../components/status/PromptPreviewStatusCard";
 import { useCreateDraftState } from "../hooks/useCreateDraftState";
@@ -35,6 +36,7 @@ function CreateScreenComposer({
     refreshPreview,
     resetToPreview,
     setOverrideAcknowledged,
+    setRenderMode,
     updateInput,
     updatePromptValue,
   } = useCreateDraftState(initialDraft);
@@ -158,6 +160,10 @@ function CreateScreenComposer({
             <ComplexityControl
               value={draft.inputs.complexity}
               onChange={(complexity) => updateInput({ complexity })}
+            />
+            <RenderModePicker
+              value={draft.renderMode}
+              onChange={setRenderMode}
             />
           </CardContent>
         </Card>

@@ -8,6 +8,7 @@ import type {
   ProjectResponse,
   PromptPreviewResponse,
   SpecAgentOutput,
+  TechSheetAgentOutput,
 } from "@skygems/shared";
 
 import type {
@@ -378,6 +379,62 @@ function mapSpecOutputToSpecData(spec: SpecAgentOutput | null): Design["specData
   };
 }
 
+function mapTechSheetOutputToData(
+  techSheet: TechSheetAgentOutput | null,
+  updatedAt: string,
+): Design["technicalSheetData"] {
+  if (!techSheet) {
+    return {
+      versionLabel: "Not generated",
+      generatedAt: updatedAt,
+      geometryAndDimensions: [],
+      materialsAndMetalDetails: [],
+      gemstoneSchedule: [],
+      constructionAndAssemblyNotes: [],
+      tolerancesAndConstraints: [],
+      riskFlags: [],
+      missingInformation: [],
+    };
+  }
+
+  return {
+    versionLabel: "Latest technical sheet",
+    generatedAt: updatedAt,
+    geometryAndDimensions: techSheet.geometryAndDimensions.map((d) => ({
+      label: d.label,
+      value: d.value,
+    })),
+    materialsAndMetalDetails: techSheet.materialsAndMetalDetails.map((m) => ({
+      label: `${m.material} (${m.purity})`,
+      value: `${m.weight_g}g, ${m.finish}`,
+    })),
+    gemstoneSchedule: techSheet.gemstoneSchedule.map((g) => ({
+      label: g.stone,
+      value: `${g.cut} / ${g.caratWeight}ct / ${g.dimensions}`,
+    })),
+    constructionAndAssemblyNotes: techSheet.constructionNotes,
+    tolerancesAndConstraints: techSheet.riskFlags,
+    riskFlags: techSheet.riskFlags.map((msg) => ({
+      severity: msg.startsWith("[HIGH]") ? "blocking" as const : msg.startsWith("[MEDIUM]") ? "warning" as const : "informational" as const,
+      message: msg,
+    })),
+    missingInformation: [],
+    billOfMaterials: techSheet.billOfMaterials.map((b) => ({
+      item: b.item,
+      quantity: b.quantity,
+      unitCost: b.unitCost,
+      totalCost: b.totalCost,
+      source: b.source,
+    })),
+    estimatedRetailPrice: {
+      low: techSheet.estimatedRetailPrice.low,
+      mid: techSheet.estimatedRetailPrice.mid,
+      high: techSheet.estimatedRetailPrice.high,
+      currency: techSheet.estimatedRetailPrice.currency,
+    },
+  };
+}
+
 function summarizeStage(
   label: string,
   status: Design["stages"]["spec"]["status"],
@@ -417,6 +474,7 @@ function mapDesignSummaryToDesign(
   options?: {
     recentGenerationId?: string | null;
     latestSpec?: SpecAgentOutput | null;
+    latestTechSheet?: TechSheetAgentOutput | null;
   },
 ): Design {
   const sourceGenerationId =
@@ -498,17 +556,19 @@ function mapDesignSummaryToDesign(
           riskFlags: [],
           missingInformation: [],
         },
-    technicalSheetData: {
-      versionLabel: summary.latestTechnicalSheetId ? "Latest technical sheet" : "Not generated",
-      generatedAt: formatDisplayTimestamp(summary.updatedAt),
-      geometryAndDimensions: [],
-      materialsAndMetalDetails: [],
-      gemstoneSchedule: [],
-      constructionAndAssemblyNotes: [],
-      tolerancesAndConstraints: [],
-      riskFlags: [],
-      missingInformation: [],
-    },
+    technicalSheetData: options?.latestTechSheet
+      ? mapTechSheetOutputToData(options.latestTechSheet, formatDisplayTimestamp(summary.updatedAt))
+      : {
+          versionLabel: summary.latestTechnicalSheetId ? "Latest technical sheet" : "Not generated",
+          generatedAt: formatDisplayTimestamp(summary.updatedAt),
+          geometryAndDimensions: [],
+          materialsAndMetalDetails: [],
+          gemstoneSchedule: [],
+          constructionAndAssemblyNotes: [],
+          tolerancesAndConstraints: [],
+          riskFlags: [],
+          missingInformation: [],
+        },
     svgViews: [],
     cadJobs: [],
   };
@@ -782,6 +842,7 @@ export async function fetchCreateDraft(projectId: string): Promise<CreateDraftSt
     inputs: { ...DEFAULT_INPUT },
     promptMode: "synced",
     promptValue: preview.prompt,
+    renderMode: "sketch",
     inputRevision: 0,
     previewRevision: 0,
     previewStatus: "ready",
@@ -842,6 +903,7 @@ export async function postGenerateDesign(input: {
     projectId: input.projectId,
     ...input.draft.inputs,
     pairStandardVersion: "pair_v1",
+    renderMode: input.draft.renderMode ?? "sketch",
   };
 
   if (input.draft.promptMode === "override") {
@@ -968,6 +1030,7 @@ export async function fetchDesign(designId: string): Promise<Design> {
       recentGenerationId:
         payload.recentGenerations[0]?.generationId ?? payload.design.sourceGenerationId,
       latestSpec: payload.latestSpec,
+      latestTechSheet: payload.latestTechSheet,
     });
     stubDesigns[designId] = mapped;
     return mapped;
@@ -1107,6 +1170,37 @@ export async function postGenerateSpec(designId: string) {
       forceRegenerate: false,
     }),
   });
+}
+
+export async function postStartTechSheet(designId: string) {
+  return requestJson<{
+    workflowRunId: string;
+    designId: string;
+    projectId: string;
+    requestedTargetStage: "technical_sheet";
+    currentStage: "complete" | "technical_sheet";
+    workflowStatus: "queued" | "running" | "succeeded" | "failed" | "canceled";
+    latestTechnicalSheetId: string | null;
+    updatedAt: string;
+  }>(`/v1/designs/${designId}/technical-sheet`, {
+    method: "POST",
+    headers: {
+      "Idempotency-Key": buildIdempotencyKey(),
+    },
+    body: JSON.stringify({
+      includePdf: true,
+      forceRegenerate: false,
+    }),
+  });
+}
+
+export async function fetchTechSheet(designId: string): Promise<TechSheetAgentOutput | null> {
+  try {
+    const payload = await requestJson<DesignDetailResponse>(`/v1/designs/${designId}`);
+    return payload.latestTechSheet ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export async function postGallerySearch(input: {

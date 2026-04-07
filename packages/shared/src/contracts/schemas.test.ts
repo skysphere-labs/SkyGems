@@ -261,6 +261,7 @@ test("design detail, project designs, and selection responses lock the explicit 
     canSelect: true,
     design,
     latestSpec: null,
+    latestTechSheet: null,
     recentGenerations: [
       {
         generationId: "gen_01J0F8M0G7J0F8M0G7J0F8M0G7",

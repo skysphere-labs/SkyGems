@@ -10,6 +10,7 @@ import type {
   Gemstone as SharedGemstone,
   JewelryType as SharedJewelryType,
   Metal as SharedMetal,
+  RenderMode as SharedRenderMode,
   RequestKind as SharedRequestKind,
   SelectionState as SharedSelectionState,
   Style as SharedStyle,
@@ -65,6 +66,8 @@ export type Gemstone = SharedGemstone;
 
 export type DesignStyle = SharedStyle;
 
+export type RenderMode = SharedRenderMode;
+
 export type CadFormat = SharedCadFormat;
 export type CadJobStatus =
   | "queued"
@@ -106,6 +109,7 @@ export interface CreateDraftState {
   inputRevision: number;
   promptMode: PromptMode;
   promptValue: string;
+  renderMode: RenderMode;
   previewStatus: "idle" | "loading" | "ready" | "error";
   previewRevision?: number;
 }
@@ -176,6 +180,21 @@ export interface DesignSpecData {
   missingInformation: string[];
 }
 
+export interface BomLineItem {
+  item: string;
+  quantity: number;
+  unitCost: number;
+  totalCost: number;
+  source: string;
+}
+
+export interface EstimatedRetailPrice {
+  low: number;
+  mid: number;
+  high: number;
+  currency: string;
+}
+
 export interface TechnicalSheetData {
   versionLabel: string;
   generatedAt: string;
@@ -186,6 +205,8 @@ export interface TechnicalSheetData {
   tolerancesAndConstraints: string[];
   riskFlags: RiskFlag[];
   missingInformation: string[];
+  billOfMaterials?: BomLineItem[];
+  estimatedRetailPrice?: EstimatedRetailPrice;
 }
 
 export interface SvgViewData {

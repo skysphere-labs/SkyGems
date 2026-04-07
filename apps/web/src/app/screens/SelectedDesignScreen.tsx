@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { Link, useParams } from "react-router";
 
@@ -7,12 +7,28 @@ import { Button, Card, CardContent } from "@skygems/ui";
 import { fetchDesign } from "../contracts/api";
 import type { Design } from "../contracts/types";
 import { RefineDrawer } from "../components/RefineDrawer";
+import { EditingToolbar } from "../components/editing/EditingToolbar";
+import type { EditingToolPreset } from "../components/editing/presets";
 import { SelectionSummaryPanel } from "../components/status/SelectionSummaryPanel";
 import { appRoutes } from "../lib/routes";
 
 export function SelectedDesignScreen() {
   const { designId, projectId } = useParams();
   const [design, setDesign] = useState<Design | null>(null);
+  const [refineOpen, setRefineOpen] = useState(false);
+  const [presetInstruction, setPresetInstruction] = useState<string | undefined>(undefined);
+
+  const handlePresetSelect = useCallback((preset: EditingToolPreset) => {
+    setPresetInstruction(preset.refineInstruction);
+    setRefineOpen(true);
+  }, []);
+
+  const handleRefineOpenChange = useCallback((open: boolean) => {
+    setRefineOpen(open);
+    if (!open) {
+      setPresetInstruction(undefined);
+    }
+  }, []);
 
   useEffect(() => {
     if (!designId) {
@@ -55,8 +71,19 @@ export function SelectedDesignScreen() {
                 </Link>
               </Button>
             ) : null}
-            <RefineDrawer design={design} />
+            <RefineDrawer
+              design={design}
+              initialInstruction={presetInstruction}
+              open={refineOpen}
+              onOpenChange={handleRefineOpenChange}
+            />
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-white/6 bg-[var(--bg-secondary)]">
+        <CardContent className="py-6">
+          <EditingToolbar onSelectPreset={handlePresetSelect} />
         </CardContent>
       </Card>
 

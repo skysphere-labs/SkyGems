@@ -72,6 +72,22 @@ export const styleDescriptions: Record<Style, string> = {
 export const defaultNegativePrompt =
   "cropped composition, incomplete jewelry, extra pieces, labels, captions, watermark, logo, hands, fingers, ears, neck, body parts, mannequin, packaging, low detail, blurry";
 
+export const productRenderDirectives = {
+  background:
+    "Pure white or very soft light-to-white gradient background with no distracting elements.",
+  lighting:
+    "Professional studio lighting setup with soft key light and balanced fill light for even illumination, gentle specular highlights on metal, and controlled gemstone brilliance.",
+  composition:
+    "Clean, centered composition with the piece as the sole hero object. Balanced negative space around the jewelry. No lifestyle context, props, or environmental elements.",
+  quality:
+    "E-commerce catalog quality suitable for product listing. Sharp focus across the entire piece, accurate color reproduction, and premium material detail.",
+  framing:
+    "Single hero product shot. The complete piece is visible with no cropping. Slight elevation angle for depth, consistent with luxury product photography conventions.",
+} as const;
+
+export const productRenderNegativePrompt =
+  "lifestyle scene, model, body parts, hands, fingers, ears, neck, mannequin, props, flowers, fabric, colored background, busy background, bokeh, artistic blur, watermark, logo, text, labels, packaging, shadows on colored surface, low resolution, noise";
+
 export const artifactFileNames: Record<ArtifactKind, string> = {
   pair_sketch_png: "sketch.png",
   pair_render_png: "render.png",

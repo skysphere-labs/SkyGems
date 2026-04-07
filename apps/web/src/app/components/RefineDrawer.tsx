@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowRight, WandSparkles } from "lucide-react";
 import { useNavigate } from "react-router";
 
@@ -18,16 +18,34 @@ import type { Design } from "../contracts/types";
 import { postRefineDesign } from "../contracts/api";
 import { appRoutes } from "../lib/routes";
 
-export function RefineDrawer({ design }: { design: Design }) {
+interface RefineDrawerProps {
+  design: Design;
+  initialInstruction?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export function RefineDrawer({
+  design,
+  initialInstruction,
+  open: controlledOpen,
+  onOpenChange,
+}: RefineDrawerProps) {
   const navigate = useNavigate();
   const [instruction, setInstruction] = useState(
-    "Tighten the silhouette while preserving the gemstone hierarchy.",
+    initialInstruction ?? "Tighten the silhouette while preserving the gemstone hierarchy.",
   );
   const [promptOverride, setPromptOverride] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedPresets, setSelectedPresets] = useState<string[]>([
     design.refinePresets[0] ?? "",
   ]);
+
+  useEffect(() => {
+    if (initialInstruction) {
+      setInstruction(initialInstruction);
+    }
+  }, [initialInstruction]);
 
   const togglePreset = (preset: string) => {
     setSelectedPresets((current) =>
@@ -56,7 +74,7 @@ export function RefineDrawer({ design }: { design: Design }) {
   };
 
   return (
-    <Sheet>
+    <Sheet open={controlledOpen} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>
         <Button variant="outline">
           <WandSparkles className="size-4" />

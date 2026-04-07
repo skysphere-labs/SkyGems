@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { postPromptPreview } from "../contracts/api";
-import type { CreateDraftState, CreateInput } from "../contracts/types";
+import type { CreateDraftState, CreateInput, RenderMode } from "../contracts/types";
 import { generatePromptPreview } from "../domain/promptGenerator";
 
 export function useCreateDraftState(initialState: CreateDraftState) {
@@ -10,6 +10,7 @@ export function useCreateDraftState(initialState: CreateDraftState) {
   const [draft, setDraft] = useState<CreateDraftState>({
     ...initialState,
     promptValue: initialState.promptValue || initialPreview.prompt,
+    renderMode: initialState.renderMode ?? "sketch",
     previewStatus: initialState.previewStatus ?? "ready",
     previewRevision:
       initialState.previewRevision ?? initialState.inputRevision,
@@ -108,5 +109,11 @@ export function useCreateDraftState(initialState: CreateDraftState) {
       setPreviewNonce((current) => current + 1);
     },
     setOverrideAcknowledged,
+    setRenderMode(mode: RenderMode) {
+      setDraft((current) => ({
+        ...current,
+        renderMode: mode,
+      }));
+    },
   };
 }

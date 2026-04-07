@@ -1,4 +1,5 @@
 import { specAgentDefinition } from "./agents/spec-agent.ts";
+import { techSheetAgentDefinition } from "./agents/tech-sheet-agent.ts";
 import { promptAgentDefinition } from "./agents/prompt-agent.ts";
 import { AgentExecutor } from "./executor.ts";
 import { ProviderRouter } from "./providers/router.ts";
@@ -10,6 +11,7 @@ import { SkillRegistry } from "./skills/registry.ts";
 
 export * from "./agents/prompt-agent.ts";
 export * from "./agents/spec-agent.ts";
+export * from "./agents/tech-sheet-agent.ts";
 export * from "./executor.ts";
 export * from "./packs/prompt-pack-v1.ts";
 export * from "./packs/resolver.ts";
@@ -32,6 +34,7 @@ export function createDefaultAgentRegistry(): AgentRegistry {
   const registry = new AgentRegistry();
   registry.register(promptAgentDefinition);
   registry.register(specAgentDefinition);
+  registry.register(techSheetAgentDefinition);
   return registry;
 }
 

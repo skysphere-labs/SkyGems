@@ -1,6 +1,6 @@
 import type { CreateDesignInput, DesignDna, DesignDnaPreview, PromptBundle } from "../contracts/primitives.ts";
 import { CreateDesignInputSchema, DesignDnaPreviewSchema, DesignDnaSchema, PromptBundleSchema } from "../contracts/primitives.ts";
-import type { Gemstone, JewelryType } from "../contracts/enums.ts";
+import type { Gemstone, JewelryType, RenderMode } from "../contracts/enums.ts";
 import { gemstoneValues } from "../contracts/enums.ts";
 import { sha256Hex } from "../lib/crypto.ts";
 import { stableStringify } from "../lib/json.ts";
@@ -8,6 +8,8 @@ import {
   defaultNegativePrompt,
   gemstoneDescriptions,
   metalDescriptions,
+  productRenderDirectives,
+  productRenderNegativePrompt,
   styleDescriptions,
   typeCompositionPrompts,
 } from "./vocab.ts";
@@ -367,9 +369,11 @@ export function buildPromptBundle(
   userNotes?: string,
   options: {
     provider?: PromptPreviewProvider;
+    renderMode?: RenderMode;
   } = {},
 ): PromptBundle {
   const provider = options.provider ?? "xai";
+  const renderMode = options.renderMode ?? "sketch";
   const variationNotes = formatVariationsForPrompt(designDna);
   const complexityDescription = getComplexityDescription(designDna.complexity);
   const notesSuffix = userNotes ? `\n\nUser notes to respect: ${userNotes.trim()}.` : "";
@@ -386,18 +390,39 @@ Provider targeting: ${buildProviderSketchDirective(provider)}${notesSuffix}
 
 IMPORTANT: This is a ${designDna.jewelryType.toUpperCase()}. Show the complete piece in every view with nothing cropped.`;
 
-  const renderPrompt = `A luxury studio render of the same ${designDna.jewelryType} concept. Showcase ${metalDescriptions[designDna.metal]} with ${describeGemstones(
-    designDna.gemstones,
-  ).toLowerCase()} Keep the structure faithful to this design DNA: ${designDna.bandStyle}, ${designDna.settingType}, ${designDna.stonePosition}, ${designDna.profile}, and ${designDna.motif}. Style direction: ${styleDescriptions[
-    designDna.style
-  ]}. Complexity level: ${complexityDescription}. Present a single hero object on a clean neutral background with premium lighting and crisp material detail.
+  let renderPrompt: string;
+  let negativePrompt: string;
+
+  if (renderMode === "product") {
+    renderPrompt = `Product photography of a ${designDna.jewelryType} in ${metalDescriptions[designDna.metal]} with ${describeGemstones(designDna.gemstones).toLowerCase()}
+
+${productRenderDirectives.background} ${productRenderDirectives.lighting}
+
+${productRenderDirectives.composition} ${productRenderDirectives.framing}
+
+Design DNA: ${designDna.bandStyle}, ${designDna.settingType}, ${designDna.stonePosition}, ${designDna.profile}, and ${designDna.motif}. Style direction: ${styleDescriptions[designDna.style]}. Complexity level: ${complexityDescription}.
+
+${productRenderDirectives.quality}
 
 Provider targeting: ${buildProviderRenderDirective(provider)}.${notesSuffix}`;
+
+    negativePrompt = productRenderNegativePrompt;
+  } else {
+    renderPrompt = `A luxury studio render of the same ${designDna.jewelryType} concept. Showcase ${metalDescriptions[designDna.metal]} with ${describeGemstones(
+      designDna.gemstones,
+    ).toLowerCase()} Keep the structure faithful to this design DNA: ${designDna.bandStyle}, ${designDna.settingType}, ${designDna.stonePosition}, ${designDna.profile}, and ${designDna.motif}. Style direction: ${styleDescriptions[
+      designDna.style
+    ]}. Complexity level: ${complexityDescription}. Present a single hero object on a clean neutral background with premium lighting and crisp material detail.
+
+Provider targeting: ${buildProviderRenderDirective(provider)}.${notesSuffix}`;
+
+    negativePrompt = defaultNegativePrompt;
+  }
 
   return PromptBundleSchema.parse({
     sketchPrompt,
     renderPrompt,
-    negativePrompt: defaultNegativePrompt,
+    negativePrompt,
   });
 }
 
@@ -414,6 +439,7 @@ export async function buildPromptPreviewWithOptions(
   input: CreateDesignInput,
   options: {
     provider?: PromptPreviewProvider;
+    renderMode?: RenderMode;
   },
 ): Promise<{
   normalizedInput: Omit<CreateDesignInput, "projectId">;
@@ -425,6 +451,7 @@ export async function buildPromptPreviewWithOptions(
   const designDna = await buildDesignDna(normalizedInput);
   const promptBundle = buildPromptBundle(designDna, normalizedInput.userNotes, {
     provider: options.provider,
+    renderMode: options.renderMode,
   });
 
   return {

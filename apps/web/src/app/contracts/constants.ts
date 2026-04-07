@@ -1,8 +1,11 @@
 import type { LucideIcon } from "lucide-react";
 import {
+  Camera,
   CircleDot,
   Gem,
+  Image,
   Orbit,
+  Pencil,
   Sparkles,
   Waves,
   Workflow,
@@ -14,6 +17,7 @@ import type {
   Gemstone,
   JewelryType,
   Metal,
+  RenderMode,
 } from "./types";
 
 export interface IconOption<T extends string> {
@@ -95,5 +99,33 @@ export const CAD_FORMAT_OPTIONS: Array<{
     id: "dxf",
     label: "DXF",
     description: "2D drafting export for workshop annotations.",
+  },
+];
+
+export interface RenderModeOption {
+  id: RenderMode;
+  label: string;
+  description: string;
+  icon: LucideIcon;
+}
+
+export const RENDER_MODE_OPTIONS: RenderModeOption[] = [
+  {
+    id: "sketch",
+    label: "Sketch",
+    description: "Pencil linework design sheet on white paper.",
+    icon: Pencil,
+  },
+  {
+    id: "render",
+    label: "Realistic Render",
+    description: "Luxury editorial studio render with premium detail.",
+    icon: Image,
+  },
+  {
+    id: "product",
+    label: "Product Photography",
+    description: "E-commerce catalog shot on white, studio-lit.",
+    icon: Camera,
   },
 ];

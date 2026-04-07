@@ -33,6 +33,8 @@ import {
   SpecRequestSchema,
   SpecQueuePayloadSchema,
   StageStatusesSchema,
+  TechSheetAgentOutputSchema,
+  TechnicalSheetRequestSchema,
   WorkflowStageResponseSchema,
   generatePrefixedId,
   type ArtifactPublic,
@@ -44,6 +46,7 @@ import {
   type ProjectResponse,
   type SpecAgentOutput,
   type StageStatuses,
+  type TechSheetAgentOutput,
 } from "@skygems/shared";
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from "cloudflare:workers";
 
@@ -166,6 +169,14 @@ interface DesignSpecRow {
   risk_flags_json: string;
   unknowns_json: string;
   spec_version: number;
+  completed_at: string | null;
+  updated_at: string;
+}
+
+interface TechnicalSheetRow {
+  id: string;
+  sheet_json: string | null;
+  tech_version: number;
   completed_at: string | null;
   updated_at: string;
 }
@@ -399,6 +410,26 @@ async function loadLatestSpec(db: D1Database, specId: string | null) {
   }
 
   return SpecAgentOutputSchema.parse(JSON.parse(spec.agent_output_json));
+}
+
+async function loadLatestTechSheet(db: D1Database, techSheetId: string | null) {
+  if (!techSheetId) {
+    return null;
+  }
+
+  const sheet = await queryFirst<TechnicalSheetRow>(
+    db,
+    `SELECT id, sheet_json, tech_version, completed_at, updated_at
+     FROM technical_sheets
+     WHERE id = ?`,
+    [techSheetId],
+  );
+
+  if (!sheet?.sheet_json) {
+    return null;
+  }
+
+  return TechSheetAgentOutputSchema.parse(JSON.parse(sheet.sheet_json));
 }
 
 async function loadLatestGenerationForDesign(
@@ -755,6 +786,7 @@ async function buildDesignDetailResponse(
 ) {
   const workflow = await loadWorkflow(db, design.latest_workflow_run_id);
   const latestSpec = await loadLatestSpec(db, design.latest_spec_id);
+  const latestTechSheet = await loadLatestTechSheet(db, design.latest_technical_sheet_id);
 
   return DesignDetailResponseSchema.parse({
     projectId: project.id,
@@ -762,6 +794,7 @@ async function buildDesignDetailResponse(
     canSelect: canSelectDesign(design),
     design: await buildDesignSummary(db, design, workflow, origin),
     latestSpec,
+    latestTechSheet,
     recentGenerations: await loadRecentDesignGenerations(db, design),
   });
 }
@@ -1286,6 +1319,180 @@ async function handleSpecStage(
   );
 }
 
+async function handleTechSheetStage(
+  request: Request,
+  env: ApiEnv,
+  auth: AuthContext,
+  designId: string,
+): Promise<Response> {
+  const design = await requireDesign(env.SKYGEMS_DB, auth.tenantId, designId);
+  const project = await requireProjectWriteAccess(env.SKYGEMS_DB, auth, design.project_id);
+  const payload = await parseJsonBody(request, TechnicalSheetRequestSchema);
+
+  if (!design.latest_spec_id) {
+    throw new HttpError(409, "conflict", "A completed spec is required before technical sheet generation.");
+  }
+
+  if (design.latest_technical_sheet_id && !payload.forceRegenerate) {
+    const workflow = await loadWorkflow(env.SKYGEMS_DB, design.latest_workflow_run_id);
+    return jsonResponse(
+      WorkflowStageResponseSchema.parse({
+        workflowRunId: design.latest_workflow_run_id,
+        designId: design.id,
+        projectId: project.id,
+        selectionState: design.selection_state,
+        requestedTargetStage: "technical_sheet",
+        currentStage: workflow?.current_stage ?? "technical_sheet",
+        workflowStatus: workflow?.workflow_status ?? "succeeded",
+        stageStatuses: stageStatusesFromDesign(design, workflow),
+        latestSpecId: design.latest_spec_id,
+        latestTechnicalSheetId: design.latest_technical_sheet_id,
+        latestSvgAssetId: design.latest_svg_asset_id,
+        latestCadJobId: design.latest_cad_job_id,
+        updatedAt: workflow?.updated_at ?? design.updated_at,
+      }),
+    );
+  }
+
+  // Load the spec output
+  const specOutput = await loadLatestSpec(env.SKYGEMS_DB, design.latest_spec_id);
+  if (!specOutput) {
+    throw new HttpError(409, "conflict", "Spec agent output is required before technical sheet generation.");
+  }
+
+  // Load design DNA
+  const designDna = DesignDnaSchema.parse(JSON.parse(design.design_dna_json));
+
+  const workflowRunId = generatePrefixedId("wfr");
+  const techSheetId = generatePrefixedId("tch");
+  const now = nowIso();
+  const versionRow = await queryFirst<{ version: number }>(
+    env.SKYGEMS_DB,
+    `SELECT COALESCE(MAX(tech_version), 0) AS version
+     FROM technical_sheets
+     WHERE design_id = ? AND tenant_id = ?`,
+    [design.id, auth.tenantId],
+  );
+  const techVersion = (versionRow?.version ?? 0) + 1;
+
+  // Create workflow run
+  await executeStatement(
+    env.SKYGEMS_DB,
+    `INSERT INTO design_workflow_runs (
+       id, tenant_id, project_id, design_id, requested_by_user_id, requested_target_stage, current_stage,
+       workflow_status, spec_status, technical_sheet_status, svg_status, cad_status,
+       latest_spec_id, latest_technical_sheet_id, latest_svg_asset_id, latest_cad_job_id,
+       force_regenerate, last_error_code, last_error_message, created_at, started_at, completed_at, updated_at
+     ) VALUES (?, ?, ?, ?, ?, 'technical_sheet', 'technical_sheet', 'running', 'succeeded', 'running', 'not_requested', 'not_requested', ?, NULL, NULL, NULL, ?, NULL, NULL, ?, ?, NULL, ?)`,
+    [
+      workflowRunId,
+      auth.tenantId,
+      project.id,
+      design.id,
+      auth.userId,
+      design.latest_spec_id,
+      payload.forceRegenerate ? 1 : 0,
+      now,
+      now,
+      now,
+    ],
+  );
+
+  // Create technical_sheets row (running)
+  await executeStatement(
+    env.SKYGEMS_DB,
+    `INSERT INTO technical_sheets (
+       id, tenant_id, project_id, design_id, workflow_run_id, source_spec_id, tech_version,
+       status, tech_standard_version, sheet_json, json_artifact_id, pdf_artifact_id, created_at, completed_at, updated_at
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, 'running', 'tech_v1', NULL, NULL, NULL, ?, NULL, ?)`,
+    [
+      techSheetId,
+      auth.tenantId,
+      project.id,
+      design.id,
+      workflowRunId,
+      design.latest_spec_id,
+      techVersion,
+      now,
+      now,
+    ],
+  );
+
+  // Run tech-sheet agent
+  const techSheetRun = await agentExecutor.run<TechSheetAgentOutput>("tech-sheet-agent", {
+    specOutput,
+    designDna,
+    specId: design.latest_spec_id,
+  });
+  const techSheetOutput = TechSheetAgentOutputSchema.parse(techSheetRun.output);
+  const completedAt = nowIso();
+
+  // Update technical_sheets row with result
+  await executeStatement(
+    env.SKYGEMS_DB,
+    `UPDATE technical_sheets
+     SET status = 'succeeded',
+         sheet_json = ?,
+         completed_at = ?,
+         updated_at = ?
+     WHERE id = ?`,
+    [
+      asJsonText(techSheetOutput),
+      completedAt,
+      completedAt,
+      techSheetId,
+    ],
+  );
+
+  // Update workflow run
+  await executeStatement(
+    env.SKYGEMS_DB,
+    `UPDATE design_workflow_runs
+     SET current_stage = 'complete',
+         workflow_status = 'succeeded',
+         technical_sheet_status = 'succeeded',
+         latest_technical_sheet_id = ?,
+         completed_at = ?,
+         updated_at = ?
+     WHERE id = ?`,
+    [techSheetId, completedAt, completedAt, workflowRunId],
+  );
+
+  // Update designs row
+  await executeStatement(
+    env.SKYGEMS_DB,
+    `UPDATE designs
+     SET latest_technical_sheet_id = ?,
+         latest_workflow_run_id = ?,
+         updated_at = ?
+     WHERE id = ?`,
+    [techSheetId, workflowRunId, completedAt, design.id],
+  );
+
+  return jsonResponse(
+    WorkflowStageResponseSchema.parse({
+      workflowRunId,
+      designId: design.id,
+      projectId: project.id,
+      selectionState: design.selection_state,
+      requestedTargetStage: "technical_sheet",
+      currentStage: "complete",
+      workflowStatus: "succeeded",
+      stageStatuses: {
+        spec: "succeeded",
+        technicalSheet: "succeeded",
+        svg: "not_requested",
+        cad: "not_requested",
+      },
+      latestSpecId: design.latest_spec_id,
+      latestTechnicalSheetId: techSheetId,
+      latestSvgAssetId: null,
+      latestCadJobId: null,
+      updatedAt: completedAt,
+    }),
+  );
+}
+
 async function handleGenerationStatus(
   request: Request,
   env: ApiEnv,
@@ -1646,8 +1853,11 @@ async function routeRequest(
     if (downstreamMatch[2] === "spec") {
       return handleSpecStage(request, env, auth, design.id);
     }
+    if (downstreamMatch[2] === "technical-sheet") {
+      return handleTechSheetStage(request, env, auth, design.id);
+    }
     return stubbedRoute(
-      "Downstream workflow execution is intentionally stubbed in Phase 2A foundation.",
+      "Downstream workflow execution is intentionally stubbed for svg and cad stages.",
     );
   }
 

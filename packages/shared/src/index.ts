@@ -6,6 +6,7 @@ export * from "./contracts/primitives.ts";
 export * from "./contracts/queues.ts";
 export * from "./domain/artifacts.ts";
 export * from "./domain/design-dna.ts";
+export * from "./domain/pricing.ts";
 export * from "./domain/vocab.ts";
 export * from "./lib/crypto.ts";
 export * from "./lib/json.ts";

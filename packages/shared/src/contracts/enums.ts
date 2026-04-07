@@ -96,6 +96,18 @@ export const refinePresetValues = [
   "simplify",
   "luxury",
   "manufacturable",
+  "swap_material",
+  "swap_gemstone",
+  "change_angle",
+  "change_background",
+  "adjust_scale",
+  "add_inscription",
+  "erase_oddities",
+  "swap_findings",
+  "pair_gems",
+  "upscale",
+  "relight",
+  "add_texture",
 ] as const;
 export const refinePreserveValues = ["metal", "gemstones", "style", "silhouette"] as const;
 export const manufacturingIntentValues = [
@@ -151,6 +163,7 @@ export const cadBlockerCodeValues = [
   "svg_invalid",
   "unsupported_geometry",
 ] as const;
+export const renderModeValues = ["sketch", "render", "product"] as const;
 
 export const JewelryTypeEnum = z.enum(jewelryTypeValues);
 export const MetalEnum = z.enum(metalValues);
@@ -187,6 +200,7 @@ export const GemstoneRoleEnum = z.enum(gemstoneRoleValues);
 export const CadCleanupOperationEnum = z.enum(cadCleanupOperationValues);
 export const CadQaCheckEnum = z.enum(cadQaCheckValues);
 export const CadBlockerCodeEnum = z.enum(cadBlockerCodeValues);
+export const RenderModeEnum = z.enum(renderModeValues);
 
 export type JewelryType = z.infer<typeof JewelryTypeEnum>;
 export type Metal = z.infer<typeof MetalEnum>;
@@ -223,3 +237,4 @@ export type GemstoneRole = z.infer<typeof GemstoneRoleEnum>;
 export type CadCleanupOperation = z.infer<typeof CadCleanupOperationEnum>;
 export type CadQaCheck = z.infer<typeof CadQaCheckEnum>;
 export type CadBlockerCode = z.infer<typeof CadBlockerCodeEnum>;
+export type RenderMode = z.infer<typeof RenderModeEnum>;
