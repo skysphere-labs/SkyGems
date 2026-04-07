@@ -844,7 +844,7 @@ async function handlePromptPreview(request: Request, env: ApiEnv, auth: AuthCont
     designId: generatePrefixedId("dsn"),
     input: payload,
     provider: promptProvider.active,
-  });
+  }, { env: { XAI_API_KEY: env.XAI_API_KEY } });
 
   return jsonResponse(
     PromptPreviewResponseSchema.parse({
@@ -895,7 +895,7 @@ async function handleGenerateDesign(
         designId,
         input: payload,
         provider: promptProvider.active,
-      });
+      }, { env: { XAI_API_KEY: env.XAI_API_KEY } });
       const promptAgentOutput = PromptAgentOutputSchema.parse(promptAgentRun.output);
       const designDna = DesignDnaSchema.parse(promptAgentOutput.designDna);
       const promptBundle = PromptBundleSchema.parse(promptAgentOutput.promptBundle);
@@ -1062,7 +1062,7 @@ async function handleRefineDesign(
         sourceDesignId: sourceDesign.id,
         provider: promptProvider.active,
         refinementInstruction: payload.instruction,
-      });
+      }, { env: { XAI_API_KEY: env.XAI_API_KEY } });
       const promptAgentOutput = PromptAgentOutputSchema.parse(promptAgentRun.output);
       const designDna = DesignDnaSchema.parse(promptAgentOutput.designDna);
       const promptSummary = `${buildPromptSummary(createInput)} refined`;

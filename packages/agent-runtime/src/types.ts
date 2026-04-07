@@ -18,6 +18,7 @@ export interface AgentContext {
   providerRouter: ProviderRouter;
   skillRegistry: SkillRegistry;
   metadata?: Record<string, string | number | boolean | null | undefined>;
+  env?: Record<string, string | undefined>;
 }
 
 export interface AgentDefinition<TInput, TOutput> {
