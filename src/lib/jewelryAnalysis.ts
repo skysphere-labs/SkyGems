@@ -138,7 +138,7 @@ async function analyzeWithXai(
       'Authorization': `Bearer ${getXaiKey()}`,
     },
     body: JSON.stringify({
-      model: 'grok-3',
+      model: 'grok-4-0709',
       max_tokens: 1024,
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
