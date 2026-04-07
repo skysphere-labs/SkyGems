@@ -1,3 +1,4 @@
+import React from 'react';
 import { Link } from 'react-router';
 import { Sparkles, Play, Gem, Zap, Cpu, Download, ArrowRight } from 'lucide-react';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';

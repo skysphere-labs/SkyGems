@@ -1,3 +1,4 @@
+import React from 'react';
 import { DesignGenerator } from './DesignGenerator';
 
 export function DesignStudio() {

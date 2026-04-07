@@ -29,11 +29,11 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api\/anthropic/, ''),
       },
       '/v1': {
-        target: 'http://127.0.0.1:8787',
+        target: 'http://localhost:8787',
         changeOrigin: true,
       },
       '/api': {
-        target: 'http://127.0.0.1:8787',
+        target: 'http://localhost:8787',
         changeOrigin: true,
       },
     },

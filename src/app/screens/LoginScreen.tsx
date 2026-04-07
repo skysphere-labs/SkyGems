@@ -1,3 +1,4 @@
+import React from 'react';
 import { FormEvent, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { ArrowRight, Shield, Sparkles } from 'lucide-react';

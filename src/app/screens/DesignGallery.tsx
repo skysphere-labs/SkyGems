@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useEffect } from 'react';
 import { Heart, Download, Trash2, Tag } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -11,7 +12,7 @@ import {
   DesignMetadata,
   getStorageStats,
 } from '../services/storageService';
-import { listBackendDesigns } from '../services/skygemsApi';
+import { DESIGNS_UPDATED_EVENT, listBackendDesigns } from '../services/skygemsApi';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 
 interface GalleryTab {
@@ -31,25 +32,48 @@ export function DesignGallery() {
     { id: 'liked', label: 'Liked Designs' },
   ];
 
+  const loadStats = () => {
+    setStats(getStorageStats());
+  };
+
   useEffect(() => {
     loadDesigns();
     loadStats();
+
+    const handleRefresh = () => {
+      loadDesigns();
+      loadStats();
+    };
+
+    window.addEventListener(DESIGNS_UPDATED_EVENT, handleRefresh);
+    window.addEventListener('focus', handleRefresh);
+
+    return () => {
+      window.removeEventListener(DESIGNS_UPDATED_EVENT, handleRefresh);
+      window.removeEventListener('focus', handleRefresh);
+    };
   }, [activeTab]);
 
   const loadDesigns = () => {
     if (activeTab === 'liked') {
       const loaded = getLikedDesigns();
       setDesigns(loaded);
+      loadStats();
       if (loaded.length === 0) setSelectedDesign(null);
       return;
     }
     listBackendDesigns()
-      .then((loaded) => { setDesigns(loaded); if (loaded.length === 0) setSelectedDesign(null); })
-      .catch(() => { const loaded = getAllDesigns(); setDesigns(loaded); if (loaded.length === 0) setSelectedDesign(null); });
-  };
-
-  const loadStats = () => {
-    setStats(getStorageStats());
+      .then((loaded) => {
+        setDesigns(loaded);
+        loadStats();
+        if (loaded.length === 0) setSelectedDesign(null);
+      })
+      .catch(() => {
+        const loaded = getAllDesigns();
+        setDesigns(loaded);
+        loadStats();
+        if (loaded.length === 0) setSelectedDesign(null);
+      });
   };
 
   const handleLikeToggle = (designId: string, currentLiked: boolean) => {

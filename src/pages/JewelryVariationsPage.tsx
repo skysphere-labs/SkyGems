@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {

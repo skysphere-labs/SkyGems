@@ -1,10 +1,11 @@
+import React from 'react';
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { Search, Gem, ChevronDown, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import { getAllDesigns, type DesignMetadata } from '../services/storageService';
-import { listBackendDesigns } from '../services/skygemsApi';
+import { DESIGNS_UPDATED_EVENT, listBackendDesigns } from '../services/skygemsApi';
 
 const jewelryCategories = [
   { id: 'ring', name: 'Ring', emoji: '💍' },
@@ -24,10 +25,23 @@ export function Dashboard() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [filterOpen, setFilterOpen] = useState(false);
 
-  useEffect(() => {
+  const loadDesigns = () => {
     listBackendDesigns()
       .then(setAllDesigns)
       .catch(() => setAllDesigns(getAllDesigns()));
+  };
+
+  useEffect(() => {
+    loadDesigns();
+
+    const handleRefresh = () => loadDesigns();
+    window.addEventListener(DESIGNS_UPDATED_EVENT, handleRefresh);
+    window.addEventListener('focus', handleRefresh);
+
+    return () => {
+      window.removeEventListener(DESIGNS_UPDATED_EVENT, handleRefresh);
+      window.removeEventListener('focus', handleRefresh);
+    };
   }, []);
 
   const filteredDesigns = allDesigns.filter((d) => {

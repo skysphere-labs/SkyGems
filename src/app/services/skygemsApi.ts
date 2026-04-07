@@ -53,6 +53,7 @@ export interface RootGeneratedDesign {
 }
 
 export type DesignOwnerScope = 'all' | 'mine';
+export const DESIGNS_UPDATED_EVENT = 'skygems:designs-updated';
 
 interface DevBootstrapConfig {
   username?: string;
@@ -154,6 +155,12 @@ function buildBootstrapConfigKey(config: DevBootstrapConfig): string {
 function clearStoredSession() {
   sessionStorage.removeItem(DEV_SESSION_KEY);
   localStorage.removeItem(DEV_SESSION_KEY);
+}
+
+export function notifyDesignsUpdated() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(DESIGNS_UPDATED_EVENT));
+  }
 }
 
 function getStoredSession(): DevSession | null {
@@ -412,9 +419,13 @@ async function generateSingleConcept(
 export async function generateConceptSet(input: RootCreateInput): Promise<RootGeneratedDesign[]> {
   const count = Math.max(1, Math.min(input.variations || 4, 6));
   const variations = generateMultipleVariations(input.type, count);
-  return Promise.all(
+  const session = await ensureSession();
+  const results = await Promise.all(
     variations.map((v, i) => generateSingleConcept(input, v, i)),
   );
+  results.forEach((result) => mapGeneratedDesign(result, session.userId));
+  notifyDesignsUpdated();
+  return results;
 }
 
 // ── Design Operations ──
@@ -477,6 +488,25 @@ function mapBackendDesign(design: any): DesignMetadata {
     liked: existing?.liked ?? false,
     createdAt: new Date(design.createdAt).getTime(),
     updatedAt: new Date(design.updatedAt).getTime(),
+    tags: existing?.tags ?? [],
+    notes: existing?.notes ?? '',
+  };
+  upsertDesignMetadata(metadata);
+  return metadata;
+}
+
+function mapGeneratedDesign(result: RootGeneratedDesign, userId?: string): DesignMetadata {
+  const existing = getDesign(result.designId);
+  const metadata: DesignMetadata = {
+    id: result.designId,
+    prompt: result.prompt,
+    imageUrl: result.imageUrl,
+    createdByUserId: userId ?? existing?.createdByUserId,
+    ownedByCurrentUser: true,
+    features: result.features,
+    liked: existing?.liked ?? false,
+    createdAt: existing?.createdAt ?? Date.now(),
+    updatedAt: Date.now(),
     tags: existing?.tags ?? [],
     notes: existing?.notes ?? '',
   };

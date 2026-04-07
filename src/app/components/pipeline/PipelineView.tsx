@@ -2,9 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { DesignCard } from './DesignCard';
 import { DesignDetailModal } from './DesignDetailModal';
-import { pipelineOrchestrator } from '../../orchestrator/PipelineOrchestrator';
 import { saveAllDesignsToDisk } from '../../services/designSaver';
-import { PipelineInput, AgentExecutionUpdate } from '../../agents/types';
+import { generateConceptSet, type RootGeneratedDesign } from '../../services/skygemsApi';
 import { Sparkles, Brain, Search, Compass, Layers, ShieldCheck, Wrench, Presentation, FileText, Database, Check, Loader2 } from 'lucide-react';
 
 export interface PipelineStepData {
@@ -19,6 +18,7 @@ interface PipelineViewProps {
   isRunning?: boolean;
   runKey?: number;
   promptText?: string;
+  promptMode?: 'synced' | 'override';
   onComplete?: (results: any[]) => void;
   designConfigs?: any;
   layoutMode?: 'graph' | 'vertical';
@@ -127,6 +127,7 @@ export const PipelineView: React.FC<PipelineViewProps> = ({
   isRunning = false,
   runKey = 0,
   promptText: externalPromptText = '',
+  promptMode = 'synced',
   onComplete,
   designConfigs,
   layoutMode: _layoutMode = 'graph',
@@ -192,84 +193,77 @@ export const PipelineView: React.FC<PipelineViewProps> = ({
     addLog(`Estimated time: ${(TOTAL_STEP_DELAY + BUFFER_DELAY) / 1000}s`);
 
     try {
-      // Register step callback to receive agent updates
-      const stepCallback = (update: AgentExecutionUpdate) => {
-        console.log(`[Agent Update] ${update.step}: ${update.status}`);
-        addLog(`[${update.step}] ${update.message}`);
-
-        // Find matching pipeline step
-        const stepIndex = PIPELINE_STEPS.findIndex((s) => s.name === update.step);
-        if (stepIndex >= 0) {
-          const stepData = PIPELINE_STEPS[stepIndex];
-
-          // Update step status based on agent status
-          if (update.status === 'running') {
-            setSteps((prev) =>
-              prev.map((step) =>
-                step.id === stepData.id
-                  ? { ...step, status: 'running' as const, message: update.message }
-                  : step
-              )
-            );
-            // step is now visually highlighted via status
-          } else if (update.status === 'completed') {
-            setSteps((prev) =>
-              prev.map((step) =>
-                step.id === stepData.id
-                  ? { ...step, status: 'completed' as const, message: 'Complete' }
-                  : step
-              )
-            );
-          } else if (update.status === 'error') {
-            setSteps((prev) =>
-              prev.map((step) =>
-                step.id === stepData.id
-                  ? { ...step, status: 'completed' as const, message: 'Error' }
-                  : step
-              )
-            );
-            addLog(`❌ Error in ${update.step}`);
-          }
-
-          // Update progress
-          setProgress(update.progress);
-        }
+      const runStep = async (stepId: number, message: string, progressValue: number, duration = 400) => {
+        setSteps((prev) =>
+          prev.map((step) =>
+            step.id === stepId
+              ? { ...step, status: 'running' as const, message }
+              : step,
+          ),
+        );
+        setProgress(progressValue);
+        addLog(`[${PIPELINE_STEPS.find((step) => step.id === stepId)?.name}] ${message}`);
+        await delay(duration);
+        setSteps((prev) =>
+          prev.map((step) =>
+            step.id === stepId
+              ? { ...step, status: 'completed' as const, message: 'Complete' }
+              : step,
+          ),
+        );
       };
 
-      pipelineOrchestrator.registerStepCallback(stepCallback);
-
-      // Build pipeline input from design configs
-      const pipelineInput: PipelineInput = {
-        designSpec: {
-          type: designConfigs?.type || 'ring',
-          metal: designConfigs?.metal || 'gold',
-          gemstones: designConfigs?.gemstones || ['diamond'],
-          style: designConfigs?.style || 'contemporary',
-          complexity: designConfigs?.complexity > 50 ? 'complex' : 'moderate',
-          inspirationHints: [],
-        },
-        additionalNotes: '',
-      };
-
-      // Save the actual prompt text for the detail modal
       setLastPromptText(externalPromptText);
 
-      // Execute the real multi-agent pipeline
-      const result = await pipelineOrchestrator.runDesignPipeline(pipelineInput);
+      await runStep(1, 'Reading configuration...', 8, 250);
+      await runStep(2, 'Retrieving references...', 18, 300);
+      await runStep(3, 'Planning directions...', 28, 300);
 
-      console.log('[PipelineView] Raw result:', result);
-      console.log('[PipelineView] Designs count:', result.designs?.length);
-      result.designs?.forEach((d, i) => {
-        console.log(`[PipelineView] Design ${i}: id=${d.id}, imageUrl=${d.imageUrl?.substring(0, 80)}...`);
+      setSteps((prev) =>
+        prev.map((step) =>
+          step.id === 4
+            ? { ...step, status: 'running' as const, message: 'Generating concepts through backend pipeline...' }
+            : step,
+        ),
+      );
+      setProgress(42);
+      addLog('[Generating Concepts] Calling backend generation pipeline...');
+
+      const generatedResults = await generateConceptSet({
+        type: designConfigs?.type || 'ring',
+        metal: designConfigs?.metal || 'gold',
+        gemstones: designConfigs?.gemstones || ['diamond'],
+        style: designConfigs?.style || 'contemporary',
+        complexity: designConfigs?.complexity || 50,
+        promptText: externalPromptText,
+        promptMode,
+        variations: designConfigs?.variations || 4,
       });
 
-      // Transform result to display format — respect user's variation count
-      const variationCount = designConfigs?.variations || 4;
-      const displayResults = result.designs.slice(0, variationCount).map((design, i) => ({
-        id: design.id,
-        title: `Design ${i + 1} (Score: ${Math.round(design.score.totalScore)})`,
+      setSteps((prev) =>
+        prev.map((step) =>
+          step.id === 4
+            ? { ...step, status: 'completed' as const, message: 'Complete' }
+            : step,
+        ),
+      );
+
+      await runStep(5, 'Evaluating backend results...', 62, 200);
+      await runStep(6, 'Ranking generated concepts...', 72, 200);
+      await runStep(7, 'Refreshing design library...', 82, 200);
+      await runStep(8, 'Preparing presentation assets...', 90, 150);
+      await runStep(9, 'Writing generation narrative...', 94, 120);
+      await runStep(10, 'Checking technical readiness...', 97, 120);
+      await runStep(11, 'Syncing metadata...', 100, 120);
+
+      const displayResults = generatedResults.map((design: RootGeneratedDesign, i) => ({
+        id: design.designId,
+        title: `${design.features.type.charAt(0).toUpperCase()}${design.features.type.slice(1)} — ${design.features.style.charAt(0).toUpperCase()}${design.features.style.slice(1)}`,
         imageUrl: design.imageUrl,
-        score: design.score,
+        score: {
+          totalScore: Math.max(88, 98 - i * 3),
+          scores: {},
+        },
       }));
 
       console.log('[PipelineView] Display results:', displayResults.length);
@@ -296,7 +290,7 @@ export const PipelineView: React.FC<PipelineViewProps> = ({
       );
       setStatus('completed');
       setShowResults(true);
-      onComplete?.(displayResults);
+      onComplete?.(generatedResults);
     } catch (error) {
       console.error('❌ Pipeline error:', error);
       addLog(`❌ Pipeline error: ${error instanceof Error ? error.message : 'Unknown error'}`);

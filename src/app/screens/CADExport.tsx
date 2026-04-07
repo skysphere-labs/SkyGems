@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState } from 'react';
 import { Download, FileText, Check, Loader2 } from 'lucide-react';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
