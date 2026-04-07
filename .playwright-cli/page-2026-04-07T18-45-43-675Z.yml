@@ -1,0 +1,234 @@
+- generic [active] [ref=e1]:
+  - main [ref=e3]:
+    - generic [ref=e4]:
+      - navigation [ref=e5]:
+        - generic [ref=e6]:
+          - button "Close sidebar" [ref=e8] [cursor=pointer]:
+            - img "SidebarBold" [ref=e9]
+          - button "Go to home" [ref=e12] [cursor=pointer]:
+            - img "Logo" [ref=e13]
+        - generic [ref=e22]:
+          - button "Help" [ref=e24] [cursor=pointer]:
+            - img "QuestionMarkFill" [ref=e25]
+          - button "Discord" [ref=e27] [cursor=pointer]:
+            - img "DiscordFill" [ref=e28]
+          - button "YouTube" [ref=e30] [cursor=pointer]:
+            - img "YoutubeFill" [ref=e31]
+          - button "Gift Center" [ref=e35] [cursor=pointer]:
+            - img "GiftBold" [ref=e36]
+          - button "Pricing" [ref=e38] [cursor=pointer]:
+            - generic [ref=e39]: Pricing
+          - button "Login" [ref=e40] [cursor=pointer]:
+            - generic [ref=e41]: Login
+          - button "Start for Free ArrowRight" [ref=e42] [cursor=pointer]:
+            - generic [ref=e43]: Start for Free
+            - img "ArrowRight" [ref=e45]
+      - generic [ref=e49]:
+        - complementary "Tool favorites" [ref=e51]:
+          - generic [ref=e52]:
+            - button "Widgets All Tools" [ref=e54] [cursor=pointer]:
+              - img "Widgets" [ref=e57]
+              - generic [ref=e59]: All Tools
+            - button "HappyemojiFill Characters & Worlds" [ref=e61] [cursor=pointer]:
+              - img "HappyemojiFill" [ref=e64]
+              - generic [ref=e66]: Characters & Worlds
+            - generic [ref=e67]:
+              - paragraph [ref=e69]: Pinned
+              - button "AddBold Add Tools" [ref=e72] [cursor=pointer]:
+                - img "AddBold" [ref=e75]
+                - generic [ref=e77]: Add Tools
+              - generic [ref=e78]:
+                - generic [ref=e80]:
+                  - button "DragIndicator" [ref=e81]:
+                    - img "DragIndicator" [ref=e82]
+                  - button "Create Image Create Image" [ref=e84] [cursor=pointer]:
+                    - img "Create Image" [ref=e86]
+                    - generic [ref=e87]: Create Image
+                - generic [ref=e89]:
+                  - button "DragIndicator" [ref=e90]:
+                    - img "DragIndicator" [ref=e91]
+                  - button "Frame to Video Frame to Video" [ref=e93] [cursor=pointer]:
+                    - img "Frame to Video" [ref=e95]
+                    - generic [ref=e96]: Frame to Video
+                - generic [ref=e98]:
+                  - button "DragIndicator" [ref=e99]:
+                    - img "DragIndicator" [ref=e100]
+                  - button "Text to Video Text to Video" [ref=e102] [cursor=pointer]:
+                    - img "Text to Video" [ref=e104]
+                    - generic [ref=e105]: Text to Video
+                - generic [ref=e107]:
+                  - button "DragIndicator" [ref=e108]:
+                    - img "DragIndicator" [ref=e109]
+                  - button "Motion Sync Motion Sync" [ref=e111] [cursor=pointer]:
+                    - img "Motion Sync" [ref=e113]
+                    - generic [ref=e114]: Motion Sync
+                - generic [ref=e116]:
+                  - button "DragIndicator" [ref=e117]:
+                    - img "DragIndicator" [ref=e118]
+                  - button "Lip-Sync Lip-Sync" [ref=e120] [cursor=pointer]:
+                    - img "Lip-Sync" [ref=e122]
+                    - generic [ref=e123]: Lip-Sync
+                - generic [ref=e125]:
+                  - button "DragIndicator" [ref=e126]:
+                    - img "DragIndicator" [ref=e127]
+                  - button "Edit Image Edit Image" [ref=e129] [cursor=pointer]:
+                    - img "Edit Image" [ref=e131]
+                    - generic [ref=e132]: Edit Image
+                - generic [ref=e134]:
+                  - button "DragIndicator" [ref=e135]:
+                    - img "DragIndicator" [ref=e136]
+                  - button "Edit Video Edit Video" [ref=e138] [cursor=pointer]:
+                    - img "Edit Video" [ref=e140]
+                    - generic [ref=e141]: Edit Video
+                - status [ref=e142]
+        - separator [ref=e143]
+        - generic [ref=e145]:
+          - generic [ref=e147]:
+            - generic [ref=e233]:
+              - button "Go back" [ref=e701] [cursor=pointer]:
+                - img "ArrowLeft" [ref=e702]
+              - heading "Image Upscale" [level=1] [ref=e704]:
+                - generic [ref=e238]: Image Upscale
+            - generic [ref=e709]:
+              - generic [ref=e710]:
+                - heading "Choose what to upscale" [level=3] [ref=e714]
+                - button "Gallery Add Upload or choose an image Click or drag to upload / choose from History" [ref=e719] [cursor=pointer]:
+                  - generic [ref=e721]:
+                    - generic [ref=e722]:
+                      - img "Gallery" [ref=e726]
+                      - img "Add" [ref=e731]
+                    - generic [ref=e733]:
+                      - paragraph [ref=e734]: Upload or choose an image
+                      - paragraph [ref=e735]:
+                        - text: Click or drag to upload / choose from
+                        - button "History" [ref=e736]
+              - generic [ref=e737]:
+                - heading "Choose an upscale mode" [level=3] [ref=e741]
+                - radiogroup [ref=e743]:
+                  - radio "Precise" [checked] [ref=e744] [cursor=pointer]:
+                    - generic [ref=e745]: Precise
+                  - radio [checked]
+                  - radio "Refined" [ref=e746] [cursor=pointer]:
+                    - generic [ref=e747]: Refined
+                  - radio
+                  - radio "Creative" [ref=e748] [cursor=pointer]:
+                    - generic [ref=e749]: Creative
+                  - radio
+              - generic [ref=e750]:
+                - heading "Version" [level=3] [ref=e754]
+                - radiogroup [ref=e756]:
+                  - radio "Fast" [ref=e757] [cursor=pointer]:
+                    - generic [ref=e758]: Fast
+                  - radio
+                  - radio "Ultra" [checked] [ref=e759] [cursor=pointer]:
+                    - generic [ref=e760]: Ultra
+                  - radio [checked]
+              - generic [ref=e761]:
+                - generic [ref=e762]:
+                  - heading "Skin enhancement" [level=3] [ref=e765]
+                  - paragraph [ref=e766]: Enhances facial skin details. Best for portraits and close-ups.
+                - generic [ref=e768]:
+                  - button "On" [ref=e769] [cursor=pointer]
+                  - button "Off" [ref=e770] [cursor=pointer]
+              - button "Create for Free" [ref=e773] [cursor=pointer]:
+                - generic [ref=e774]: Create for Free
+            - generic [ref=e149]:
+              - button "Video" [ref=e150] [cursor=pointer]:
+                - img "VideoFill" [ref=e152]
+              - button "Image" [ref=e154] [cursor=pointer]:
+                - img "GalleryFill" [ref=e156]
+                - generic [ref=e259]: Image
+              - button "Character" [ref=e160] [cursor=pointer]:
+                - img "HappyemojiFill" [ref=e162]
+              - button "World" [ref=e164] [cursor=pointer]:
+                - img "AiWorldFill" [ref=e166]
+              - button "Audio" [ref=e170] [cursor=pointer]:
+                - img "VoiceSquareFill" [ref=e172]
+          - separator [ref=e174]
+          - generic [ref=e177]:
+            - generic [ref=e178]:
+              - generic [ref=e179]:
+                - button "ReverseTimeArrowBold Creations ArrowDownBold" [ref=e180] [cursor=pointer]:
+                  - img "ReverseTimeArrowBold" [ref=e181]
+                  - generic [ref=e185]: Creations
+                  - img "ArrowDownBold" [ref=e186]
+                - button "FolderBold Collections" [ref=e188] [cursor=pointer]:
+                  - img "FolderBold" [ref=e189]
+                  - generic [ref=e191]: Collections
+              - generic [ref=e192]:
+                - slider [ref=e198]
+                - button "ShapesBold All" [ref=e200] [cursor=pointer]:
+                  - img "ShapesBold" [ref=e201]
+                  - generic [ref=e203]: All
+                - button "Favorites" [ref=e204] [cursor=pointer]:
+                  - img "StarBold" [ref=e205]
+                - button "Copyright Checked" [ref=e207] [cursor=pointer]:
+                  - img "ShieldBold" [ref=e208]
+                - button "Filters" [ref=e211] [cursor=pointer]:
+                  - img "FilterBold" [ref=e212]
+                - button "Grids4Bold" [ref=e214] [cursor=pointer]:
+                  - img "Grids4Bold" [ref=e215]
+                - generic [ref=e217] [cursor=pointer]:
+                  - generic:
+                    - img "SearchBold"
+                  - textbox "Search"
+            - generic [ref=e266]:
+              - generic [ref=e267]:
+                - heading "Enhance1 Free AI Image Creation" [level=2] [ref=e268]:
+                  - img "Enhance1" [ref=e269]
+                  - generic [ref=e272]: Free AI Image Creation
+                - generic [ref=e273]:
+                  - generic [ref=e274]:
+                    - img "ModelGoogle" [ref=e275]
+                    - text: Nano Banana 2/Pro
+                  - generic [ref=e278]:
+                    - img "ModelSeedanceSeedream" [ref=e279]
+                    - text: Seedream 5.0 Lite
+                  - generic [ref=e281]:
+                    - img "ModelKling" [ref=e282]
+                    - text: Kling 3.0 Omni
+                  - generic [ref=e285]:
+                    - img "ModelOpenalSora2" [ref=e286]
+                    - text: GPT Image 1.5
+                  - generic [ref=e289]:
+                    - img "ModelWanQwenZImage" [ref=e290]
+                    - text: Z-Image
+                  - generic [ref=e293]:
+                    - img "ModelFlux" [ref=e294]
+                    - text: FLUX.2
+                - paragraph [ref=e299]: Generate stunning images from simple prompts using powerful AI models. Create artwork, realistic photos, illustrations, and product visuals for social media, marketing, design projects, or creative inspiration in just seconds.
+              - button "Sign up to create for FREE" [ref=e300] [cursor=pointer]:
+                - generic [ref=e301]: Sign up to create for FREE
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - img "Info"
+                  - generic:
+                    - generic:
+                      - paragraph: Holding shift key or select area to select multiple assets
+                      - button "Dismiss":
+                        - img "Close"
+                - generic:
+                  - generic:
+                    - button "CloseBold":
+                      - img "CloseBold"
+                    - paragraph:
+                      - text: "0"
+                      - generic: items
+                      - text: selected
+                  - generic:
+                    - button "DownloadArrowBold Download":
+                      - generic:
+                        - img "DownloadArrowBold"
+                      - generic: Download
+                    - button "FolderAddBold":
+                      - img "FolderAddBold"
+                    - button "StarBold":
+                      - img "StarBold"
+                    - button "ShieldBold" [ref=e228]:
+                      - img "ShieldBold" [ref=e229]
+                    - button "TrashBold":
+                      - img "TrashBold"
+  - region "Notifications alt+T"
+  - alert [ref=e231]

@@ -70,6 +70,11 @@ export const DevBootstrapRequestSchema = z.object({
   projectDescription: z.string().trim().max(500).optional(),
 });
 
+export const DevLoginRequestSchema = z.object({
+  username: z.string().trim().min(3).max(64),
+  password: z.string().min(4).max(128),
+});
+
 export const DevBootstrapResponseSchema = z.object({
   mode: z.literal("dev_bootstrap"),
   sessionToken: z.string().min(1),
@@ -98,6 +103,38 @@ export const DevBootstrapResponseSchema = z.object({
     user: z.boolean(),
     project: z.boolean(),
     membership: z.boolean(),
+  }),
+});
+
+export const DevLoginResponseSchema = DevBootstrapResponseSchema;
+
+export const AuthSessionResponseSchema = z.object({
+  authMode: z.enum(["auth0", "dev_bootstrap"]),
+  tenant: z.object({
+    id: TenantIdSchema,
+    slug: z.string().min(1).max(64),
+    name: z.string().min(1).max(120),
+  }),
+  user: z.object({
+    id: UserIdSchema,
+    email: z.string().email(),
+    displayName: z.string().nullable(),
+    authSubject: z.string().min(1).max(320),
+    role: z.enum(["owner", "editor", "viewer"]),
+    permissions: z.array(z.string().min(1).max(160)),
+  }),
+  access: z.object({
+    memberships: z.array(
+      z.object({
+        projectId: ProjectIdSchema,
+        role: z.enum(["owner", "editor", "viewer"]),
+      }),
+    ),
+    accessibleProjectCount: z.number().int().nonnegative(),
+    ownedProjectCount: z.number().int().nonnegative(),
+    accessibleDesignCount: z.number().int().nonnegative(),
+    ownedDesignCount: z.number().int().nonnegative(),
+    accessibleArtifactCount: z.number().int().nonnegative(),
   }),
 });
 
@@ -130,6 +167,8 @@ export const PairPublicSchema = z.object({
 export const DesignSummarySchema = z.object({
   designId: DesignIdSchema,
   projectId: ProjectIdSchema,
+  createdByUserId: UserIdSchema,
+  ownedByCurrentUser: z.boolean(),
   parentDesignId: DesignIdSchema.nullable(),
   sourceKind: DesignSourceKindEnum,
   sourceGenerationId: GenerationIdSchema.nullable(),
@@ -192,6 +231,12 @@ export const ProjectDesignsResponseSchema = z.object({
   selectedDesignId: DesignIdSchema.nullable(),
   total: z.number().int().nonnegative(),
   items: z.array(z.object(DesignSummarySchema.shape)),
+});
+
+export const DesignOwnerScopeSchema = z.enum(["all", "mine"]);
+
+export const ProjectDesignsQuerySchema = z.object({
+  ownerScope: DesignOwnerScopeSchema.default("all"),
 });
 
 export const DesignDetailResponseSchema = z.object({
@@ -277,6 +322,7 @@ export const CadRequestSchema = z.object({
 
 export const GallerySearchRequestSchema = z.object({
   projectId: ProjectIdSchema.optional(),
+  ownerScope: DesignOwnerScopeSchema.default("all"),
   query: z.string().trim().max(200).default(""),
   filters: z
     .object({
@@ -300,6 +346,8 @@ export const GallerySearchResponseSchema = z.object({
     z.object({
       designId: DesignIdSchema,
       projectId: ProjectIdSchema,
+      createdByUserId: UserIdSchema,
+      ownedByCurrentUser: z.boolean(),
       displayName: z.string(),
       promptSummary: z.string(),
       selectionState: SelectionStateEnum,
@@ -348,7 +396,10 @@ export const ProjectResponseSchema = z.object({
 export type PromptPreviewRequest = z.infer<typeof PromptPreviewRequestSchema>;
 export type PromptPreviewResponse = z.infer<typeof PromptPreviewResponseSchema>;
 export type DevBootstrapRequest = z.infer<typeof DevBootstrapRequestSchema>;
+export type DevLoginRequest = z.infer<typeof DevLoginRequestSchema>;
 export type DevBootstrapResponse = z.infer<typeof DevBootstrapResponseSchema>;
+export type DevLoginResponse = z.infer<typeof DevLoginResponseSchema>;
+export type AuthSessionResponse = z.infer<typeof AuthSessionResponseSchema>;
 export type GenerateDesignRequest = z.infer<typeof GenerateDesignRequestSchema>;
 export type GenerateDesignResponse = z.infer<typeof GenerateDesignResponseSchema>;
 export type PairPublic = z.infer<typeof PairPublicSchema>;
@@ -357,6 +408,8 @@ export type GenerationError = z.infer<typeof GenerationErrorSchema>;
 export type GenerationStatusResponse = z.infer<typeof GenerationStatusResponseSchema>;
 export type DesignGenerationSummary = z.infer<typeof DesignGenerationSummarySchema>;
 export type ProjectDesignsResponse = z.infer<typeof ProjectDesignsResponseSchema>;
+export type DesignOwnerScope = z.infer<typeof DesignOwnerScopeSchema>;
+export type ProjectDesignsQuery = z.infer<typeof ProjectDesignsQuerySchema>;
 export type DesignDetailResponse = z.infer<typeof DesignDetailResponseSchema>;
 export type DesignSelectResponse = z.infer<typeof DesignSelectResponseSchema>;
 export type RefineRequest = z.infer<typeof RefineRequestSchema>;

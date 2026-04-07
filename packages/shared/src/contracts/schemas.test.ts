@@ -5,15 +5,25 @@ import {
   DesignSummarySchema,
   DesignDetailResponseSchema,
   DesignSelectResponseSchema,
+  AuthSessionResponseSchema,
   DevBootstrapResponseSchema,
+  GallerySearchRequestSchema,
   type GenerateDesignRequest,
   GenerateDesignResponseSchema,
   GenerateDesignRequestSchema,
   GenerationStatusResponseSchema,
   PromptPreviewResponseSchema,
+  ProjectDesignsQuerySchema,
   ProjectDesignsResponseSchema,
 } from "./api.ts";
-import { buildPromptPreview, buildPromptPreviewWithOptions, buildDesignDna } from "../domain/design-dna.ts";
+import {
+  buildPromptBundle,
+  buildPromptPreview,
+  buildPromptPreviewWithOptions,
+  buildDesignDna,
+  formatPromptBundlePreviewText,
+  parsePromptBundleText,
+} from "../domain/design-dna.ts";
 import { buildArtifactR2Key } from "../domain/artifacts.ts";
 
 const baseCreateInput = {
@@ -30,6 +40,11 @@ test("generate design request schema accepts the locked create contract", () => 
   const parsed = GenerateDesignRequestSchema.parse(baseCreateInput);
   assert.equal(parsed.pairStandardVersion, "pair_v1");
   assert.deepEqual(parsed.gemstones, ["diamond", "ruby"]);
+});
+
+test("owner scope defaults keep list and gallery requests backward compatible", () => {
+  assert.equal(ProjectDesignsQuerySchema.parse({}).ownerScope, "all");
+  assert.equal(GallerySearchRequestSchema.parse({}).ownerScope, "all");
 });
 
 test("design dna generation is deterministic for the same normalized input", async () => {
@@ -85,6 +100,28 @@ test("prompt preview can compile provider-aware prompt text without changing the
   assert.match(preview.promptText, /Google image prompting/);
 });
 
+test("prompt bundle preview text round-trips into an override bundle", async () => {
+  const designDna = await buildDesignDna(baseCreateInput);
+  const promptBundle = buildPromptBundle(designDna, "Focus on high-end craftsmanship", {
+    provider: "xai",
+  });
+
+  assert.deepEqual(
+    parsePromptBundleText(formatPromptBundlePreviewText(promptBundle)),
+    promptBundle,
+  );
+});
+
+test("prompt override text without preview labels applies to both prompt lanes", () => {
+  const override = parsePromptBundleText("single override prompt", {
+    fallbackNegativePrompt: "avoid clutter",
+  });
+
+  assert.equal(override.sketchPrompt, "single override prompt");
+  assert.equal(override.renderPrompt, "single override prompt");
+  assert.equal(override.negativePrompt, "avoid clutter");
+});
+
 test("dev bootstrap response schema locks the signed local bootstrap contract", () => {
   const parsed = DevBootstrapResponseSchema.parse({
     mode: "dev_bootstrap",
@@ -120,11 +157,48 @@ test("dev bootstrap response schema locks the signed local bootstrap contract", 
   assert.equal(parsed.project.name, "SkyGems Sandbox");
 });
 
+test("auth session response schema captures tenant-scoped access counts", () => {
+  const parsed = AuthSessionResponseSchema.parse({
+    authMode: "dev_bootstrap",
+    tenant: {
+      id: "ten_01J0F8M0G7J0F8M0G7J0F8M0G7",
+      slug: "skygems-dev",
+      name: "SkyGems Dev Tenant",
+    },
+    user: {
+      id: "usr_01J0F8M0G7J0F8M0G7J0F8M0G7",
+      email: "dev@skygems.local",
+      displayName: "SkyGems Dev User",
+      authSubject: "dev:skygems-dev:dev@skygems.local",
+      role: "owner",
+      permissions: ["project:read", "design:create"],
+    },
+    access: {
+      memberships: [
+        {
+          projectId: "prj_01J0F8M0G7J0F8M0G7J0F8M0G7",
+          role: "owner",
+        },
+      ],
+      accessibleProjectCount: 1,
+      ownedProjectCount: 1,
+      accessibleDesignCount: 4,
+      ownedDesignCount: 4,
+      accessibleArtifactCount: 8,
+    },
+  });
+
+  assert.equal(parsed.access.memberships[0]?.role, "owner");
+  assert.equal(parsed.access.accessibleArtifactCount, 8);
+});
+
 test("design summary and generation status schemas carry backend-owned selection truth", async () => {
   const designDna = await buildDesignDna(baseCreateInput);
   const design = DesignSummarySchema.parse({
     designId: "dsn_01J0F8M0G7J0F8M0G7J0F8M0G7",
     projectId: baseCreateInput.projectId,
+    createdByUserId: "usr_01J0F8M0G7J0F8M0G7J0F8M0G7",
+    ownedByCurrentUser: true,
     parentDesignId: null,
     sourceKind: "create",
     sourceGenerationId: "gen_01J0F8M0G7J0F8M0G7J0F8M0G7",
@@ -211,6 +285,8 @@ test("design detail, project designs, and selection responses lock the explicit 
   const design = {
     designId: "dsn_01J0F8M0G7J0F8M0G7J0F8M0G7",
     projectId: baseCreateInput.projectId,
+    createdByUserId: "usr_01J0F8M0G7J0F8M0G7J0F8M0G7",
+    ownedByCurrentUser: true,
     parentDesignId: null,
     sourceKind: "create" as const,
     sourceGenerationId: "gen_01J0F8M0G7J0F8M0G7J0F8M0G7",
@@ -293,6 +369,7 @@ test("design detail, project designs, and selection responses lock the explicit 
   });
 
   assert.equal(detail.design.sourceGenerationId, "gen_01J0F8M0G7J0F8M0G7J0F8M0G7");
+  assert.equal(detail.design.ownedByCurrentUser, true);
   assert.equal(list.items[0].projectId, baseCreateInput.projectId);
   assert.equal(selection.previousSelectedDesignId, "dsn_01J0F8M0G7J0F8M0G7J0F8M0G8");
 });

@@ -1,0 +1,477 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e3]:
+    - generic [ref=e6]:
+      - link "Logo" [ref=e7] [cursor=pointer]:
+        - /url: https://openart.ai/home
+        - img "Logo" [ref=e8]
+      - navigation [ref=e9]:
+        - generic [ref=e10]:
+          - button "Features" [ref=e13] [cursor=pointer]:
+            - generic [ref=e14]: 
+            - generic [ref=e15]: Features
+          - link "Discover" [ref=e18] [cursor=pointer]:
+            - /url: https://openart.ai/discovery
+            - generic [ref=e19]: Discover
+            - article [ref=e20]
+          - link "Pricing" [ref=e22] [cursor=pointer]:
+            - /url: https://openart.ai/pricing
+            - generic [ref=e23]: Pricing
+          - link "Blog" [ref=e26] [cursor=pointer]:
+            - /url: https://openart.ai/blog
+            - generic [ref=e27]: Blog
+          - generic:
+            - generic: 
+      - button [ref=e30] [cursor=pointer]:
+        - generic [ref=e31]: 
+      - link "Start creating now" [ref=e33] [cursor=pointer]:
+        - /url: https://openart.ai/home
+        - generic [ref=e35]: Start creating now
+  - generic [ref=e37]:
+    - generic [ref=e38]:
+      - generic [ref=e39]:
+        - generic [ref=e40]:
+          - heading "Where Ideas Become Visual" [level=1] [ref=e42]:
+            - strong [ref=e43]: Where Ideas Become Visual
+          - heading "Stories." [level=1] [ref=e46]:
+            - strong [ref=e47]: Stories.
+        - paragraph [ref=e50]: OpenArt turns imagination into visual stories—from idea to final frame. Make wonders with OpenArt.
+      - link "Start creating now It's free! ->" [ref=e53] [cursor=pointer]:
+        - /url: https://openart.ai/home
+        - text: Start creating now
+        - generic [ref=e54]: It's free!
+        - text: "->"
+    - complementary [ref=e58]:
+      - generic [ref=e67]: Unlimited Possibility
+  - generic [ref=e69]:
+    - iframe [ref=e73]:
+      - generic [active] [ref=f1e1]:
+        - generic "YouTube Video Player" [ref=f1e3]
+        - generic [ref=f1e5]:
+          - generic:
+            - generic:
+              - button "Play video" [ref=f1e10] [cursor=pointer]
+              - button "Hide player controls" [ref=f1e12] [cursor=pointer]
+              - generic [ref=f1e14]:
+                - generic [ref=f1e19]:
+                  - generic [ref=f1e20]:
+                    - link "OpenArt Story - Turn Anything Into a Ready-to-post Video With One Click" [ref=f1e21] [cursor=pointer]:
+                      - /url: https://www.youtube.com/watch?v=jtfRb1ULI3M
+                    - link "OpenArt" [ref=f1e22] [cursor=pointer]:
+                      - /url: /channel/UCbSmO2zxCs6m7Ve2CVd6mtg
+                      - generic [ref=f1e23]: OpenArt
+                  - generic [ref=f1e24]:
+                    - button [ref=f1e25] [cursor=pointer]
+                    - generic [ref=f1e27]:
+                      - generic: OpenArt
+                      - generic: 346K subscribers
+                - generic [ref=f1e28]:
+                  - button "Share" [ref=f1e31] [cursor=pointer]:
+                    - generic [ref=f1e35]:
+                      - img
+                  - link "Watch on YouTube" [ref=f1e42] [cursor=pointer]:
+                    - /url: https://www.youtube.com/watch?v=jtfRb1ULI3M
+                    - generic [ref=f1e45]:
+                      - text: Watch on
+                      - img [ref=f1e47]:
+                        - generic [ref=f1e49]:
+                          - img
+    - generic [ref=e75]: Trusted by millions of artists and businesses worldwide
+  - generic [ref=e84]:
+    - generic [ref=e85]:
+      - heading "What makes OpenArt different" [level=1] [ref=e87]
+      - generic [ref=e88]:
+        - img "Saas Webflow Template - Basel - Designed by Azwedo.com and Wedoflow.com"
+    - generic [ref=e89]:
+      - generic [ref=e90]:
+        - tablist [ref=e91]:
+          - tab "Character Vlog" [ref=e92] [cursor=pointer]:
+            - generic [ref=e93]: Character Vlog
+          - tab "Music Video" [selected] [ref=e94] [cursor=pointer]:
+            - generic [ref=e95]: Music Video
+          - tab "Explainer Video" [ref=e96] [cursor=pointer]:
+            - generic [ref=e97]: Explainer Video
+          - tab "From Scratch" [ref=e98] [cursor=pointer]:
+            - generic [ref=e99]: From Scratch
+        - generic:
+          - tabpanel "Music Video"
+      - generic [ref=e100]:
+        - heading "OpenArt turns your ideas into stunning visuals in minutes." [level=2] [ref=e103]:
+          - strong [ref=e104]: OpenArt turns your ideas into stunning visuals in minutes.
+        - paragraph [ref=e107]: OpenArt gives you the power to turn any idea into a captivating visual story, within minutes.Whether you're creating viral social media posts, explaining a concept, or building brand content, OpenArt is where ideas become visual stories.
+        - link "Start creating now ->" [ref=e110] [cursor=pointer]:
+          - /url: https://openart.ai/story
+    - generic [ref=e112]:
+      - heading "Set things in motion with our photo to video converter" [level=2] [ref=e115]:
+        - strong [ref=e116]: Set things in motion with our photo to video converter
+      - paragraph [ref=e119]: Creating a tutorial? Making a montage? Producing an ad? Make the most out of your photos. Convert an image to video on OpenArt for free and use our intuitive editing tools to make your visual story come alive.
+      - link "Start video now ->" [ref=e122] [cursor=pointer]:
+        - /url: https://openart.ai/suite/animate-video
+    - generic [ref=e124]:
+      - heading "Unleash your creativity with boundary-free AI drawing" [level=2] [ref=e127]:
+        - strong [ref=e128]: Unleash your creativity with boundary-free AI drawing
+      - paragraph [ref=e131]: Break free from the constraints of traditional AI art generators. With OpenArt, using prompts is optional, allowing you to bring your visions to life unrestricted. Interact with our AI on your terms and unleash creativity like never before.
+      - link "Start creating now ->" [ref=e134] [cursor=pointer]:
+        - /url: https://openart.ai/home
+    - generic [ref=e136]:
+      - heading "Craft your characters and stories with ease" [level=2] [ref=e139]:
+        - strong [ref=e140]: Craft your characters and stories with ease
+      - paragraph [ref=e143]: OpenArt Characters lets you create images of consistent characters from just one image or description. Pose, place, and combine them in any scene for infinite storytelling possibilities.
+      - link "Create a character now ->" [ref=e146] [cursor=pointer]:
+        - /url: https://openart.ai/suite/character
+    - generic [ref=e148]:
+      - heading "Edit, iterate, or enhance with advanced AI art tools" [level=2] [ref=e151]:
+        - strong [ref=e152]: Edit, iterate, or enhance with advanced AI art tools
+      - paragraph [ref=e155]: Experience the future of image creation with OpenArt's innovative suite of AI-powered tools. From effortless InPainting to precise object removal, our advanced features empower you to achieve stunning transformations in seconds.
+      - link "Experience our AI editing suite today ->" [ref=e158] [cursor=pointer]:
+        - /url: https://openart.ai/suite/edit-image
+  - generic [ref=e161]:
+    - heading "Frequently Asked Questions" [level=1] [ref=e165]
+    - generic [ref=e168]:
+      - generic [ref=e169]:
+        - generic [ref=e170] [cursor=pointer]:
+          - generic [ref=e171]:
+            - strong [ref=e174]: What is OpenArt?
+            - img [ref=e177]
+          - paragraph [ref=e179]:
+            - text: OpenArt is an AI-powered art platform where users can create images using pre-built models or by training their own models. A suite of AI tools is provided to enhance the creation of the artwork. We also have an
+            - link "active Discord community" [ref=e180]:
+              - /url: https://discord.com/invite/openart-ai-1009536403555750018
+            - text: where OpenArt Users can connect, engage, share ideas, and collaborate on artistic projects.
+        - generic [ref=e181] [cursor=pointer]:
+          - generic [ref=e182]:
+            - strong [ref=e185]: What is an AI Art Generator?
+            - img [ref=e188]
+          - paragraph [ref=e190]:
+            - text: An AI art generator like OpenArt leverages state-of-the-art generative AI technologies to convert user-provided textual prompts into exquisite visual artworks. These generators can imitate a wide range of artistic styles by utilizing complex algorithms such as diffusion models. This technology spans from replicating the intricate brushwork found in Renaissance oil paintings to creating dynamic, abstract visuals akin to modern digital art. Users have the opportunity to craft custom images, elaborate illustrations, or detailed digital paintings effortlessly. By simply providing descriptive prompts, they unlock the potential to produce artwork that is both unique and reflective of their personal vision. This process not only democratizes art creation, making it accessible regardless of one's traditional artistic skills, but it also paves the way for innovative expressions in art.
+            - text: ‍
+        - generic [ref=e191] [cursor=pointer]:
+          - generic [ref=e192]:
+            - strong [ref=e195]: What plans do you currently offer?
+            - img [ref=e198]
+          - paragraph [ref=e200]:
+            - text: OpenArt offers a
+            - link "variety of plans" [ref=e201]:
+              - /url: https://openart.ai/pricing
+            - text: "for users ages 18 and up. Here are our current plans:"
+            - text: ‍
+            - link "FREE" [ref=e202]:
+              - /url: https://openart.ai/pricing
+              - strong [ref=e203]: FREE
+            - text: "Perfect for the ultimate newbie, this plan is 100% free, with no credit card required! The Free Plan includes up to 4 parallel generations and a daily free credits on the basic models including the newest Stable Diffusion XL model (Image size up to 512 x 512 pixels, up to 25 steps). BONUS: We are currently offering new users a bonus of 20 free credits to explore our premium models, and if you join our Discord community, you'll receive even more additional free credits. (Note: Bonuses are subject to change/withdrawal at any time)."
+            - text: ‍
+            - strong: ‍
+            - text: ‍
+            - link "STARTER" [ref=e204]:
+              - /url: https://openart.ai/pricing
+              - strong [ref=e205]: STARTER
+            - text: This plan is perfect for the frequent experimenter who wants a deeper dive into the world of AI art. The Starter Plan includes
+            - strong [ref=e206]: 5,000 credits
+            - text: per month, up to
+            - strong [ref=e207]: 8 parallel generations
+            - text: ", 20+ public models, all community models,"
+            - strong [ref=e208]: 2 fine-tuned models
+            - text: ", access to the exclusive premium AI tools (e.g., Creative Upscaler, Sketch to Image), editing with inpainting, Img2Img, ControlNet, 2/4upscale image, face/anime enhancement and more!"
+            - text: ‍
+            - link "HOBBYIST" [ref=e209]:
+              - /url: https://openart.ai/pricing
+              - strong [ref=e210]: HOBBYIST
+            - text: Our most popular plan! The Hobbyist is for AI art enthusiasts and regular project makers seeking advanced capabilities. The Hobbyist Plan includes
+            - strong [ref=e211]: 15,000 credits
+            - text: per month, up to
+            - strong [ref=e212]: 16 parallel generations
+            - text: ","
+            - strong [ref=e213]: 4 custom fine-tuned models
+            - text: every month, plus everything included in the Starter plan.
+            - text: ‍
+            - text: ‍
+            - link "PRO" [ref=e214]:
+              - /url: https://openart.ai/pricing
+              - strong [ref=e215]: PRO
+            - text: Ready to take your art to the Pro level? We've got you covered! Our Pro plan is for dedicated creators and businesses to experience the full power of OpenArt, including a faster generation speed!The Pro Plan includes
+            - strong [ref=e216]: UNLIMITED credits
+            - text: ", up to"
+            - strong [ref=e217]: 32 parallel generations
+            - text: ", and"
+            - strong [ref=e218]: 8 new custom fine-tuned models
+            - text: every month, and everything included at the Hobbyist & Starter levels.
+        - generic [ref=e219] [cursor=pointer]:
+          - generic [ref=e220]:
+            - strong [ref=e223]: What makes OpenArt different from other AI art generators?
+            - img [ref=e226]
+          - paragraph [ref=e228]:
+            - text: OpenArt stands out from other AI art generators due to its focus on high-quality art creation and comprehensive support for both amateur and professional artists. Unlike many other platforms, OpenArt offers a variety of advanced tools and models that cater to different artistic needs and preferences. These include high-resolution image generation, a wide range of artistic styles and models, ultimate image upscale, AI image editing tools, and the ability to fine-tune models to specific artistic visions. Additionally, OpenArt emphasizes user education through resources like the
+            - link "Prompt Book" [ref=e229]:
+              - /url: https://openart.ai/promptbook
+            - text: ","
+            - link "Model Training Book" [ref=e230]:
+              - /url: https://openart.ai/modeltrainingbook
+            - text: ","
+            - link "YouTube tutorials" [ref=e231]:
+              - /url: https://www.youtube.com/@openart_ai
+            - text: ", which are designed to enhance user understanding and capabilities in AI-driven art creation."
+        - generic [ref=e232] [cursor=pointer]:
+          - generic [ref=e233]:
+            - strong [ref=e236]: Can OpenArt help me improve my artistic skills?
+            - img [ref=e239]
+          - paragraph [ref=e241]: Absolutely! OpenArt is designed not only as a tool for creating art but also as a platform for learning and skill development. Users can experiment with various styles and techniques without the need for traditional artistic training, which can accelerate the learning process and inspire creativity. The platform provides detailed feedback on art creation processes, allowing users to refine their techniques and understand art concepts better. Moreover, OpenArt offers community models and collaborative projects on its Discord channel, where users can receive critiques and advice from a community of like-minded artists and AI enthusiasts. This supportive environment fosters both personal growth and artistic improvement.
+        - generic [ref=e242] [cursor=pointer]:
+          - generic [ref=e243]:
+            - strong [ref=e246]: How does an AI art generator transform my ideas into images?
+            - img [ref=e249]
+          - paragraph [ref=e251]: OpenArt uses advanced AI to interpret your textual prompts and convert them into visual art. This process involves neural networks that have been trained on a diverse dataset, allowing the AI to apply various artistic styles and elements to produce unique artworks.
+        - generic [ref=e252] [cursor=pointer]:
+          - generic [ref=e253]:
+            - strong [ref=e256]: What are Prompts?
+            - img [ref=e259]
+          - paragraph [ref=e261]:
+            - text: Prompts are highly detailed written instructions that you input into an AI art generator like OpenArt to create your desired artwork. These prompts act as creative commands that guide the AI in generating images, ranging from simple sketches to complex scenes. You can experiment with various artistic styles, from photorealistic drawings to vibrant abstract art, by just describing what you envision.For example, if you're interested in AI-generated images of fantastical landscapes, you might use a prompt like "a snowy mountain landscape under a starry night sky." The AI uses this prompt to understand and visualize the scene in artistic forms. The process is flexible, allowing you to adjust your prompts based on the results, ensuring the artwork aligns closely with your vision.Prompts can be as specific as you need—detailing not just the subject but also the style, mood, and even particular color schemes. This tool is particularly useful for creating digital art, generating unique illustrations, or conceptualizing visuals for projects that require a quick turnaround, such as graphic design, marketing campaigns, and entertainment media.Whether you're a professional artist or a hobbyist, AI art generators empower you to expand your creative boundaries by turning your written ideas into visual realities efficiently and effectively.
+            - text: View our
+            - link "Prompt Book" [ref=e262]:
+              - /url: https://openart.ai/promptbook
+            - text: for details and examples.
+        - generic [ref=e263] [cursor=pointer]:
+          - generic [ref=e264]:
+            - strong [ref=e267]: How do I create a good prompt?
+            - img [ref=e270]
+          - paragraph [ref=e272]:
+            - text: A well-crafted Prompt uses defined subjects, styles, and detailed descriptions. Doing so will significantly improve the quality of your artwork. Below are a few tips to help you create good Prompts. View our
+            - link "Prompt Book" [ref=e273]:
+              - /url: https://openart.ai/promptbook
+            - text: and
+            - link "Prompt Template" [ref=e274]:
+              - /url: https://openart.ai/presets
+            - text: for even more tips, descriptions, and prompt examples.
+            - strong [ref=e275]:
+              - text: Subject and Concept
+              - text: ‍
+            - text: "Clearly define what you aim to create, whether it’s a landscape, portrait, or abstract idea. Be specific and give a strong direction. Example: \"An abstract concept of a majestic bald eagle flying over an emerald green sea.\""
+            - text: ‍
+            - text: ‍
+            - strong [ref=e276]: Style or Theme
+            - text: "Describe your favorite art style, historical period, or artist. Impressionism:"
+            - text: "\"A red barn with an owl flying in the style of Impressionism, capturing light and color.\""
+            - text: "Historical:"
+            - text: "\"A bustling Ancient Rome marketplace in the Baroque period’s architectural style.\""
+            - text: "Artist:"
+            - text: "\"In Vincent van Gogh's style, a star-filled night over a tranquil village with vibrant colors.\""
+            - text: ‍
+            - text: ‍
+            - strong [ref=e277]: Composition and Perspective
+            - text: "Detail the arrangement of elements (foreground, background, central figure) and use perspective (bird’s eye view, worm’s eye view) to enhance the artwork’s depth and angle.Example: \"A majestic oak tree as the central figure, with a bustling forest scene in the background and wildflowers in the foreground.\""
+            - text: ‍
+            - text: ‍
+            - strong [ref=e278]: Atmosphere and Mood
+            - text: "Describe the mood, time of day, or weather to enhance its emotional tone. Example: \"A surreal sunset with clouds melting into a sea of liquid gold.\""
+            - text: ‍
+            - text: ‍
+            - strong [ref=e279]:
+              - text: Colors and Lighting
+              - text: ‍
+            - text: "Name your desired colors and lighting conditions to set the artwork’s mood and visual impact. Example: \"Use warm oranges, yellows, and deep purples for a sunset depiction."
+      - generic [ref=e280]:
+        - generic [ref=e281] [cursor=pointer]:
+          - generic [ref=e282]:
+            - strong [ref=e285]: Can I generate images for free using OpenArt?
+            - img [ref=e288]
+          - paragraph [ref=e290]:
+            - text: Yes! OpenArt's Free Plan is 100% risk-free with no cost and no credit card required. Registered users can generate images up to 512 x 512 pixels and up to 25 steps for free on our basic models (OpenArt SDXL, OpenArt Creative, Stable Diffusion XL). As a new member of the Free Plan, you'll also receive a one-time bonus of 20 FREE CREDITS to try any OpenArt premium features and advanced models. Want more? Join our Discord community to earn additional FREE CREDITS. Discord is our hub for artists and AI art enthusiasts. Community participation will enrich your artistic journey through events, contests, brainstorming, and creative discussions.
+            - link "Click here to join Discord" [ref=e291]:
+              - /url: https://discord.com/invite/openart-ai-1009536403555750018
+            - text: .
+        - generic [ref=e292] [cursor=pointer]:
+          - generic [ref=e293]:
+            - strong [ref=e296]: How Can I Use AI to Generate Art for Free?
+            - img [ref=e299]
+          - paragraph [ref=e301]: OpenArt provides a comprehensive free AI art generator that makes the creation of digital art accessible to everyone, eliminating economic barriers. This platform is particularly beneficial for beginners and enthusiasts, offering basic models that produce artworks with resolutions up to 1024x1024 pixels under its free plan. This setup is perfect for those exploring the potential of AI in art, allowing them to dabble in various styles and media without upfront costs. For those desiring to delve deeper into high-resolution creations or more sophisticated features, OpenArt promotes active community engagement and periodic promotional offers to earn additional credits. These initiatives not only enrich the user experience but also cultivate a sense of community among users, enhancing their connection to the platform. Consequently, OpenArt stands out as an excellent resource for anyone looking to explore the frontiers of AI-generated art, encouraging creativity and exploration across its user base.
+        - generic [ref=e302] [cursor=pointer]:
+          - generic [ref=e303]:
+            - strong [ref=e306]: Can AI help me convert my photos to art?
+            - img [ref=e309]
+          - paragraph [ref=e311]:
+            - text: Yes, OpenArt includes features that can transform your photos into artworks. By upload your own image under Image Guidance, using styles from famous artists or particular art movements, you can recreate your photo in the style of Impressionism, Baroque, or even in the unique strokes of Van Gogh.You can read more about Image Guidance on our
+            - link "wiki page" [ref=e312]:
+              - /url: https://openart.ai/wiki/image-creation/master-image-guidance
+            - text: .
+        - generic [ref=e313] [cursor=pointer]:
+          - generic [ref=e314]:
+            - strong [ref=e317]: What are the Benefits of Using AI for Drawing and Creating Art?
+            - img [ref=e320]
+          - paragraph [ref=e322]: "Utilizing AI for drawing and creating art provides numerous benefits that can transform the creative process across various industries, including digital marketing, animation, video game design, and more. Here are some of the key advantages:Rapid Visualization of Concepts: AI art tools enable swift translation of ideas into visual formats. This is particularly valuable in fields where concept development is crucial and time-sensitive, such as in advertising or game design. Artists and designers can quickly iterate over multiple visual concepts without the need for extensive physical or digital resources typically required in traditional art-making.Accessibility and Ease of Use: AI generators, like OpenArt, lower the barriers to entry for digital art creation. They provide platforms where both novices and professionals can create complex artworks without needing advanced skills in painting or drawing. This inclusivity opens up the art and design field to a broader audience, fostering diversity in creative expression.Experimentation with Diverse Styles: AI art tools offer the flexibility to explore a vast array of artistic styles—from classical to contemporary, from realistic portraits to surreal landscapes. This allows creators to experiment freely, blending different styles or creating entirely new ones without the constraints of traditional mediums.Enhanced Productivity: AI accelerates the art creation process, allowing artists to produce more work in less time. This increased productivity can be a significant advantage for commercial artists who need to meet tight deadlines or manage multiple projects simultaneously.Educational Tool: For educational purposes, AI art generators serve as excellent resources for learning about art techniques, historical styles, and the elements of visual composition. Educators can use these tools to provide students with hands-on experience in art creation, enhancing their understanding of aesthetic principles through practical application.Cost-Effectiveness: By using AI, artists and companies can reduce the costs associated with art production, such as materials, studio space, and even human resources. AI art generators require only a digital platform and minimal computing resources, making high-quality art creation more affordable and financially sustainable.Personalized Art Creation: AI can analyze individual preferences and past interactions to suggest or create personalized artworks that resonate more deeply with the user. This personalized approach can enhance user engagement and satisfaction, particularly in sectors like personalized gifts or bespoke interior design."
+        - generic [ref=e323] [cursor=pointer]:
+          - generic [ref=e324]:
+            - strong [ref=e327]: Can I create AI-generated fan-art with OpenArt?
+            - img [ref=e330]
+          - paragraph [ref=e332]: Absolutely! OpenArt enables users to create AI-generated fanart by inputting prompts related to their favorite characters, series, or themes from various media, including anime, movies, and comics. For instance, you could enter a prompt such as "anime character in a futuristic cityscape" or "superhero in action in a dramatic comic book style." Our AI uses these prompts to generate unique and visually appealing artworks that capture the essence of the characters and settings you love.The platform supports a wide range of artistic styles, so you can experiment with different looks—whether you want your anime characters in a classic watercolor style, a vibrant pop art look, or even emulating the styles of specific artists. This feature allows fans to see their favorite characters in new and creative ways, expanding the universe of their beloved series through art.Furthermore, OpenArt provides tools that allow for detailed customizations, such as adjusting color schemes, backgrounds, and even the emotions portrayed in the characters' expressions. This level of control ensures that the fanart not only meets but often exceeds the fans’ expectations, making OpenArt a fantastic tool for fanart creators at all skill levels.
+        - generic [ref=e333] [cursor=pointer]:
+          - generic [ref=e334]:
+            - strong [ref=e337]: How can AI enhance my digital art creation process?
+            - img [ref=e340]
+          - paragraph [ref=e342]:
+            - text: AI can significantly speed up the creative process in 2 ways.First, it can automate the initial stages of art creation. Artists can use AI to generate multiple drafts in different styles quickly, which they can then refine or combine using their artistic skills. Second, OpenArt offer advanced tools like Composition guidance, ControlNet and
+            - link "Sketch to Image" [ref=e343]:
+              - /url: https://openart.ai/apps/sketch-to-image
+            - text: where one give OpenArt a draft and get a fully-rendered image within seconds.
+        - generic [ref=e344] [cursor=pointer]:
+          - generic [ref=e345]:
+            - strong [ref=e348]: My images aren't turning out well. What can I do to improve them?
+            - img [ref=e351]
+          - paragraph [ref=e353]:
+            - strong [ref=e354]: TIP 1 - Refine your Prompts
+            - text: If an image isn't what you expected, tweak your Prompts by adding or removing details, changing styles, or putting emphasis on different elements. Simplify your Prompts if your images consistently turn out too complex or cluttered. Conversely, add more details or elements to your prompts if the images are too simple.View our
+            - link "Prompt Book" [ref=e355]:
+              - /url: https://openart.ai/promptbook
+            - text: for details and examples. You can also visit our
+            - link "Style Palettes" [ref=e356]:
+              - /url: https://openart.ai/style-palettes
+            - text: page to for a variety of prompt examples.
+            - strong [ref=e357]: TIP 2 - Leverage our editing tools
+            - text: If you’re not 100% happy with your AI generated image, you can use our advanced yet easy AI image editing tools to refine the image to exactly you want it to be.
+            - strong [ref=e358]: TIP 3 - Explore OpenArt Resources
+            - text: Seeing what works for others can inspire your own prompts and help you understand the details that lead to the best results. Explore samples on our Discover page or
+            - link "Prompt Book" [ref=e359]:
+              - /url: https://openart.ai/promptbook
+            - text: or our
+            - link "YouTube channel" [ref=e360]:
+              - /url: https://www.youtube.com/@openart_ai
+            - text: ", or join"
+            - link "Discord" [ref=e361]:
+              - /url: https://discord.com/invite/openart-ai-1009536403555750018
+            - text: ", our interactive community. You can even talk directly to the OpenArt founders!"
+  - generic [ref=e366]:
+    - heading "Create without limits" [level=2] [ref=e367]
+    - paragraph [ref=e369]: Explore the power of AI to bring your ideas to life. Generate, refine, and innovate—your creative journey starts here.
+    - link "Start creating now It's free!" [ref=e372] [cursor=pointer]:
+      - /url: https://openart.ai/home
+  - generic [ref=e376]:
+    - generic [ref=e377]:
+      - generic [ref=e378]:
+        - link:
+          - /url: /?r=0
+      - generic [ref=e379]:
+        - generic [ref=e380]: Product
+        - link "Home" [ref=e382] [cursor=pointer]:
+          - /url: https://openart.ai/home
+          - generic [ref=e383]: Home
+        - link "Create" [ref=e386] [cursor=pointer]:
+          - /url: https://openart.ai/create
+          - generic [ref=e387]: Create
+        - link "Edit" [ref=e390] [cursor=pointer]:
+          - /url: https://openart.ai/create?mode=edit
+          - generic [ref=e391]: Edit
+        - link "Discover" [ref=e394] [cursor=pointer]:
+          - /url: https://openart.ai/discovery
+          - generic [ref=e395]: Discover
+        - link "Train model" [ref=e398] [cursor=pointer]:
+          - /url: https://openart.ai/models
+          - generic [ref=e399]: Train model
+      - generic [ref=e401]:
+        - generic [ref=e402]: AI tools
+        - link "AI Image Generator" [ref=e404] [cursor=pointer]:
+          - /url: https://openart.ai/ai-image-generator
+          - generic [ref=e405]: AI Image Generator
+        - link "Image to video" [ref=e408] [cursor=pointer]:
+          - /url: https://openart.ai/apps/image-to-video
+          - generic [ref=e409]: Image to video
+        - link "Consistent character" [ref=e412] [cursor=pointer]:
+          - /url: https://openart.ai/characters
+          - generic [ref=e413]: Consistent character
+        - link "Sketch to image" [ref=e416] [cursor=pointer]:
+          - /url: https://openart.ai/apps/sketch-to-image
+          - generic [ref=e417]: Sketch to image
+        - link "Creative Upscale" [ref=e420] [cursor=pointer]:
+          - /url: https://openart.ai/apps/creative-upscale
+          - generic [ref=e421]: Creative Upscale
+        - link "Creative variations" [ref=e424] [cursor=pointer]:
+          - /url: https://openart.ai/apps/creative-variations
+          - generic [ref=e425]: Creative variations
+        - link "AI QR code" [ref=e428] [cursor=pointer]:
+          - /url: https://openart.ai/apps/ai_qrcode
+          - generic [ref=e429]: AI QR code
+      - generic [ref=e431]:
+        - generic [ref=e432]: Resources
+        - link "Terms of Service" [ref=e434] [cursor=pointer]:
+          - /url: https://openart.ai/terms
+          - generic [ref=e435]: Terms of Service
+        - link "Privacy Policy" [ref=e438] [cursor=pointer]:
+          - /url: https://openart.ai/privacy
+          - generic [ref=e439]: Privacy Policy
+        - link "Career" [ref=e442] [cursor=pointer]:
+          - /url: https://openart.notion.site/OpenArt-Job-Openings-2eb269c1f58580c082c8f6ee9934c1c4?pvs=143
+          - generic [ref=e443]: Career
+        - link "Blog" [ref=e446] [cursor=pointer]:
+          - /url: https://openart.ai/blog
+          - generic [ref=e447]: Blog
+        - link "Prompt book" [ref=e450] [cursor=pointer]:
+          - /url: https://openart.ai/promptbook
+          - generic [ref=e451]: Prompt book
+        - link "Style palette" [ref=e454] [cursor=pointer]:
+          - /url: https://openart.ai/style-palettes
+          - generic [ref=e455]: Style palette
+        - link "Model training book" [ref=e458] [cursor=pointer]:
+          - /url: https://openart.ai/modeltrainingbook
+          - generic [ref=e459]: Model training book
+        - link "What's new?" [ref=e462] [cursor=pointer]:
+          - /url: https://openart.ai/new-on-openart
+          - generic [ref=e463]: What's new?
+        - link "Partners" [ref=e466] [cursor=pointer]:
+          - /url: https://openart.ai/partners
+          - generic [ref=e467]: Partners
+        - link "MIT AI Film" [ref=e470] [cursor=pointer]:
+          - /url: https://openart.ai/mit-ai-filmmaking-hackathon
+          - generic [ref=e471]: MIT AI Film
+        - link "Features" [ref=e474] [cursor=pointer]:
+          - /url: https://openart.ai/features
+          - generic [ref=e475]: Features
+        - link "Generators" [ref=e478] [cursor=pointer]:
+          - /url: https://openart.ai/generator
+          - generic [ref=e479]: Generators
+        - link "Video Generators" [ref=e482] [cursor=pointer]:
+          - /url: https://openart.ai/video-generators
+          - generic [ref=e483]: Video Generators
+        - link "Fan Art" [ref=e486] [cursor=pointer]:
+          - /url: https://openart.ai/fan-art
+          - generic [ref=e487]: Fan Art
+        - link "Image/Video Models" [ref=e490] [cursor=pointer]:
+          - /url: https://openart.ai/model
+          - generic [ref=e491]: Image/Video Models
+        - link "Creative Partner" [ref=e494] [cursor=pointer]:
+          - /url: https://openart.ai/programs/cpp
+          - generic [ref=e495]: Creative Partner
+        - link "Affiliates Program" [ref=e498] [cursor=pointer]:
+          - /url: https://openart.ai/programs/affiliate
+          - generic [ref=e499]: Affiliates Program
+      - generic [ref=e501]:
+        - generic [ref=e502]: Need Help?
+        - link "Email us" [ref=e504] [cursor=pointer]:
+          - /url: mailto:support@openart.ai
+          - generic [ref=e505]: Email us
+        - link "Discord" [ref=e508] [cursor=pointer]:
+          - /url: https://discord.com/invite/openart-ai-1009536403555750018
+          - generic [ref=e509]: Discord
+        - link "Help Center" [ref=e512] [cursor=pointer]:
+          - /url: https://openart.ai/wiki/getting-started/create-your-first-image
+          - generic [ref=e513]: Help Center
+        - link "FAQ" [ref=e516] [cursor=pointer]:
+          - /url: https://openart.ai/general_faq
+          - generic [ref=e517]: FAQ
+    - generic [ref=e519]:
+      - generic [ref=e520]: © 2026 OpenArt. All rights reserved.
+      - generic [ref=e522]:
+        - link [ref=e523] [cursor=pointer]:
+          - /url: https://twitter.com/openart_ai
+          - img [ref=e525]
+        - link [ref=e527] [cursor=pointer]:
+          - /url: https://www.youtube.com/@openart_ai
+          - img [ref=e529]
+        - link [ref=e531] [cursor=pointer]:
+          - /url: https://discord.com/invite/openart-ai-1009536403555750018
+          - img [ref=e533]
+        - link [ref=e535] [cursor=pointer]:
+          - /url: mailto:support@openart.ai
+          - img [ref=e537]
+        - link [ref=e539] [cursor=pointer]:
+          - /url: https://www.instagram.com/openart_ai
+          - img [ref=e541]
+        - link [ref=e543] [cursor=pointer]:
+          - /url: https://www.linkedin.com/company/openart-ai
+          - img [ref=e545]

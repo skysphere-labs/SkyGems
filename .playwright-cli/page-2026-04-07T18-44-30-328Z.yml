@@ -1,0 +1,303 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e5] [cursor=pointer]:
+      - generic [ref=e6]:
+        - img "Star icon" [ref=e8]
+        - generic [ref=e10]:
+          - img "Seedance 2.0" [ref=e11]
+          - text: is live on OpenArt Suite.
+      - link "Go to the new workspace" [ref=e12]:
+        - /url: /suite/home
+        - text: Go to the new workspace
+        - img [ref=e13]
+    - generic [ref=e15]:
+      - link "OpenArt Logo" [ref=e17] [cursor=pointer]:
+        - /url: /suite/home
+        - img "OpenArt Logo" [ref=e19]
+      - generic [ref=e20]:
+        - button "Help Center - Access tutorials, wiki, and support" [ref=e21] [cursor=pointer]:
+          - img [ref=e22]
+        - link [ref=e24] [cursor=pointer]:
+          - /url: https://discord.gg/openart-ai-1009536403555750018
+          - img [ref=e25]
+        - link [ref=e28] [cursor=pointer]:
+          - /url: https://www.youtube.com/@openart_ai?sub_confirmation=1
+          - img [ref=e29]
+        - generic [ref=e31]:
+          - button "Upgrade" [ref=e32] [cursor=pointer]: Upgrade
+          - link "Create" [ref=e33] [cursor=pointer]:
+            - /url: /image/create
+            - img [ref=e35]
+            - text: Create
+          - generic [ref=e37]:
+            - link "Sign in" [ref=e38] [cursor=pointer]:
+              - /url: /signin
+              - text: Sign in
+            - link "Sign up" [ref=e39] [cursor=pointer]:
+              - /url: /signup
+              - text: Sign up
+    - generic [ref=e40]:
+      - generic [ref=e41]:
+        - generic [ref=e42]:
+          - button "Toggle Secondary Menu" [expanded] [ref=e43] [cursor=pointer]:
+            - img [ref=e44]
+          - generic [ref=e47]:
+            - link "Home" [ref=e48] [cursor=pointer]:
+              - /url: /home
+              - img [ref=e50]
+              - paragraph [ref=e53]: Home
+            - link "Assets" [ref=e54] [cursor=pointer]:
+              - /url: /assets
+              - img [ref=e56]
+              - paragraph [ref=e58]: Assets
+          - generic [ref=e60]:
+            - link "Beta Story" [ref=e61] [cursor=pointer]:
+              - /url: /story
+              - generic [ref=e62]:
+                - img [ref=e63]
+                - paragraph [ref=e72]: Beta
+              - paragraph [ref=e73]: Story
+            - link "Video" [ref=e74] [cursor=pointer]:
+              - /url: /video
+              - img [ref=e76]
+              - paragraph [ref=e80]: Video
+            - link "Image" [ref=e81] [cursor=pointer]:
+              - /url: /image
+              - img [ref=e83]
+              - paragraph [ref=e86]: Image
+            - link "New Character" [ref=e87] [cursor=pointer]:
+              - /url: /characters
+              - generic [ref=e88]:
+                - img [ref=e89]
+                - paragraph [ref=e93]: New
+              - paragraph [ref=e94]: Character
+            - link "Audio" [ref=e95] [cursor=pointer]:
+              - /url: /audio
+              - img [ref=e97]
+              - paragraph [ref=e99]: Audio
+          - generic [ref=e102] [cursor=pointer]:
+            - img [ref=e104]
+            - paragraph [ref=e106]: More
+        - link "Tutorial" [ref=e108] [cursor=pointer]:
+          - /url: /tutorials
+          - img [ref=e110]
+          - paragraph [ref=e112]: Tutorial
+      - main [ref=e113]:
+        - generic [ref=e114]:
+          - generic [ref=e116]:
+            - generic [ref=e117]:
+              - heading "Image" [level=4] [ref=e118]
+              - link "Tutorial" [ref=e119] [cursor=pointer]:
+                - /url: /tutorials?category=Image+Generation
+                - generic [ref=e120]:
+                  - img [ref=e121]
+                  - paragraph [ref=e123]: Tutorial
+            - generic [ref=e124]:
+              - link "Image Home" [ref=e125] [cursor=pointer]:
+                - /url: /image
+                - img [ref=e126]
+                - paragraph [ref=e128]: Image Home
+              - link "Create Image" [ref=e129] [cursor=pointer]:
+                - /url: /image/create
+                - img [ref=e130]
+                - paragraph [ref=e132]: Create Image
+              - link "Edit Image" [ref=e133] [cursor=pointer]:
+                - /url: /image/edit
+                - img [ref=e134]
+                - paragraph [ref=e136]: Edit Image
+              - link "Chat to Edit" [ref=e137] [cursor=pointer]:
+                - /url: /image/chat
+                - img [ref=e138]
+                - paragraph [ref=e140]: Chat to Edit
+              - link "Character" [ref=e141] [cursor=pointer]:
+                - /url: /image/character
+                - img [ref=e142]
+                - paragraph [ref=e144]: Character
+              - link "Image Upscale" [ref=e145] [cursor=pointer]:
+                - /url: /image/upscale
+                - img [ref=e146]
+                - paragraph [ref=e149]: Image Upscale
+              - link "Train a Model" [ref=e150] [cursor=pointer]:
+                - /url: /model_training
+                - img [ref=e151]
+                - paragraph [ref=e156]: Train a Model
+              - link "Camera Angle Control" [ref=e157] [cursor=pointer]:
+                - /url: /image/camera-angle-control
+                - img [ref=e158]
+                - paragraph [ref=e162]: Camera Angle Control
+              - link "Face Realism" [ref=e163] [cursor=pointer]:
+                - /url: /image/photorealistic
+                - img [ref=e164]
+                - paragraph [ref=e168]: Face Realism
+              - link "Swap" [ref=e169] [cursor=pointer]:
+                - /url: /image/swap
+                - img [ref=e170]
+                - paragraph [ref=e172]: Swap
+          - generic [ref=e174]:
+            - complementary [ref=e175]:
+              - generic [ref=e176]:
+                - generic [ref=e177]:
+                  - generic [ref=e178]:
+                    - button "Custom Settings Save and manage your own custom settings to quickly reuse your preferred settings like prompts, models, and aspect ratios any time." [expanded] [ref=e179] [cursor=pointer]:
+                      - generic [ref=e182]:
+                        - generic [ref=e183]:
+                          - img [ref=e184]
+                          - heading "Custom Settings" [level=3] [ref=e186]
+                        - generic "Save and manage your own custom settings to quickly reuse your preferred settings like prompts, models, and aspect ratios any time." [ref=e187]:
+                          - img [ref=e188]
+                    - region "Custom Settings Save and manage your own custom settings to quickly reuse your preferred settings like prompts, models, and aspect ratios any time." [ref=e193]:
+                      - generic "Custom Settings Presets - Select a preset to apply saved settings" [ref=e197]:
+                        - combobox "None" [ref=e198] [cursor=pointer]
+                        - textbox: None
+                        - img
+                        - group
+                  - generic [ref=e199]:
+                    - button "Model or Character" [expanded] [ref=e200] [cursor=pointer]:
+                      - heading "Model or Character" [level=3] [ref=e205]
+                      - img [ref=e207]
+                    - region "Custom Settings Save and manage your own custom settings to quickly reuse your preferred settings like prompts, models, and aspect ratios any time." [ref=e212]:
+                      - generic [ref=e215] [cursor=pointer]:
+                        - img "model" [ref=e216]
+                        - generic [ref=e218]:
+                          - generic [ref=e219]: Seedream 4.5
+                          - button "Switch" [ref=e220]:
+                            - text: Switch
+                            - img [ref=e222]
+                  - generic [ref=e224]:
+                    - button "Prompt" [expanded] [ref=e225] [cursor=pointer]:
+                      - generic [ref=e229]:
+                        - heading "Prompt" [level=3] [ref=e231]
+                        - img [ref=e233]
+                      - img [ref=e236]
+                    - region "Custom Settings Save and manage your own custom settings to quickly reuse your preferred settings like prompts, models, and aspect ratios any time." [ref=e241]:
+                      - generic [ref=e244]:
+                        - generic [ref=e247]:
+                          - textbox "e.g. A cat is sitting on a table. We support all languages." [ref=e248]
+                          - group
+                        - generic [ref=e252] [cursor=pointer]:
+                          - img [ref=e253]
+                          - generic [ref=e257]: Image to Prompt
+                        - button [ref=e259] [cursor=pointer]:
+                          - img [ref=e260]
+                  - generic [ref=e262]:
+                    - button "Image Guidance" [expanded] [ref=e263] [cursor=pointer]:
+                      - generic [ref=e266]:
+                        - heading "Image Guidance" [level=3] [ref=e267]
+                        - img [ref=e269]
+                      - img [ref=e272]
+                    - region "Custom Settings Save and manage your own custom settings to quickly reuse your preferred settings like prompts, models, and aspect ratios any time." [ref=e277]:
+                      - generic [ref=e279]: Purchase any Upgrade to use image guidance
+                  - button "Output Settings" [ref=e281] [cursor=pointer]:
+                    - heading "Output Settings" [level=3] [ref=e283]
+                    - img [ref=e285]
+                - generic [ref=e287]:
+                  - separator [ref=e288]
+                  - generic [ref=e289]:
+                    - generic [ref=e291]:
+                      - generic [ref=e292]:
+                        - generic [ref=e293]: Number of Images
+                        - generic [ref=e295]:
+                          - spinbutton [ref=e296]: "2"
+                          - group
+                      - slider "Number of Images" [ref=e301]: "2"
+                    - generic [ref=e302]:
+                      - button "Create" [ref=e304] [cursor=pointer]:
+                        - generic [ref=e305]: Create
+                      - paragraph [ref=e306]:
+                        - generic [ref=e307]:
+                          - img [ref=e308]
+                          - text: Unleash your creativity for free
+            - generic [ref=e310]:
+              - generic [ref=e311]:
+                - generic [ref=e312]:
+                  - generic [ref=e313]:
+                    - img "Character Vlog" [ref=e314]
+                    - img "Character Vlog" [ref=e315]
+                    - img "Character Vlog" [ref=e316]
+                  - generic [ref=e317]:
+                    - paragraph [ref=e318]: Create Your Story Video
+                    - paragraph [ref=e319]: Turn your ideas into animated stories — from character vlogs to music videos, all in one place.
+                - generic [ref=e320]:
+                  - button "Dismiss" [ref=e321] [cursor=pointer]: Dismiss
+                  - link "Try Now" [ref=e322] [cursor=pointer]:
+                    - /url: /story/create
+                    - text: Try Now
+              - generic [ref=e324]:
+                - generic [ref=e325]:
+                  - generic [ref=e326]:
+                    - generic [ref=e327]:
+                      - generic [ref=e328]:
+                        - img [ref=e329]
+                        - heading "Free AI Image Generator" [level=1] [ref=e330]
+                        - img "OpenArt logo right" [ref=e331]
+                      - paragraph [ref=e332]: Make Wonders
+                      - generic [ref=e333]:
+                        - generic [ref=e334]:
+                          - img [ref=e336]
+                          - paragraph [ref=e339]: Flux Kontext
+                        - generic [ref=e340]:
+                          - img [ref=e342]
+                          - paragraph [ref=e345]: Flux Pro
+                        - generic [ref=e346]:
+                          - img [ref=e348]
+                          - paragraph [ref=e351]: Flux Dev
+                        - generic [ref=e352]:
+                          - img "OpenAI" [ref=e354]
+                          - paragraph [ref=e356]: GPT Image 1
+                        - generic [ref=e357]:
+                          - img "Gemini" [ref=e359]
+                          - paragraph [ref=e361]: Imagen 4
+                        - generic [ref=e362]:
+                          - img "Stability" [ref=e364]
+                          - paragraph [ref=e367]: SDXL
+                    - button "Sign up to create for FREE" [ref=e369] [cursor=pointer]: Sign up to create for FREE
+                  - generic [ref=e371]:
+                    - generic [ref=e372]:
+                      - img "Image 1" [ref=e374] [cursor=pointer]
+                      - img "Image 5" [ref=e376] [cursor=pointer]
+                      - img "Image 8" [ref=e378] [cursor=pointer]
+                      - img "Image 12" [ref=e380] [cursor=pointer]
+                      - img "Image 14" [ref=e382] [cursor=pointer]
+                      - img "Image 17" [ref=e384] [cursor=pointer]
+                    - generic [ref=e385]:
+                      - img "Image 2" [ref=e387] [cursor=pointer]
+                      - img "Image 4" [ref=e389] [cursor=pointer]
+                      - img "Image 7" [ref=e391] [cursor=pointer]
+                      - img "Image 10" [ref=e393] [cursor=pointer]
+                      - img "Image 13" [ref=e395] [cursor=pointer]
+                      - img "Image 16" [ref=e397] [cursor=pointer]
+                    - generic [ref=e398]:
+                      - img "Image 3" [ref=e400] [cursor=pointer]
+                      - img "Image 6" [ref=e402] [cursor=pointer]
+                      - img "Image 9" [ref=e404] [cursor=pointer]
+                      - img "Image 11" [ref=e406] [cursor=pointer]
+                      - img "Image 15" [ref=e408] [cursor=pointer]
+                - generic [ref=e409]:
+                  - heading "FAQ" [level=2] [ref=e410]
+                  - generic [ref=e411]:
+                    - button "Can I generate images for free?" [expanded] [ref=e412] [cursor=pointer]:
+                      - heading "Can I generate images for free?" [level=6] [ref=e414]
+                      - img [ref=e416]
+                    - region "Can I generate images for free?" [ref=e421]:
+                      - paragraph [ref=e423]:
+                        - text: Yes! When you sign up, you receive 40 trial credits to try any premium features and advanced models within 7-day trial period. If you like what you created, you can upgrade.',
+                        - link "joining the OpenArt Discord" [ref=e424] [cursor=pointer]:
+                          - /url: https://discord.gg/openart-ai-1009536403555750018
+                        - text: . If you need more credits, you can always
+                        - link "subscribe to a plan" [ref=e425] [cursor=pointer]:
+                          - /url: /pricing
+                        - text: .
+                  - button "Can I make my own AI models or image generator for free?" [ref=e427] [cursor=pointer]:
+                    - heading "Can I make my own AI models or image generator for free?" [level=6] [ref=e429]
+                    - img [ref=e431]
+                  - button "My images aren't turning out well. What can I do?" [ref=e434] [cursor=pointer]:
+                    - heading "My images aren't turning out well. What can I do?" [level=6] [ref=e436]
+                    - img [ref=e438]
+                  - button "Can I use images I created or found on your platform for commercial purposes?" [ref=e441] [cursor=pointer]:
+                    - heading "Can I use images I created or found on your platform for commercial purposes?" [level=6] [ref=e443]
+                    - img [ref=e445]
+                  - button "I am a paid subscriber. Do credits carry over to the next month?" [ref=e448] [cursor=pointer]:
+                    - heading "I am a paid subscriber. Do credits carry over to the next month?" [level=6] [ref=e450]
+                    - img [ref=e452]
+  - img [ref=e455] [cursor=pointer]
+  - alert [ref=e457]

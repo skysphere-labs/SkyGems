@@ -1,0 +1,135 @@
+Design a high-end SaaS web application UI prototype for an AI-powered jewelry design platform called “JewelGen AI”.
+
+The interface should look like a premium Dribbble-quality product design with a modern SaaS dashboard layout, elegant typography, smooth spacing, and luxury jewelry-inspired visuals.
+
+Design style:
+Minimal, luxurious, elegant, and modern. Inspired by luxury brands like Cartier and Tiffany. The UI should feel premium and creative, similar to a professional design tool like Figma or Canva.
+
+Color palette:
+Primary accent: Gold (#C9A227)
+Background: Ivory white (#F8F6F2)
+Secondary: Black and dark charcoal (#1E1E1E)
+Neutral UI: Soft gray (#E5E5E5)
+
+Use glassmorphism or soft shadow cards for panels.
+
+Typography:
+Elegant modern fonts with large headings and clean body text.
+
+Create the following UI screens as part of a complete clickable product prototype.
+
+Screen 1 — Welcome / Landing Page
+Hero section introducing JewelGen AI.
+
+Elements:
+• Product logo and navigation bar
+• Headline: “Design Jewelry with AI”
+• Subheading: “Generate professional jewelry designs and CAD files instantly”
+• CTA buttons: “Start Designing” and “View Demo”
+• Background with abstract jewelry shapes or gemstones
+• Product preview mockup of the design generator
+
+Screen 2 — Main Dashboard
+A clean SaaS dashboard layout.
+
+Left Sidebar Navigation:
+• Dashboard
+• Create Design
+• Design Library
+• AI Assistant
+• CAD Exports
+• Settings
+
+Main Area:
+• “Create New Design” card
+• Recent designs grid with thumbnails
+• Quick stats (designs generated, CAD exports, saved projects)
+• Activity panel
+
+Screen 3 — AI Jewelry Design Generator
+Interactive design creation panel.
+
+Left configuration panel:
+• Jewelry type selector with icons (Ring, Necklace, Earrings, Bracelet, Pendant)
+• Metal selector (Gold, Silver, Platinum, Rose Gold)
+• Gemstone selector (Diamond, Ruby, Emerald, Sapphire, Pearl)
+• Design style selector (Temple, Vintage, Floral, Geometric, Contemporary, Minimalist)
+• Complexity slider
+• “Generate Designs” button
+
+Right panel:
+Large preview area where generated designs appear.
+
+Screen 4 — AI Generated Designs Gallery
+Grid layout displaying 12–20 AI-generated jewelry concepts.
+
+Each card shows:
+• design thumbnail
+• gemstone icons
+• metal type label
+• favorite icon
+• select design button
+
+Include hover effects and selection states.
+
+Screen 5 — Design Preview & 3D Viewer
+Detailed view of a selected design.
+
+Center:
+Interactive 3D jewelry model viewer.
+
+Right side panel:
+• metal weight estimate
+• gemstone count
+• symmetry rating
+• manufacturing feasibility indicator
+
+Buttons:
+• Edit Design
+• Generate CAD
+• Export Files
+
+Screen 6 — AI Co-Pilot Editor
+A side chat panel where the designer can modify designs.
+
+Example commands:
+“Make this more vintage”
+“Add more diamonds”
+“Make the pendant larger”
+“Reduce gold weight”
+
+Show the design updating visually.
+
+Screen 7 — CAD Export Center
+Production export interface.
+
+Display:
+• 3D preview
+• technical specifications
+
+Export buttons:
+• SVG
+• STL
+• STEP CAD
+• DXF
+• Rhino
+
+Include file preview thumbnails and download buttons.
+
+Screen 8 — Manufacturing Pipeline Visualization
+Create a horizontal workflow diagram showing the AI pipeline:
+
+User Input → Prompt Generator → AI Design Generation → Design Ranking → 3D Model Creation → CAD Conversion → Manufacturing Validation → File Export
+
+Use icons and arrows to clearly visualize the process.
+
+Design Quality Requirements:
+• premium SaaS UI
+• elegant spacing and layout
+• rounded cards and subtle shadows
+• gold highlight accents
+• intuitive navigation
+• modern design tool interface similar to Figma or Notion
+• visually polished enough for a startup product presentation
+
+The final result should look like a real product prototype that could be presented to investors or design teams.

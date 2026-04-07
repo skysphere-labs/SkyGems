@@ -1,12 +1,17 @@
 import { createDefaultAgentExecutor, type CopilotAgentOutput } from "@skygems/agent-runtime";
 import {
   ArtifactPublicSchema,
+  AuthSessionResponseSchema,
   buildDesignDisplayName,
+  formatPromptBundlePreviewText,
+  parsePromptBundleText,
   buildPromptSummary,
   buildSearchText,
   CadJobIdSchema,
   DevBootstrapRequestSchema,
   DevBootstrapResponseSchema,
+  DevLoginRequestSchema,
+  DevLoginResponseSchema,
   DesignDetailResponseSchema,
   DesignDnaSchema,
   DesignDnaPreviewSchema,
@@ -21,6 +26,7 @@ import {
   GallerySearchResponseSchema,
   PairIdSchema,
   ProjectIdSchema,
+  ProjectDesignsQuerySchema,
   ProjectDesignsResponseSchema,
   ProjectResponseSchema,
   PromptAgentOutputSchema,
@@ -56,15 +62,24 @@ import {
 } from "@skygems/shared";
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from "cloudflare:workers";
 
-import { ensureTenantAndUser, resolveAuthContext, type AuthContext } from "./lib/auth.ts";
+import {
+  ensureTenantAndUser,
+  issueArtifactAccessToken,
+  resolveAuthContext,
+  type AuthContext,
+  verifyArtifactAccessToken,
+} from "./lib/auth.ts";
 import { ensureDevBootstrap } from "./lib/bootstrap.ts";
+import { resolveLocalDevAccount } from "./lib/bootstrap.ts";
 import { selectProjectDesign } from "./lib/design-selection.ts";
 import { asJsonText, executeStatement, nowIso, queryAll, queryFirst } from "./lib/d1.ts";
 import { dispatchGenerateExecution, runGenerateExecution } from "./lib/generation.ts";
 import { computeRequestHash, requireIdempotencyKey, withIdempotency } from "./lib/idempotency.ts";
 import { errorResponse, handleApiError, HttpError, jsonResponse, parseJsonBody } from "./lib/http.ts";
 import {
+  isLocalDevelopmentRequest,
   isDevBootstrapEnabled,
+  requiresExplicitDevBootstrapIdentity,
   resolveGenerateExecutionMode,
   resolvePromptProviderSelection,
   type ApiEnv,
@@ -145,6 +160,8 @@ interface GenerationPairRow {
 
 interface ArtifactRow {
   id: string;
+  tenant_id: string;
+  project_id: string;
   artifact_kind: ArtifactPublic["kind"];
   r2_key: string;
   file_name: string;
@@ -212,19 +229,98 @@ function defaultStageStatuses(): StageStatuses {
   });
 }
 
-function buildPromptPreviewText(promptBundle: PromptAgentOutput["promptBundle"]): string {
-  return [
-    "Sketch prompt:",
-    promptBundle.sketchPrompt,
-    "",
-    "Render prompt:",
-    promptBundle.renderPrompt,
-    "",
-    "Negative prompt:",
-    promptBundle.negativePrompt,
-  ]
-    .join("\n")
-    .slice(0, 8000);
+function resolvePublicOrigin(request: Request): string {
+  const origin = request.headers.get("Origin")?.trim();
+  if (origin && /^https?:\/\//i.test(origin)) {
+    return origin.replace(/\/$/, "");
+  }
+
+  return new URL(request.url).origin;
+}
+
+async function buildAuthSessionResponse(
+  db: D1Database,
+  auth: AuthContext,
+) {
+  const memberships = await queryAll<{ project_id: string; role: ProjectMembershipRow["role"] }>(
+    db,
+    `SELECT project_id, role
+     FROM project_memberships
+     WHERE user_id = ?
+     ORDER BY project_id ASC`,
+    [auth.userId],
+  );
+
+  const [accessibleProjectsRow] = await queryAll<CountRow>(
+    db,
+    `SELECT COUNT(*) AS count
+     FROM projects
+     WHERE tenant_id = ?
+       AND id IN (SELECT project_id FROM project_memberships WHERE user_id = ?)`,
+    [auth.tenantId, auth.userId],
+  );
+
+  const [ownedProjectsRow] = await queryAll<CountRow>(
+    db,
+    `SELECT COUNT(*) AS count
+     FROM projects
+     WHERE tenant_id = ? AND created_by_user_id = ?`,
+    [auth.tenantId, auth.userId],
+  );
+
+  const [accessibleDesignsRow] = await queryAll<CountRow>(
+    db,
+    `SELECT COUNT(*) AS count
+     FROM designs
+     WHERE tenant_id = ?
+       AND project_id IN (SELECT project_id FROM project_memberships WHERE user_id = ?)`,
+    [auth.tenantId, auth.userId],
+  );
+
+  const [ownedDesignsRow] = await queryAll<CountRow>(
+    db,
+    `SELECT COUNT(*) AS count
+     FROM designs
+     WHERE tenant_id = ? AND created_by_user_id = ?`,
+    [auth.tenantId, auth.userId],
+  );
+
+  const [accessibleArtifactsRow] = await queryAll<CountRow>(
+    db,
+    `SELECT COUNT(*) AS count
+     FROM artifacts
+     WHERE tenant_id = ?
+       AND project_id IN (SELECT project_id FROM project_memberships WHERE user_id = ?)`,
+    [auth.tenantId, auth.userId],
+  );
+
+  return AuthSessionResponseSchema.parse({
+    authMode: auth.authMode,
+    tenant: {
+      id: auth.tenantId,
+      slug: auth.tenantSlug,
+      name: auth.tenantName,
+    },
+    user: {
+      id: auth.userId,
+      email: auth.email,
+      displayName: auth.displayName,
+      authSubject: auth.authSubject,
+      role: auth.role,
+      permissions: auth.permissions,
+    },
+    access: {
+      memberships: memberships.map((membership) => ({
+        projectId: membership.project_id,
+        role: membership.role,
+      })),
+      accessibleProjectCount: accessibleProjectsRow?.count ?? 0,
+      ownedProjectCount: ownedProjectsRow?.count ?? 0,
+      accessibleDesignCount: accessibleDesignsRow?.count ?? 0,
+      ownedDesignCount: ownedDesignsRow?.count ?? 0,
+      accessibleArtifactCount: accessibleArtifactsRow?.count ?? 0,
+    },
+  });
 }
 
 function buildDesignDnaPreview(designDna: PromptAgentOutput["designDna"]) {
@@ -245,6 +341,7 @@ function buildDesignDnaPreview(designDna: PromptAgentOutput["designDna"]) {
 async function rebuildPromptAgentOutputFromDesign(
   design: DesignRow,
   provider: "xai" | "google",
+  apiEnv?: { XAI_API_KEY?: string },
 ): Promise<PromptAgentOutput> {
   const designDna = DesignDnaSchema.parse(JSON.parse(design.design_dna_json));
   const promptMode = design.source_kind === "refine" ? "refine" : "generate";
@@ -263,7 +360,7 @@ async function rebuildPromptAgentOutputFromDesign(
     },
     sourceDesignId: design.parent_design_id ?? undefined,
     provider,
-  });
+  }, apiEnv ? { env: { XAI_API_KEY: apiEnv.XAI_API_KEY } } : undefined);
 
   return PromptAgentOutputSchema.parse({
     schemaVersion: "prompt_agent.v1",
@@ -520,6 +617,7 @@ function buildArtifactPreviewDataUrl(artifact: Pick<ArtifactRow, "artifact_kind"
 }
 
 async function loadArtifact(
+  env: ApiEnv,
   db: D1Database,
   artifactId: string | null,
   origin: string,
@@ -530,7 +628,7 @@ async function loadArtifact(
 
   const artifact = await queryFirst<ArtifactRow>(
     db,
-    `SELECT id, artifact_kind, r2_key, file_name, content_type, byte_size, sha256
+    `SELECT id, tenant_id, project_id, artifact_kind, r2_key, file_name, content_type, byte_size, sha256
      FROM artifacts
      WHERE id = ?`,
     [artifactId],
@@ -540,10 +638,23 @@ async function loadArtifact(
     return null;
   }
 
-  // For real images stored in R2 (image/png), serve via the artifact image endpoint.
-  // For placeholder SVGs (image/svg+xml), use the inline data URL fallback.
-  const signedUrl = artifact.content_type === "image/png"
-    ? new URL(`/v1/artifacts/${artifact.id}/image`, origin).toString()
+  // Route persisted images through a short-lived signed URL so browser <img> tags
+  // can load them without manually attaching Authorization headers.
+  const signedUrl = artifact.content_type.startsWith("image/")
+    ? new URL(
+        `/v1/artifacts/${artifact.id}/image?token=${encodeURIComponent(
+          await issueArtifactAccessToken(
+            {
+              artifactId: artifact.id,
+              tenantId: artifact.tenant_id,
+              projectId: artifact.project_id,
+            },
+            env,
+            { allowLocalFallback: true, ttlMinutes: 15 },
+          ),
+        )}`,
+        origin,
+      ).toString()
     : buildArtifactPreviewDataUrl(artifact);
 
   return ArtifactPublicSchema.parse({
@@ -557,6 +668,7 @@ async function loadArtifact(
 }
 
 async function loadPairById(
+  env: ApiEnv,
   db: D1Database,
   pairId: string | null,
   selectionState: DesignRow["selection_state"],
@@ -578,8 +690,8 @@ async function loadPairById(
     return null;
   }
 
-  const sketch = await loadArtifact(db, pair.sketch_artifact_id, origin);
-  const render = await loadArtifact(db, pair.render_artifact_id, origin);
+  const sketch = await loadArtifact(env, db, pair.sketch_artifact_id, origin);
+  const render = await loadArtifact(env, db, pair.render_artifact_id, origin);
 
   if (!sketch || !render || sketch.kind !== "pair_sketch_png" || render.kind !== "pair_render_png") {
     return null;
@@ -594,16 +706,20 @@ async function loadPairById(
 }
 
 async function buildDesignSummary(
+  env: ApiEnv,
   db: D1Database,
   design: DesignRow,
   workflow: WorkflowRow | null,
   origin: string,
+  currentUserId: string,
 ) {
   const sourceGenerationId = await loadSourceGenerationId(db, design.id);
 
   return DesignSummarySchema.parse({
     designId: design.id,
     projectId: design.project_id,
+    createdByUserId: design.created_by_user_id,
+    ownedByCurrentUser: design.created_by_user_id === currentUserId,
     parentDesignId: design.parent_design_id,
     sourceKind: design.source_kind,
     sourceGenerationId,
@@ -612,7 +728,7 @@ async function buildDesignSummary(
     designDna: DesignDnaSchema.parse(JSON.parse(design.design_dna_json)),
     selectionState: design.selection_state,
     latestPairId: design.latest_pair_id,
-    pair: await loadPairById(db, design.latest_pair_id, design.selection_state, origin),
+    pair: await loadPairById(env, db, design.latest_pair_id, design.selection_state, origin),
     latestSpecId: design.latest_spec_id,
     latestTechnicalSheetId: design.latest_technical_sheet_id,
     latestSvgAssetId: design.latest_svg_asset_id,
@@ -659,6 +775,7 @@ async function loadRecentDesignGenerations(
 }
 
 async function loadCoverImageForDesign(
+  env: ApiEnv,
   db: D1Database,
   design: DesignRow,
   origin: string,
@@ -679,10 +796,11 @@ async function loadCoverImageForDesign(
     return null;
   }
 
-  return loadArtifact(db, pair.render_artifact_id, origin);
+  return loadArtifact(env, db, pair.render_artifact_id, origin);
 }
 
 async function loadGalleryPairImages(
+  env: ApiEnv,
   db: D1Database,
   design: DesignRow,
   origin: string,
@@ -704,17 +822,19 @@ async function loadGalleryPairImages(
   }
 
   const [sketch, render] = await Promise.all([
-    loadArtifact(db, pair.sketch_artifact_id, origin),
-    loadArtifact(db, pair.render_artifact_id, origin),
+    loadArtifact(env, db, pair.sketch_artifact_id, origin),
+    loadArtifact(env, db, pair.render_artifact_id, origin),
   ]);
 
   return { sketch, render };
 }
 
 async function buildProjectResponse(
+  env: ApiEnv,
   db: D1Database,
   project: ProjectRow,
   origin: string,
+  currentUserId: string,
 ): Promise<ProjectResponse> {
   const [{ count }] = await queryAll<CountRow>(
     db,
@@ -764,7 +884,7 @@ async function buildProjectResponse(
       updatedAt: project.updated_at,
     },
     selectedDesign: selectedDesign
-      ? await buildDesignSummary(db, selectedDesign, selectedWorkflow, origin)
+      ? await buildDesignSummary(env, db, selectedDesign, selectedWorkflow, origin, currentUserId)
       : null,
     recentDesigns: recentDesigns.map((design) => ({
       designId: DesignIdSchema.parse(design.id),
@@ -782,26 +902,35 @@ async function buildProjectResponse(
 }
 
 async function buildProjectDesignsResponse(
+  env: ApiEnv,
   db: D1Database,
   project: ProjectRow,
   origin: string,
+  currentUserId: string,
+  ownerScope: "all" | "mine",
 ) {
+  const ownerFilterSql = ownerScope === "mine" ? "AND created_by_user_id = ?" : "";
+  const queryBindings =
+    ownerScope === "mine"
+      ? [project.id, project.tenant_id, currentUserId, project.selected_design_id]
+      : [project.id, project.tenant_id, project.selected_design_id];
   const designs = await queryAll<DesignRow>(
     db,
     `SELECT *
      FROM designs
      WHERE project_id = ? AND tenant_id = ?
+     ${ownerFilterSql}
      ORDER BY
        CASE WHEN id = ? THEN 0 ELSE 1 END,
        COALESCE(selected_at, updated_at) DESC,
        created_at DESC`,
-    [project.id, project.tenant_id, project.selected_design_id],
+    queryBindings,
   );
 
   const items = await Promise.all(
     designs.map(async (design) => {
       const workflow = await loadWorkflow(db, design.latest_workflow_run_id);
-      return buildDesignSummary(db, design, workflow, origin);
+      return buildDesignSummary(env, db, design, workflow, origin, currentUserId);
     }),
   );
 
@@ -814,10 +943,12 @@ async function buildProjectDesignsResponse(
 }
 
 async function buildDesignDetailResponse(
+  env: ApiEnv,
   db: D1Database,
   project: ProjectRow,
   design: DesignRow,
   origin: string,
+  currentUserId: string,
 ) {
   const workflow = await loadWorkflow(db, design.latest_workflow_run_id);
   const latestSpec = await loadLatestSpec(db, design.latest_spec_id);
@@ -827,7 +958,7 @@ async function buildDesignDetailResponse(
     projectId: project.id,
     selectedDesignId: project.selected_design_id,
     canSelect: canSelectDesign(design),
-    design: await buildDesignSummary(db, design, workflow, origin),
+    design: await buildDesignSummary(env, db, design, workflow, origin, currentUserId),
     latestSpec,
     latestTechSheet,
     recentGenerations: await loadRecentDesignGenerations(db, design),
@@ -844,7 +975,7 @@ async function handlePromptPreview(request: Request, env: ApiEnv, auth: AuthCont
     designId: generatePrefixedId("dsn"),
     input: payload,
     provider: promptProvider.active,
-  });
+  }, { env: { XAI_API_KEY: env.XAI_API_KEY } });
 
   return jsonResponse(
     PromptPreviewResponseSchema.parse({
@@ -854,7 +985,7 @@ async function handlePromptPreview(request: Request, env: ApiEnv, auth: AuthCont
       normalizedInput: promptAgentRun.output.normalizedInput,
       designDnaPreview: buildDesignDnaPreview(promptAgentRun.output.designDna),
       promptSummary: buildPromptSummary(payload),
-      promptText: buildPromptPreviewText(promptAgentRun.output.promptBundle),
+      promptText: formatPromptBundlePreviewText(promptAgentRun.output.promptBundle),
     }),
     200,
     {
@@ -895,10 +1026,18 @@ async function handleGenerateDesign(
         designId,
         input: payload,
         provider: promptProvider.active,
-      });
+      }, { env: { XAI_API_KEY: env.XAI_API_KEY } });
       const promptAgentOutput = PromptAgentOutputSchema.parse(promptAgentRun.output);
-      const designDna = DesignDnaSchema.parse(promptAgentOutput.designDna);
-      const promptBundle = PromptBundleSchema.parse(promptAgentOutput.promptBundle);
+      const persistedPromptBundle = payload.promptTextOverride
+        ? parsePromptBundleText(payload.promptTextOverride, {
+            fallbackNegativePrompt: promptAgentOutput.promptBundle.negativePrompt,
+          })
+        : PromptBundleSchema.parse(promptAgentOutput.promptBundle);
+      const persistedPromptAgentOutput = PromptAgentOutputSchema.parse({
+        ...promptAgentOutput,
+        promptBundle: persistedPromptBundle,
+      });
+      const designDna = DesignDnaSchema.parse(persistedPromptAgentOutput.designDna);
       const promptSummary = buildPromptSummary(payload);
 
       await executeStatement(
@@ -941,7 +1080,7 @@ async function handleGenerateDesign(
           asJsonText(payload),
           requestHash,
           idempotencyKey,
-          asJsonText(promptAgentOutput),
+          asJsonText(persistedPromptAgentOutput),
           initialExecution.mode,
           initialExecution.source,
           createdAt,
@@ -1062,7 +1201,7 @@ async function handleRefineDesign(
         sourceDesignId: sourceDesign.id,
         provider: promptProvider.active,
         refinementInstruction: payload.instruction,
-      });
+      }, { env: { XAI_API_KEY: env.XAI_API_KEY } });
       const promptAgentOutput = PromptAgentOutputSchema.parse(promptAgentRun.output);
       const designDna = DesignDnaSchema.parse(promptAgentOutput.designDna);
       const promptSummary = `${buildPromptSummary(createInput)} refined`;
@@ -1839,7 +1978,7 @@ async function handleGenerationStatus(
   auth: AuthContext,
   generationId: string,
 ) {
-  const origin = new URL(request.url).origin;
+  const origin = resolvePublicOrigin(request);
   const generation = await queryFirst<GenerationRow>(
     env.SKYGEMS_DB,
     `SELECT *
@@ -1856,6 +1995,7 @@ async function handleGenerationStatus(
   const design = await requireDesign(env.SKYGEMS_DB, auth.tenantId, generation.design_id);
   const workflow = await loadWorkflow(env.SKYGEMS_DB, design.latest_workflow_run_id);
   const pair = await loadPairById(
+    env,
     env.SKYGEMS_DB,
     design.latest_pair_id,
     design.selection_state,
@@ -1878,7 +2018,7 @@ async function handleGenerationStatus(
     pair,
     projectSelectedDesignId: project.selected_design_id,
     canSelect: canSelectDesign(design),
-    design: await buildDesignSummary(env.SKYGEMS_DB, design, workflow, origin),
+    design: await buildDesignSummary(env, env.SKYGEMS_DB, design, workflow, origin, auth.userId),
   });
 
   return jsonResponse(response);
@@ -1896,6 +2036,11 @@ async function handleGallerySearch(request: Request, env: Env, auth: AuthContext
     await requireProjectAccess(env.SKYGEMS_DB, auth, payload.projectId);
     whereClauses.push("project_id = ?");
     bindings.push(payload.projectId);
+  }
+
+  if (payload.ownerScope === "mine") {
+    whereClauses.push("created_by_user_id = ?");
+    bindings.push(auth.userId);
   }
 
   if (payload.query) {
@@ -1977,13 +2122,15 @@ async function handleGallerySearch(request: Request, env: Env, auth: AuthContext
   );
 
   const items: GallerySearchResponse["items"] = [];
-  const origin = new URL(request.url).origin;
+  const origin = resolvePublicOrigin(request);
   for (const design of designs) {
     const workflow = await loadWorkflow(env.SKYGEMS_DB, design.latest_workflow_run_id);
-    const pairImages = await loadGalleryPairImages(env.SKYGEMS_DB, design, origin);
+    const pairImages = await loadGalleryPairImages(env, env.SKYGEMS_DB, design, origin);
     items.push({
       designId: design.id,
       projectId: design.project_id,
+      createdByUserId: design.created_by_user_id,
+      ownedByCurrentUser: design.created_by_user_id === auth.userId,
       displayName: design.display_name,
       promptSummary: design.prompt_summary,
       selectionState: design.selection_state,
@@ -2012,7 +2159,13 @@ async function handleProject(
   projectId: string,
 ): Promise<Response> {
   const project = await requireProjectAccess(env.SKYGEMS_DB, auth, projectId);
-  const response = await buildProjectResponse(env.SKYGEMS_DB, project, new URL(request.url).origin);
+  const response = await buildProjectResponse(
+    env,
+    env.SKYGEMS_DB,
+    project,
+    resolvePublicOrigin(request),
+    auth.userId,
+  );
   return jsonResponse(ProjectResponseSchema.parse(response));
 }
 
@@ -2023,10 +2176,16 @@ async function handleProjectDesigns(
   projectId: string,
 ): Promise<Response> {
   const project = await requireProjectAccess(env.SKYGEMS_DB, auth, projectId);
+  const ownerScope = ProjectDesignsQuerySchema.parse({
+    ownerScope: new URL(request.url).searchParams.get("ownerScope") ?? undefined,
+  }).ownerScope;
   const response = await buildProjectDesignsResponse(
+    env,
     env.SKYGEMS_DB,
     project,
-    new URL(request.url).origin,
+    resolvePublicOrigin(request),
+    auth.userId,
+    ownerScope,
   );
   return jsonResponse(ProjectDesignsResponseSchema.parse(response));
 }
@@ -2040,10 +2199,12 @@ async function handleDesignDetail(
   const design = await requireDesign(env.SKYGEMS_DB, auth.tenantId, designId);
   const project = await requireProjectAccess(env.SKYGEMS_DB, auth, design.project_id);
   const response = await buildDesignDetailResponse(
+    env,
     env.SKYGEMS_DB,
     project,
     design,
-    new URL(request.url).origin,
+    resolvePublicOrigin(request),
+    auth.userId,
   );
   return jsonResponse(DesignDetailResponseSchema.parse(response));
 }
@@ -2065,10 +2226,12 @@ async function handleSelectDesign(
   const refreshedProject = await requireProject(env.SKYGEMS_DB, auth.tenantId, project.id);
   const refreshedDesign = await requireDesign(env.SKYGEMS_DB, auth.tenantId, design.id);
   const detail = await buildDesignDetailResponse(
+    env,
     env.SKYGEMS_DB,
     refreshedProject,
     refreshedDesign,
-    new URL(request.url).origin,
+    resolvePublicOrigin(request),
+    auth.userId,
   );
 
   return jsonResponse(
@@ -2090,6 +2253,103 @@ async function routeRequest(
   ctx: ExecutionContext | undefined,
 ): Promise<Response> {
   const url = new URL(request.url);
+  const artifactImageMatch = url.pathname.match(
+    /^\/v1\/artifacts\/(art_[0-9A-HJKMNP-TV-Z]{26})\/image$/,
+  );
+
+  if (request.method === "GET" && artifactImageMatch && url.searchParams.get("token")) {
+    const artifactId = artifactImageMatch[1];
+    const token = url.searchParams.get("token")!;
+    const access = await verifyArtifactAccessToken(token, env, {
+      allowLocalFallback: isLocalDevelopmentRequest(request),
+    });
+
+    const artifact = await queryFirst<{
+      project_id: string;
+      tenant_id: string;
+      r2_key: string;
+      content_type: string;
+    }>(
+      env.SKYGEMS_DB,
+      `SELECT project_id, tenant_id, r2_key, content_type
+       FROM artifacts
+       WHERE id = ?`,
+      [artifactId],
+    );
+
+    if (!artifact || !artifact.r2_key) {
+      return errorResponse(404, "not_found", "Artifact not found.");
+    }
+
+    if (
+      access.artifactId !== artifactId ||
+      access.projectId !== artifact.project_id ||
+      access.tenantId !== artifact.tenant_id
+    ) {
+      throw new HttpError(403, "forbidden", "Artifact access token scope mismatch.");
+    }
+
+    const object = await env.SKYGEMS_ARTIFACTS.get(artifact.r2_key);
+    if (!object) {
+      return errorResponse(404, "not_found", "Artifact file not found in storage.");
+    }
+
+    return new Response(await object.arrayBuffer(), {
+      headers: {
+        "Content-Type": artifact.content_type || "application/octet-stream",
+        "Cache-Control": "private, max-age=300",
+      },
+    });
+  }
+
+  if (request.method === "POST" && url.pathname === "/v1/dev/login") {
+    if (!isDevBootstrapEnabled(request, env)) {
+      throw new HttpError(404, "not_found", "Local dev login is not enabled for this environment.");
+    }
+
+    const payload = await parseJsonBody(request, DevLoginRequestSchema);
+    const account = resolveLocalDevAccount(payload.username, payload.password);
+    if (!account) {
+      throw new HttpError(401, "unauthorized", "Invalid local development credentials.");
+    }
+
+    const bootstrap = await ensureDevBootstrap(env, {
+      tenantSlug: account.tenantSlug,
+      tenantName: account.tenantName,
+      email: account.email,
+      displayName: account.displayName,
+      projectName: account.projectName,
+      projectDescription: account.projectDescription,
+    });
+
+    return jsonResponse(
+      DevLoginResponseSchema.parse({
+        mode: "dev_bootstrap",
+        sessionToken: bootstrap.sessionToken,
+        sessionExpiresAt: bootstrap.sessionExpiresAt,
+        tenant: {
+          id: bootstrap.auth.tenantId,
+          slug: bootstrap.auth.tenantSlug,
+          name: bootstrap.auth.tenantName,
+        },
+        user: {
+          id: bootstrap.auth.userId,
+          email: bootstrap.auth.email,
+          displayName: bootstrap.auth.displayName,
+          authSubject: bootstrap.auth.authSubject,
+        },
+        project: {
+          id: bootstrap.project.id,
+          name: bootstrap.project.name,
+          description: bootstrap.project.description,
+          status: bootstrap.project.status,
+          createdAt: bootstrap.project.created_at,
+          updatedAt: bootstrap.project.updated_at,
+        },
+        created: bootstrap.created,
+      }),
+    );
+  }
 
   if (request.method === "POST" && url.pathname === "/v1/dev/bootstrap") {
     if (!isDevBootstrapEnabled(request, env)) {
@@ -2097,6 +2357,13 @@ async function routeRequest(
     }
 
     const payload = await parseJsonBody(request, DevBootstrapRequestSchema);
+    if (requiresExplicitDevBootstrapIdentity(request, env) && !payload.email?.trim()) {
+      throw new HttpError(
+        400,
+        "invalid_request",
+        "Dev bootstrap now requires an explicit email so local authentication cannot be bypassed implicitly.",
+      );
+    }
     const bootstrap = await ensureDevBootstrap(env, payload);
 
     return jsonResponse(
@@ -2130,6 +2397,10 @@ async function routeRequest(
 
   const identity = await resolveAuthContext(request, env);
   const { auth } = await ensureTenantAndUser(env.SKYGEMS_DB, identity);
+
+  if (request.method === "GET" && url.pathname === "/v1/auth/session") {
+    return jsonResponse(await buildAuthSessionResponse(env.SKYGEMS_DB, auth));
+  }
 
   if (request.method === "POST" && url.pathname === "/v1/prompt-preview") {
     return handlePromptPreview(request, env, auth);
@@ -2219,9 +2490,6 @@ async function routeRequest(
   }
 
   // ── Serve artifact images from R2 ──
-  const artifactImageMatch = url.pathname.match(
-    /^\/v1\/artifacts\/(art_[0-9A-HJKMNP-TV-Z]{26})\/image$/,
-  );
   if (request.method === "GET" && artifactImageMatch) {
     const artifactId = artifactImageMatch[1];
     const artifact = await queryFirst<{

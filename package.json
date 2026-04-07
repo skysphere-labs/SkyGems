@@ -8,15 +8,15 @@
     "packages/*"
   ],
   "scripts": {
-    "dev:web": "npm run dev --workspace @skygems/web",
+    "dev": "npx vite",
     "dev:api": "npm run dev --workspace @skygems/api",
     "db:migrate:local": "npm run db:migrate:local --workspace @skygems/api",
     "db:migrate:remote": "npm run db:migrate:remote --workspace @skygems/api",
-    "build:web": "npm run build --workspace @skygems/web",
+    "build": "npx vite build",
     "cf:typegen": "npm run cf:typegen --workspace @skygems/api",
-    "typecheck": "npm run cf:typegen && npm run typecheck --workspace @skygems/shared && npm run typecheck --workspace @skygems/agent-runtime && npm run typecheck --workspace @skygems/api && npm run typecheck --workspace @skygems/web",
+    "typecheck": "npm run cf:typegen && npm run typecheck --workspace @skygems/shared && npm run typecheck --workspace @skygems/agent-runtime && npm run typecheck --workspace @skygems/api",
     "test": "node --experimental-strip-types --test packages/shared/src/**/*.test.ts packages/agent-runtime/src/**/*.test.ts apps/api/test/**/*.test.ts",
-    "validate": "npm run typecheck && npm run test && npm run build:web"
+    "validate": "npm run typecheck && npm run test && npm run build"
   },
   "devDependencies": {
     "@types/node": "24.3.0",

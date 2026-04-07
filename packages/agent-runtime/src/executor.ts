@@ -20,6 +20,7 @@ export class AgentExecutor {
       promptPackId?: string;
       provider?: "xai" | "google";
       metadata?: Record<string, string | number | boolean | null | undefined>;
+      env?: Record<string, string | undefined>;
     },
   ): Promise<AgentRunResult<TOutput>> {
     const definition = this.registry.resolve(agentId);
@@ -37,6 +38,7 @@ export class AgentExecutor {
       providerRouter: this.providerRouter,
       skillRegistry: this.skillRegistry,
       metadata: options?.metadata,
+      env: options?.env,
     });
     const parsedOutput = parseWithSchema(definition.outputSchema, output, `${agentId} output`);
 

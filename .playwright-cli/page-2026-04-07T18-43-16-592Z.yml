@@ -1,0 +1,438 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e5] [cursor=pointer]:
+      - generic [ref=e6]:
+        - img "Star icon" [ref=e1654]
+        - generic [ref=e10]:
+          - img "Seedance 2.0" [ref=e1655]
+          - text: is live on OpenArt Suite.
+      - link "Go to the new workspace" [ref=e1656]:
+        - /url: /suite/home
+        - text: Go to the new workspace
+        - img [ref=e13]
+    - generic [ref=e15]:
+      - link "OpenArt Logo" [ref=e1657] [cursor=pointer]:
+        - /url: /suite/home
+        - img "OpenArt Logo" [ref=e1658]
+      - generic [ref=e20]:
+        - button "Help Center - Access tutorials, wiki, and support" [ref=e1659] [cursor=pointer]:
+          - img [ref=e22]
+        - link [ref=e24] [cursor=pointer]:
+          - /url: https://discord.gg/openart-ai-1009536403555750018
+          - img [ref=e25]
+        - link [ref=e28] [cursor=pointer]:
+          - /url: https://www.youtube.com/@openart_ai?sub_confirmation=1
+          - img [ref=e29]
+        - generic [ref=e31]:
+          - button "Upgrade" [ref=e1660] [cursor=pointer]: Upgrade
+          - link "Create" [ref=e1661] [cursor=pointer]:
+            - /url: /image/create
+            - img [ref=e35]
+            - text: Create
+          - generic [ref=e37]:
+            - link "Sign in" [ref=e1662] [cursor=pointer]:
+              - /url: /signin
+              - text: Sign in
+            - link "Sign up" [ref=e1663] [cursor=pointer]:
+              - /url: /signup
+              - text: Sign up
+    - generic [ref=e40]:
+      - generic [ref=e41]:
+        - generic [ref=e42]:
+          - button "Toggle Secondary Menu" [disabled] [expanded]:
+            - img
+          - generic [ref=e44]:
+            - link "Home" [ref=e1664] [cursor=pointer]:
+              - /url: /home
+              - img [ref=e47]
+              - paragraph [ref=e50]: Home
+            - link "Assets" [ref=e1665] [cursor=pointer]:
+              - /url: /assets
+              - img [ref=e53]
+              - paragraph [ref=e55]: Assets
+          - generic [ref=e57]:
+            - link "Beta Story" [ref=e1666] [cursor=pointer]:
+              - /url: /story
+              - generic [ref=e59]:
+                - img [ref=e60]
+                - paragraph [ref=e69]: Beta
+              - paragraph [ref=e70]: Story
+            - link "Video" [ref=e1667] [cursor=pointer]:
+              - /url: /video
+              - img [ref=e73]
+              - paragraph [ref=e77]: Video
+            - link "Image" [ref=e1668] [cursor=pointer]:
+              - /url: /image
+              - img [ref=e80]
+              - paragraph [ref=e85]: Image
+            - link "New Character" [ref=e1669] [cursor=pointer]:
+              - /url: /characters
+              - generic [ref=e87]:
+                - img [ref=e88]
+                - paragraph [ref=e92]: New
+              - paragraph [ref=e93]: Character
+            - link "Audio" [ref=e1670] [cursor=pointer]:
+              - /url: /audio
+              - img [ref=e96]
+              - paragraph [ref=e98]: Audio
+          - generic [ref=e101] [cursor=pointer]:
+            - img [ref=e103]
+            - paragraph [ref=e105]: More
+        - link "Tutorial" [ref=e1671] [cursor=pointer]:
+          - /url: /tutorials
+          - img [ref=e109]
+          - paragraph [ref=e111]: Tutorial
+      - main [ref=e112]:
+        - generic [ref=e115]:
+          - generic [ref=e116]:
+            - heading "Community" [level=1] [ref=e1672]
+            - generic [ref=e118]:
+              - button "Story" [ref=e1673] [cursor=pointer]:
+                - img [ref=e120]
+                - generic [ref=e128]: Story
+              - button "Image/Video" [ref=e1674] [cursor=pointer]:
+                - img [ref=e130]
+                - generic [ref=e132]: Image/Video
+          - generic [ref=e695]:
+            - generic [ref=e696]:
+              - generic [ref=e699]:
+                - group [ref=e700]:
+                  - button "Search by image similarity" [pressed] [ref=e1675] [cursor=pointer]: Search by image similarity
+                  - button "Search by prompt" [ref=e1676] [cursor=pointer]: Search by prompt
+                - generic [ref=e704]:
+                  - img [ref=e706]
+                  - textbox "Search over 10 millions of prompts and AI generated art" [ref=e1677]
+                  - group
+              - button "Filter" [ref=e1678] [cursor=pointer]:
+                - img [ref=e714]
+                - text: Filter
+            - generic [ref=e717]:
+              - generic [ref=e718]:
+                - link [ref=e1679] [cursor=pointer]:
+                  - /url: https://openart.ai/community/iBhweW4Tio80Mxiy5McH
+                  - img [ref=e1680]
+                - 'link "Prompt: @ArcadioPineda is seated in the ship cabin of his brother @AntonioPineda during the Malaspinas expedition, in 1791. Through the cabin window can be seen a beach and tropical mountain landscape in the distance. On the walls are charts of obscure coastlines being explored, and there are scrolls rolled up on the table too. On the table and on cases and furnishings around are many loose items and boxes containing plants, insects, rocks and samples, and numerous drawings of flora and fauna. @AntonioPineda is enthusiastically explaining some artefact which he is displaying to @ArcadioPineda. An assistant is in the background working with the many specimens in the rather untidy cramped cabin. On the table which they share are a couple of heavy glasses and a jug of dark liquid, maybe wine. They have eaten recently." [ref=e1681] [cursor=pointer]':
+                  - /url: https://openart.ai/community/1Cw0iGgp4gq5NwXYP7e4
+                  - 'img "Prompt: @ArcadioPineda is seated in the ship cabin of his brother @AntonioPineda during the Malaspinas expedition, in 1791. Through the cabin window can be seen a beach and tropical mountain landscape in the distance. On the walls are charts of obscure coastlines being explored, and there are scrolls rolled up on the table too. On the table and on cases and furnishings around are many loose items and boxes containing plants, insects, rocks and samples, and numerous drawings of flora and fauna. @AntonioPineda is enthusiastically explaining some artefact which he is displaying to @ArcadioPineda. An assistant is in the background working with the many specimens in the rather untidy cramped cabin. On the table which they share are a couple of heavy glasses and a jug of dark liquid, maybe wine. They have eaten recently." [ref=e1682]'
+                - 'link "Prompt: The fruit face says: Hi , I am watermelon. I’m 92% water and still somehow more refreshing than your attitude.Hydration, vitamins, zero guilt—I’m basically summer in edible form.But slice me right, or you’re just wasting perfection. @voice-1775576858264" [ref=e1683] [cursor=pointer]':
+                  - /url: https://openart.ai/community/K7G8yar5fIXX7CV8CuYa
+                  - generic [ref=e735]:
+                    - 'img "Prompt: The fruit face says: Hi , I am watermelon. I’m 92% water and still somehow more refreshing than your attitude.Hydration, vitamins, zero guilt—I’m basically summer in edible form.But slice me right, or you’re just wasting perfection. @voice-1775576858264" [ref=e1684]'
+                    - img [ref=e738]
+                - 'link "Prompt: The unicorn is looking sad while searching along area of waterfall. She keeps on shouting her little brother''s name. With sad worried voice the unicorn said \"This is the place my little brother and I usually play.Where are you my little brother.I miss you. I hope you''re okay.\"" [ref=e1686] [cursor=pointer]':
+                  - /url: https://openart.ai/community/kzlDAAb9F0li6sOjkaVs
+                  - generic [ref=e744]:
+                    - 'img "Prompt: The unicorn is looking sad while searching along area of waterfall. She keeps on shouting her little brother''s name. With sad worried voice the unicorn said \"This is the place my little brother and I usually play.Where are you my little brother.I miss you. I hope you''re okay.\"" [ref=e1687]'
+                    - img [ref=e747]
+                - 'link "Prompt: Cinematic lifestyle video opening with beautiful older blonde woman with warm smile sitting at cozy cottage kitchen counter focused on coloring, soft natural window light, steaming tea beside her, colored pencils arranged on wooden surface, camera slowly pulls back to reveal she is coloring a beautiful intricate page, then camera gently pans and transitions to showcase close up details of whimsical cottage garden coloring pages floating into frame, intricate hedgehog cottage illustrations, botanical herb bottles and apothecary scenes, fairy gardens and woodland mushrooms, kawaii cottage animals, each page drifting gracefully into view showing extraordinary detail and beauty, warm golden cottage light illuminating the pages, magical cottagecore atmosphere throughout, dreamy cinematic movement" [ref=e1689] [cursor=pointer]':
+                  - /url: https://openart.ai/community/uubh7LlH50466nrQW1Xm
+                  - generic [ref=e753]:
+                    - 'img "Prompt: Cinematic lifestyle video opening with beautiful older blonde woman with warm smile sitting at cozy cottage kitchen counter focused on coloring, soft natural window light, steaming tea beside her, colored pencils arranged on wooden surface, camera slowly pulls back to reveal she is coloring a beautiful intricate page, then camera gently pans and transitions to showcase close up details of whimsical cottage garden coloring pages floating into frame, intricate hedgehog cottage illustrations, botanical herb bottles and apothecary scenes, fairy gardens and woodland mushrooms, kawaii cottage animals, each page drifting gracefully into view showing extraordinary detail and beauty, warm golden cottage light illuminating the pages, magical cottagecore atmosphere throughout, dreamy cinematic movement" [ref=e1690]'
+                    - img [ref=e756]
+                - 'link "Prompt: 1) Tank charging through the muddy plain, 2) running at fast speed, 3) mud splashing as it goes, 4) heart pounding mud splashing effect towards the screen !" [ref=e1692] [cursor=pointer]':
+                  - /url: https://openart.ai/community/r9MK3dNfdcAsInIlvC06
+                  - generic [ref=e762]:
+                    - 'img "Prompt: 1) Tank charging through the muddy plain, 2) running at fast speed, 3) mud splashing as it goes, 4) heart pounding mud splashing effect towards the screen !" [ref=e1693]'
+                    - img [ref=e765]
+                - 'link "Prompt: Slowly digitally build full image. Give facial silhouette slight devious grin. As horns pop out. And return to the original. Logo. Image." [ref=e1695] [cursor=pointer]':
+                  - /url: https://openart.ai/community/f23bO63QQoEMsBQ87ePz
+                  - generic [ref=e771]:
+                    - 'img "Prompt: Slowly digitally build full image. Give facial silhouette slight devious grin. As horns pop out. And return to the original. Logo. Image." [ref=e1696]'
+                    - img [ref=e774]
+                - link [ref=e1698] [cursor=pointer]:
+                  - /url: https://openart.ai/community/YXqgnAnidy6pxet4S4CW
+                  - generic [ref=e780]:
+                    - img [ref=e1699]
+                    - img [ref=e783]
+                - 'link "Prompt: @YVXS4jUmpYSzxFemd4ymis sitting in a blacked out vcal booth dimly lit on a tufted black leather chair in front of a Neumann microphone with black filter. @YVXS4jUmpYSzxFemd4ym is wearing a navy blue stripped castted beanie,navy blue stripped cahmere scarf wrapped around his neck, navy blue V neck sweater and Navy blue custom fitted sports coat with matching pants, color blocked silk pocket square in his left breast pocket. Thick black square framed dark gray tinted sunglasses. On his left wrist is a single stand black onyx beaded bracelet and on his middle finger is its black diamond signet ring. He is not wearing any necklace around his neck and no white shirt underneath the navy blue v neck." [ref=e1701] [cursor=pointer]':
+                  - /url: https://openart.ai/community/fgRzSVGVUoPq2zDxENua
+                  - 'img "Prompt: @YVXS4jUmpYSzxFemd4ymis sitting in a blacked out vcal booth dimly lit on a tufted black leather chair in front of a Neumann microphone with black filter. @YVXS4jUmpYSzxFemd4ym is wearing a navy blue stripped castted beanie,navy blue stripped cahmere scarf wrapped around his neck, navy blue V neck sweater and Navy blue custom fitted sports coat with matching pants, color blocked silk pocket square in his left breast pocket. Thick black square framed dark gray tinted sunglasses. On his left wrist is a single stand black onyx beaded bracelet and on his middle finger is its black diamond signet ring. He is not wearing any necklace around his neck and no white shirt underneath the navy blue v neck." [ref=e1702]'
+                - 'link "Prompt: give me a full character sheet with turnaround , different poses and facial expressions" [active] [ref=e1703] [cursor=pointer]':
+                  - /url: https://openart.ai/community/JJgwqNXiTwUKw3zzRwWs
+                  - 'img "Prompt: give me a full character sheet with turnaround , different poses and facial expressions" [ref=e1704]'
+                - link "Prompt:" [ref=e1705] [cursor=pointer]:
+                  - /url: https://openart.ai/community/oAJJbwehu3zodGJMFAXu
+                  - generic [ref=e801]:
+                    - img "Prompt:" [ref=e1706]
+                    - img [ref=e803]
+                - link "Prompt:" [ref=e1708] [cursor=pointer]:
+                  - /url: https://openart.ai/community/2FJikNHiOuvCB1zNu5lT
+                  - generic [ref=e809]:
+                    - img "Prompt:" [ref=e1709]
+                    - img [ref=e811]
+                - 'link "Prompt: She is running her hands through her hair, as if she is applying a treatment along the entire length of it" [ref=e1711] [cursor=pointer]':
+                  - /url: https://openart.ai/community/zGPaTAzRP6Lh2aeXxryM
+                  - generic [ref=e817]:
+                    - 'img "Prompt: She is running her hands through her hair, as if she is applying a treatment along the entire length of it" [ref=e1712]'
+                    - img [ref=e819]
+                - link "Prompt:" [ref=e1714] [cursor=pointer]:
+                  - /url: https://openart.ai/community/np7NEXjD07MsJsu12M7K
+                  - generic [ref=e825]:
+                    - img "Prompt:" [ref=e1715]
+                    - img [ref=e827]
+                - 'link "Prompt: KEEP THE PICTURE STATIC. DONOT PULL OUT THE TUBE. Voice speaks in English \"Once resistance is felt, withdraw the catheter by 1 cm before beginning suction to avoid damaging the mucosal lining\" @voice-1775505550129" [ref=e1717] [cursor=pointer]':
+                  - /url: https://openart.ai/community/bVjAWzMpWAzzRhFnLtDr
+                  - generic [ref=e833]:
+                    - 'img "Prompt: KEEP THE PICTURE STATIC. DONOT PULL OUT THE TUBE. Voice speaks in English \"Once resistance is felt, withdraw the catheter by 1 cm before beginning suction to avoid damaging the mucosal lining\" @voice-1775505550129" [ref=e1718]'
+                    - img [ref=e835]
+                - link "Prompt:" [ref=e1720] [cursor=pointer]:
+                  - /url: https://openart.ai/community/IoGnT1ibK8fBsU5A8gmw
+                  - generic [ref=e841]:
+                    - img "Prompt:" [ref=e1721]
+                    - img [ref=e843]
+                - 'link "Prompt: Voice speaks \"Place a non clean glove on your non dominant hand, this hand will handle the non sterile items like the suction valve\" two gloved hands, wave the left FROM SIDE TO SIDE hand Gloves do not touch.@voice-1775498318515" [ref=e1723] [cursor=pointer]':
+                  - /url: https://openart.ai/community/vwH7crFLakXBeo04e0bL
+                  - generic [ref=e849]:
+                    - 'img "Prompt: Voice speaks \"Place a non clean glove on your non dominant hand, this hand will handle the non sterile items like the suction valve\" two gloved hands, wave the left FROM SIDE TO SIDE hand Gloves do not touch.@voice-1775498318515" [ref=e1724]'
+                    - img [ref=e851]
+                - 'link "Prompt: Have the boy in the video share his cotton candy with the little girl. Have her look up at him and they both smile. Have the Ferris wheel turning in the background. Make it cinematic." [ref=e1726] [cursor=pointer]':
+                  - /url: https://openart.ai/community/hZM7qUewRyWTxC7JCIG0
+                  - generic [ref=e857]:
+                    - 'img "Prompt: Have the boy in the video share his cotton candy with the little girl. Have her look up at him and they both smile. Have the Ferris wheel turning in the background. Make it cinematic." [ref=e1727]'
+                    - img [ref=e859]
+              - generic [ref=e861]:
+                - 'link "Prompt: Elf ranger in a mystical forest around sunlight" [ref=e1729] [cursor=pointer]':
+                  - /url: https://openart.ai/community/7dFUjXwtEdSZ0cLh3YoQ
+                  - 'img "Prompt: Elf ranger in a mystical forest around sunlight" [ref=e1730]'
+                - link "Prompt:" [ref=e1731] [cursor=pointer]:
+                  - /url: https://openart.ai/community/AiGvWcAqyJcIyHXLecUM
+                  - img "Prompt:" [ref=e1732]
+                - 'link "Prompt: A 10-second cinematic animated explainer video. Start with a chaotic social media post about a cancer vaccine with glitch effects and flashing exaggerated claims. Quick transition to a clean lab scene showing scientists discussing NK cell activation. Cut to a confused young man surrounded by floating social media icons, looking overwhelmed. Then everything freezes and fades into a minimal calm scene where “PacCur” appears in the center with a soft glow. High contrast between chaos and clarity, smooth fast transitions, modern semi-realistic illustration style, optimized for social media ads." [ref=e1733] [cursor=pointer]':
+                  - /url: https://openart.ai/community/cXQAD5haEmG7Sj07UUgJ
+                  - generic [ref=e878]:
+                    - 'img "Prompt: A 10-second cinematic animated explainer video. Start with a chaotic social media post about a cancer vaccine with glitch effects and flashing exaggerated claims. Quick transition to a clean lab scene showing scientists discussing NK cell activation. Cut to a confused young man surrounded by floating social media icons, looking overwhelmed. Then everything freezes and fades into a minimal calm scene where “PacCur” appears in the center with a soft glow. High contrast between chaos and clarity, smooth fast transitions, modern semi-realistic illustration style, optimized for social media ads." [ref=e1734]'
+                    - img [ref=e881]
+                - link [ref=e1736] [cursor=pointer]:
+                  - /url: https://openart.ai/community/kLavtkpz2O1C6xFhZnQR
+                  - generic [ref=e887]:
+                    - img [ref=e1737]
+                    - img [ref=e890]
+                - link [ref=e1739] [cursor=pointer]:
+                  - /url: https://openart.ai/community/VSg4FedFX4mYWBV0wxIo
+                  - generic [ref=e896]:
+                    - img [ref=e1740]
+                    - img [ref=e899]
+                - 'link "Prompt: \"eMusement Park comes to life every day with its own television series that follows the drama and adventures of your favorite eStars!\"" [ref=e1742] [cursor=pointer]':
+                  - /url: https://openart.ai/community/TUtEUeDXBTPr2Lli1pTB
+                  - generic [ref=e905]:
+                    - 'img "Prompt: \"eMusement Park comes to life every day with its own television series that follows the drama and adventures of your favorite eStars!\"" [ref=e1743]'
+                    - img [ref=e908]
+                - 'link "Prompt: make a woman in the picture dancing like jazz and ballerina in the air klimt style of cloud, and sky" [ref=e1745] [cursor=pointer]':
+                  - /url: https://openart.ai/community/Wg6KVxuWKw9vhZUitivM
+                  - generic [ref=e914]:
+                    - 'img "Prompt: make a woman in the picture dancing like jazz and ballerina in the air klimt style of cloud, and sky" [ref=e1746]'
+                    - img [ref=e917]
+                - link [ref=e1748] [cursor=pointer]:
+                  - /url: https://openart.ai/community/aX3VDQ8pu0nImMrmka0s
+                  - generic [ref=e923]:
+                    - img [ref=e1749]
+                    - img [ref=e926]
+                - 'link "Prompt: i need a horizontal image of a large fleet of cars . It needs to have a technology feel to it but should look realisitic. Use light trail effects to suggest ''connected cars''." [ref=e1751] [cursor=pointer]':
+                  - /url: https://openart.ai/community/e8M1E45lo2OgauU46cLy
+                  - 'img "Prompt: i need a horizontal image of a large fleet of cars . It needs to have a technology feel to it but should look realisitic. Use light trail effects to suggest ''connected cars''." [ref=e1752]'
+                - 'link "Prompt: Black men in the hood, with gold grills, gold chains around their necks in different positions of standing and kneeling around displaying luxury cars, and other symbols of wealth and power. They are not saying anything. They are just posturing" [ref=e1753] [cursor=pointer]':
+                  - /url: https://openart.ai/community/g7tr0VI2bGpFOftYmsXD
+                  - generic [ref=e938]:
+                    - 'img "Prompt: Black men in the hood, with gold grills, gold chains around their necks in different positions of standing and kneeling around displaying luxury cars, and other symbols of wealth and power. They are not saying anything. They are just posturing" [ref=e1754]'
+                    - img [ref=e940]
+                - 'link "Prompt: They look at each other and then the man with the spear walks to the right. The man on the left stays." [ref=e1756] [cursor=pointer]':
+                  - /url: https://openart.ai/community/n2AStvuL0PSlKzfr24pc
+                  - generic [ref=e946]:
+                    - 'img "Prompt: They look at each other and then the man with the spear walks to the right. The man on the left stays." [ref=e1757]'
+                    - img [ref=e948]
+                - 'link "Prompt: Police officer bodycam footage style, handheld shaky camera, realistic and gritty. A uniformed police officer is patrolling a busy city sidewalk during the day. An elderly woman in her 70s is walking slowly with a handbag over her shoulder. A young man in a hoodie suddenly grabs her purse from behind and attempts to run. The officer immediately gives chase on foot, sprinting down the sidewalk through pedestrians. The officer catches the man within seconds, tackles him to the ground and pins him down. The elderly woman stands watching, visibly shaken. Bystanders stop and stare. Realistic bodycam overlay with timestamp visible in the corner. No narration. No music. Raw authentic footage feel." [ref=e1759] [cursor=pointer]':
+                  - /url: https://openart.ai/community/8dFPl4kagdmXKWNpSek9
+                  - generic [ref=e954]:
+                    - 'img "Prompt: Police officer bodycam footage style, handheld shaky camera, realistic and gritty. A uniformed police officer is patrolling a busy city sidewalk during the day. An elderly woman in her 70s is walking slowly with a handbag over her shoulder. A young man in a hoodie suddenly grabs her purse from behind and attempts to run. The officer immediately gives chase on foot, sprinting down the sidewalk through pedestrians. The officer catches the man within seconds, tackles him to the ground and pins him down. The elderly woman stands watching, visibly shaken. Bystanders stop and stare. Realistic bodycam overlay with timestamp visible in the corner. No narration. No music. Raw authentic footage feel." [ref=e1760]'
+                    - img [ref=e956]
+                - 'link "Prompt: They look at each other and then the man with the spear walks away." [ref=e1762] [cursor=pointer]':
+                  - /url: https://openart.ai/community/ylRu2aQQk2iMVPZjdWxW
+                  - generic [ref=e962]:
+                    - 'img "Prompt: They look at each other and then the man with the spear walks away." [ref=e1763]'
+                    - img [ref=e964]
+                - link "Prompt:" [ref=e1765] [cursor=pointer]:
+                  - /url: https://openart.ai/community/0tle3hoX3f3ybkhz2whf
+                  - generic [ref=e970]:
+                    - img "Prompt:" [ref=e1766]
+                    - img [ref=e972]
+                - link [ref=e1768] [cursor=pointer]:
+                  - /url: https://openart.ai/community/1tON8OuGY1W6PIoxRHmp
+                  - generic [ref=e978]:
+                    - img [ref=e1769]
+                    - img [ref=e980]
+                - link [ref=e1771] [cursor=pointer]:
+                  - /url: https://openart.ai/community/1rHLYDnKPh4k32KuixsU
+                  - generic [ref=e986]:
+                    - img [ref=e1772]
+                    - img [ref=e988]
+                - link [ref=e1774] [cursor=pointer]:
+                  - /url: https://openart.ai/community/UQDGmQr0JHFqQTwitFZD
+                  - generic [ref=e994]:
+                    - img [ref=e1775]
+                    - img [ref=e996]
+              - generic [ref=e998]:
+                - 'link "Prompt: A stylish crochet bag with a geometric pattern and leather straps." [ref=e1777] [cursor=pointer]':
+                  - /url: https://openart.ai/community/FYQ6lNb9A7Ggqhiw660T
+                  - 'img "Prompt: A stylish crochet bag with a geometric pattern and leather straps." [ref=e1778]'
+                - 'link "Prompt: Hey, it’s your AI relationship coach… and here’s the truth most people miss:Chemistry may start a relationship, but consistency sustains it.Love that lasts looks like choosing each other on the hard days…Communicating when it’s uncomfortable…And growing, not just together—but individually too.Stop chasing sparks. Start building steady fire.Because real love?It’s not just felt… it’s practiced—daily.”Follow for more real talk on relationships that actually work. @voice-1775586686900" [ref=e1779] [cursor=pointer]':
+                  - /url: https://openart.ai/community/zsqqJabXKwHaUTchUuPB
+                  - generic [ref=e1009]:
+                    - 'img "Prompt: Hey, it’s your AI relationship coach… and here’s the truth most people miss:Chemistry may start a relationship, but consistency sustains it.Love that lasts looks like choosing each other on the hard days…Communicating when it’s uncomfortable…And growing, not just together—but individually too.Stop chasing sparks. Start building steady fire.Because real love?It’s not just felt… it’s practiced—daily.”Follow for more real talk on relationships that actually work. @voice-1775586686900" [ref=e1780]'
+                    - img [ref=e1012]
+                - link [ref=e1782] [cursor=pointer]:
+                  - /url: https://openart.ai/community/bzKKf591iAWkqWcJGHWQ
+                  - generic [ref=e1018]:
+                    - img [ref=e1783]
+                    - img [ref=e1021]
+                - 'link "Prompt: A man sitting in the driver''s seat of a classic lowrider car, the lowrider bouncing and dancing to the rhythm of the music using its hydraulic system, realistic style, vibrant urban street scene, cinematic lighting, reflections on the polished car surface, dynamic hip-hop music video vibe, energetic and stylish atmosphere" [ref=e1785] [cursor=pointer]':
+                  - /url: https://openart.ai/community/ZFxNzrwGnp1b4d4C1DNa
+                  - generic [ref=e1027]:
+                    - 'img "Prompt: A man sitting in the driver''s seat of a classic lowrider car, the lowrider bouncing and dancing to the rhythm of the music using its hydraulic system, realistic style, vibrant urban street scene, cinematic lighting, reflections on the polished car surface, dynamic hip-hop music video vibe, energetic and stylish atmosphere" [ref=e1786]'
+                    - img [ref=e1030]
+                - link [ref=e1788] [cursor=pointer]:
+                  - /url: https://openart.ai/community/shRjtz2Uzq2TPBOe2KD2
+                  - generic [ref=e1036]:
+                    - img [ref=e1789]
+                    - img [ref=e1039]
+                - 'link "Prompt: Have his clothes morph from the first picture to the second" [ref=e1791] [cursor=pointer]':
+                  - /url: https://openart.ai/community/gqMtnHdMU3JLZ1Mq11UF
+                  - generic [ref=e1045]:
+                    - 'img "Prompt: Have his clothes morph from the first picture to the second" [ref=e1792]'
+                    - img [ref=e1048]
+                - link "Prompt:" [ref=e1794] [cursor=pointer]:
+                  - /url: https://openart.ai/community/CJKVFcScQ8uv2hEC1LYp
+                  - generic [ref=e1054]:
+                    - img "Prompt:" [ref=e1795]
+                    - img [ref=e1057]
+                - link [ref=e1797] [cursor=pointer]:
+                  - /url: https://openart.ai/community/Q4t6y7eFA4EOEpsKaht5
+                  - img [ref=e1798]
+                - link "Prompt:" [ref=e1799] [cursor=pointer]:
+                  - /url: https://openart.ai/community/T50u8Jey6FTtRlecDZM6
+                  - img "Prompt:" [ref=e1800]
+                - 'link "Prompt: “Soft pastel 2D toddler animation. An elephant says, ‘Big… small!’ when the elephant says Big the elephant glows softly, after a tiny mouse appears beside it, when the elephant says small the mouse glow softly. Calm, smooth motion, rounded shapes.”" [ref=e1801] [cursor=pointer]':
+                  - /url: https://openart.ai/community/S53WWelIjq3hHJwb7puU
+                  - generic [ref=e1075]:
+                    - 'img "Prompt: “Soft pastel 2D toddler animation. An elephant says, ‘Big… small!’ when the elephant says Big the elephant glows softly, after a tiny mouse appears beside it, when the elephant says small the mouse glow softly. Calm, smooth motion, rounded shapes.”" [ref=e1802]'
+                    - img [ref=e1077]
+                - link [ref=e1804] [cursor=pointer]:
+                  - /url: https://openart.ai/community/3jY3HER798ga2MQEQXeM
+                  - generic [ref=e1083]:
+                    - img [ref=e1805]
+                    - img [ref=e1085]
+                - link "Prompt:" [ref=e1807] [cursor=pointer]:
+                  - /url: https://openart.ai/community/Gn2uNy5MLprB7ygTVHmT
+                  - generic [ref=e1091]:
+                    - img "Prompt:" [ref=e1808]
+                    - img [ref=e1093]
+                - link [ref=e1810] [cursor=pointer]:
+                  - /url: https://openart.ai/community/dFd70z61zyCCqKkyKKE4
+                  - generic [ref=e1099]:
+                    - img [ref=e1811]
+                    - img [ref=e1101]
+                - 'link "Prompt: The figure says ''Paperless. Secure. 100% online'' (do not add text to the video)" [ref=e1813] [cursor=pointer]':
+                  - /url: https://openart.ai/community/shvJpFK6LASBx1JAHZ4r
+                  - generic [ref=e1107]:
+                    - 'img "Prompt: The figure says ''Paperless. Secure. 100% online'' (do not add text to the video)" [ref=e1814]'
+                    - img [ref=e1109]
+                - 'link "Prompt: @ Host The lighting is soft and flattering, cinematic but natural. She looks directly into the camera with a playful smile and confident posture. The vibe is playful, confident, and slightly flirty. Scene action: She smiles warmly at the camera and slightly tilts her head.In a cheerful, playful tone she says: [warm feminine voice] \"Hey… do you like my outfit?\" Short pause, soft smile:\"Tell me in the comments or message me!\" Style: realistic, cinematic warm lighting natural expressions friendly, playful vibesmooth motion Camera: medium close-up eye-level softly blurred cozy background" [ref=e1816] [cursor=pointer]':
+                  - /url: https://openart.ai/community/TzIK13iKvteFPU7MOvfe
+                  - generic [ref=e1115]:
+                    - 'img "Prompt: @ Host The lighting is soft and flattering, cinematic but natural. She looks directly into the camera with a playful smile and confident posture. The vibe is playful, confident, and slightly flirty. Scene action: She smiles warmly at the camera and slightly tilts her head.In a cheerful, playful tone she says: [warm feminine voice] \"Hey… do you like my outfit?\" Short pause, soft smile:\"Tell me in the comments or message me!\" Style: realistic, cinematic warm lighting natural expressions friendly, playful vibesmooth motion Camera: medium close-up eye-level softly blurred cozy background" [ref=e1817]'
+                    - img [ref=e1117]
+                - link [ref=e1819] [cursor=pointer]:
+                  - /url: https://openart.ai/community/6W7tZ7hBsUeHL9Axk5DP
+                  - generic [ref=e1123]:
+                    - img [ref=e1820]
+                    - img [ref=e1125]
+                - 'link "Prompt: Create a panning shot with smooth transition into the last image with travel vlog type music in the background" [ref=e1822] [cursor=pointer]':
+                  - /url: https://openart.ai/community/K0MgMKKiyr5L4v4q8XAm
+                  - generic [ref=e1131]:
+                    - 'img "Prompt: Create a panning shot with smooth transition into the last image with travel vlog type music in the background" [ref=e1823]'
+                    - img [ref=e1133]
+              - generic [ref=e1135]:
+                - 'link "Prompt: @5NiRrX3N7tIu0qJv71Bq" [ref=e1825] [cursor=pointer]':
+                  - /url: https://openart.ai/community/eqcXf7GvXUUDETJLt1Ow
+                  - 'img "Prompt: @5NiRrX3N7tIu0qJv71Bq" [ref=e1826]'
+                - 'link "Prompt: Drawing from a diary the Lines and shapes from the diary turn into dozens of dresses peeling from the page and being burried upside down in the earth inbetween viens of blood. The video should be in the style of charcoal drawings being animated on a single page all looking like it is being drawn and earased simotansiosly" [ref=e1827] [cursor=pointer]':
+                  - /url: https://openart.ai/community/vKlEl66eMkDBwh1mW7FJ
+                  - generic [ref=e1146]:
+                    - 'img "Prompt: Drawing from a diary the Lines and shapes from the diary turn into dozens of dresses peeling from the page and being burried upside down in the earth inbetween viens of blood. The video should be in the style of charcoal drawings being animated on a single page all looking like it is being drawn and earased simotansiosly" [ref=e1828]'
+                    - img [ref=e1149]
+                - 'link "Prompt: remove the heart icon from the video. Reconstruct the background realistically using surrounding pixels. Preserve motion, depth, lighting, and texture. Ensure seamless blending across all frames with no flicker." [ref=e1830] [cursor=pointer]':
+                  - /url: https://openart.ai/community/UQJlY7zea9ePUrD60PT7
+                  - generic [ref=e1155]:
+                    - 'img "Prompt: remove the heart icon from the video. Reconstruct the background realistically using surrounding pixels. Preserve motion, depth, lighting, and texture. Ensure seamless blending across all frames with no flicker." [ref=e1831]'
+                    - img [ref=e1158]
+                - 'link "Prompt: And God said, Let there be light: and there was light" [ref=e1833] [cursor=pointer]':
+                  - /url: https://openart.ai/community/ywKIRmq5v2nL6qqDSQJh
+                  - generic [ref=e1164]:
+                    - 'img "Prompt: And God said, Let there be light: and there was light" [ref=e1834]'
+                    - img [ref=e1167]
+                - link [ref=e1836] [cursor=pointer]:
+                  - /url: https://openart.ai/community/h6NMsWEmeJqw1RFsfp6w
+                  - generic [ref=e1173]:
+                    - img [ref=e1837]
+                    - img [ref=e1176]
+                - 'link "Prompt: \"prompt\": \"A cartoon stick-figure marine stands in a storage room with wooden crates, aiming a long rifle. Subtle body movements. Camera stays stationary.\", \"negative_prompt\": \"blur, distort, low quality\", \"cfg_scale\": 0.5, \"camera_control\": { \"type\": \"simple\", \"config\": { \"horizontal\": 0, \"vertical\": 0, \"pan\": 0, \"tilt\": 0, \"roll\": 0, \"zoom\": 0" [ref=e1839] [cursor=pointer]':
+                  - /url: https://openart.ai/community/yRPrYHZSwTI4ZTmq0zgy
+                  - generic [ref=e1182]:
+                    - 'img "Prompt: \"prompt\": \"A cartoon stick-figure marine stands in a storage room with wooden crates, aiming a long rifle. Subtle body movements. Camera stays stationary.\", \"negative_prompt\": \"blur, distort, low quality\", \"cfg_scale\": 0.5, \"camera_control\": { \"type\": \"simple\", \"config\": { \"horizontal\": 0, \"vertical\": 0, \"pan\": 0, \"tilt\": 0, \"roll\": 0, \"zoom\": 0" [ref=e1840]'
+                    - img [ref=e1185]
+                - 'link "Prompt: Professor Michael power hour." [ref=e1842] [cursor=pointer]':
+                  - /url: https://openart.ai/community/Z0iWjJh5hjMwQhzw2aLb
+                  - generic [ref=e1191]:
+                    - 'img "Prompt: Professor Michael power hour." [ref=e1843]'
+                    - img [ref=e1194]
+                - 'link "Prompt: fit the logo into the background" [ref=e1845] [cursor=pointer]':
+                  - /url: https://openart.ai/community/xov49oMog8oLHAujSJEL
+                  - 'img "Prompt: fit the logo into the background" [ref=e1846]'
+                - link [ref=e1847] [cursor=pointer]:
+                  - /url: https://openart.ai/community/KHGCHp2Ipr2xRrgwDvdJ
+                  - img [ref=e1848]
+                - 'link "Prompt: تلوح بيدها وتبتسم وتحيي الناس وتعمل حركة باي" [ref=e1849] [cursor=pointer]':
+                  - /url: https://openart.ai/community/cWlpgPRib0Yf0P9zupZx
+                  - generic [ref=e1212]:
+                    - 'img "Prompt: تلوح بيدها وتبتسم وتحيي الناس وتعمل حركة باي" [ref=e1850]'
+                    - img [ref=e1214]
+                - 'link "Prompt: Private jet on runway at sunset. You standing outside, phone in hand.Action:You text: “Plane ready. Don’t miss this.”Cut to her stepping onto the jet stairs confidently.Vibe: luxury, power moveCamera: cinematic wide shot → close-upInside plane — she’s looking out the window, clouds glowing.Action:She records a quick selfie video: “Halfway there…”Cut to you checking your watch, waiting.Vibe: anticipation, connectionCamera: soft glow lighting, slow motionScene (10 sec):Plane landing, wheels touching runway.Action:Cut to you leaning on a car, watching the plane.She steps out, locks eyes with you from a distance.Vibe: cinematic reunion build-upCamera: dramatic slow-motion walk" [ref=e1852] [cursor=pointer]':
+                  - /url: https://openart.ai/community/5TlXhnGKsHb12U2nUt4q
+                  - generic [ref=e1220]:
+                    - 'img "Prompt: Private jet on runway at sunset. You standing outside, phone in hand.Action:You text: “Plane ready. Don’t miss this.”Cut to her stepping onto the jet stairs confidently.Vibe: luxury, power moveCamera: cinematic wide shot → close-upInside plane — she’s looking out the window, clouds glowing.Action:She records a quick selfie video: “Halfway there…”Cut to you checking your watch, waiting.Vibe: anticipation, connectionCamera: soft glow lighting, slow motionScene (10 sec):Plane landing, wheels touching runway.Action:Cut to you leaning on a car, watching the plane.She steps out, locks eyes with you from a distance.Vibe: cinematic reunion build-upCamera: dramatic slow-motion walk" [ref=e1853]'
+                    - img [ref=e1222]
+                - 'link "Prompt: Animate a modern logo reveal for a media company focused on addiction and mental health recovery. The tone should be cinematic, hopeful, and authoritative—not cheesy or overly emotional. Use a neon gradient color scheme (purple to pink). The animation should feel high-end, like a Netflix or Apple brand intro. Include subtle lighting, smooth motion, and depth. Add professional background music that evolves with the animation and ends in a confident, uplifting tone. Theme: chaos to clarity" [ref=e1855] [cursor=pointer]':
+                  - /url: https://openart.ai/community/7PTnqfSl56fgEGInmrfN
+                  - generic [ref=e1228]:
+                    - 'img "Prompt: Animate a modern logo reveal for a media company focused on addiction and mental health recovery. The tone should be cinematic, hopeful, and authoritative—not cheesy or overly emotional. Use a neon gradient color scheme (purple to pink). The animation should feel high-end, like a Netflix or Apple brand intro. Include subtle lighting, smooth motion, and depth. Add professional background music that evolves with the animation and ends in a confident, uplifting tone. Theme: chaos to clarity" [ref=e1856]'
+                    - img [ref=e1230]
+                - 'link "Prompt: Animate the woman from the reference image, keeping her facial features, expression, skin tone, hair, and overall appearance exactly the same. She is seated in the chair. A small stack of books is on the floor beside her. She naturally leans forward, reaches down, picks up one book from the stack, opens it, and begins reading calmly. Movements are smooth, realistic, and subtle. Soft natural indoor lighting, stable camera, photorealistic style." [ref=e1858] [cursor=pointer]':
+                  - /url: https://openart.ai/community/u5gKbfLum7XZ9oYdY9og
+                  - generic [ref=e1236]:
+                    - 'img "Prompt: Animate the woman from the reference image, keeping her facial features, expression, skin tone, hair, and overall appearance exactly the same. She is seated in the chair. A small stack of books is on the floor beside her. She naturally leans forward, reaches down, picks up one book from the stack, opens it, and begins reading calmly. Movements are smooth, realistic, and subtle. Soft natural indoor lighting, stable camera, photorealistic style." [ref=e1859]'
+                    - img [ref=e1238]
+                - 'link "Prompt: 🎬 Single Scene — Refined Version (OpenArt Ready) Prompt: A peaceful lakeside porch in Nova Scotia, early morning light, a woman in her late 30s sitting with a coffee, wearing a light sweater, looking out over a calm lake, gentle breeze moving trees and water, cinematic, photorealistic, soft natural lighting, shallow depth of field, slow subtle camera push-in, calm and reflective atmosphere Dialogue (natural pacing, ~10–12s): (looking at the lake, thoughtful tone) “Hey… are you thinking about buying a home here in Nova Scotia?” (she turns slightly toward camera) “There’s a site that helps you find the right agent…” (short pause) “Not just someone local—someone who actually fits how you want to communicate.” “MeetYourAgent dot c a.”" [ref=e1861] [cursor=pointer]':
+                  - /url: https://openart.ai/community/7F3AZDTriY538LKR1Laz
+                  - generic [ref=e1244]:
+                    - 'img "Prompt: 🎬 Single Scene — Refined Version (OpenArt Ready) Prompt: A peaceful lakeside porch in Nova Scotia, early morning light, a woman in her late 30s sitting with a coffee, wearing a light sweater, looking out over a calm lake, gentle breeze moving trees and water, cinematic, photorealistic, soft natural lighting, shallow depth of field, slow subtle camera push-in, calm and reflective atmosphere Dialogue (natural pacing, ~10–12s): (looking at the lake, thoughtful tone) “Hey… are you thinking about buying a home here in Nova Scotia?” (she turns slightly toward camera) “There’s a site that helps you find the right agent…” (short pause) “Not just someone local—someone who actually fits how you want to communicate.” “MeetYourAgent dot c a.”" [ref=e1862]'
+                    - img [ref=e1246]
+                - link "Prompt:" [ref=e1864] [cursor=pointer]:
+                  - /url: https://openart.ai/community/kQb8EHD59ypnBsDgVtKz
+                  - generic [ref=e1252]:
+                    - img "Prompt:" [ref=e1865]
+                    - img [ref=e1254]
+                - 'link "Prompt: A dimly lit hospital room at dusk. Close-up on a woman sitting on a hospital bed, hands clasped, eyes closed in prayer; a small, sick child lies beside her under blankets, breathing slowly. Over 10 seconds the camera holds a gentle close shot for 2 seconds, then slowly pulls back and slightly rises, revealing the sterile room—IV stand, monitor with soft beeps, and a muted window glow—while maintaining intimate, emotional focus on their linked hands and worried expressions. Emphasize soft, warm rim lighting on their faces, subtle film grain, natural skin tones, quiet ambient hospital sounds, and slow, smooth camera motion with easing in/out. Final frame shows both figures framed together in the bed with the room’s quiet surroundings, 24fps, cinematic color grading." [ref=e1867] [cursor=pointer]':
+                  - /url: https://openart.ai/community/21sUbR3BV889KDgtjCqh
+                  - generic [ref=e1260]:
+                    - 'img "Prompt: A dimly lit hospital room at dusk. Close-up on a woman sitting on a hospital bed, hands clasped, eyes closed in prayer; a small, sick child lies beside her under blankets, breathing slowly. Over 10 seconds the camera holds a gentle close shot for 2 seconds, then slowly pulls back and slightly rises, revealing the sterile room—IV stand, monitor with soft beeps, and a muted window glow—while maintaining intimate, emotional focus on their linked hands and worried expressions. Emphasize soft, warm rim lighting on their faces, subtle film grain, natural skin tones, quiet ambient hospital sounds, and slow, smooth camera motion with easing in/out. Final frame shows both figures framed together in the bed with the room’s quiet surroundings, 24fps, cinematic color grading." [ref=e1868]'
+                    - img [ref=e1262]
+                - 'link "Prompt: Make the start image begin by shifting the frame to being directly over the drawing, then make the image slowly come to life starting with the frame, then the siding and roof, then add the brick and wood accents and finally ending with the landscape around it" [ref=e1870] [cursor=pointer]':
+                  - /url: https://openart.ai/community/6wWFY3FIMMUVvajjlDCe
+                  - generic [ref=e1268]:
+                    - 'img "Prompt: Make the start image begin by shifting the frame to being directly over the drawing, then make the image slowly come to life starting with the frame, then the siding and roof, then add the brick and wood accents and finally ending with the landscape around it" [ref=e1871]'
+                    - img [ref=e1270]
+            - generic [ref=e1272]:
+              - heading "Join the community to see more and discover new AI art and prompts!" [level=6] [ref=e1873]:
+                - text: Join the community to see more and
+                - text: discover new AI art and prompts!
+              - button "Sign in" [ref=e1874] [cursor=pointer]: Sign in
+  - alert [ref=e694]

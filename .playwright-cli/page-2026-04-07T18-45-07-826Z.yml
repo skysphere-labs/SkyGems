@@ -1,0 +1,324 @@
+- generic [ref=e1]:
+  - main [ref=e3]:
+    - generic [ref=e4]:
+      - navigation [ref=e5]:
+        - generic [ref=e6]:
+          - button "Close sidebar" [ref=e8] [cursor=pointer]:
+            - img "SidebarBold" [ref=e9]
+          - button "Go to home" [ref=e12] [cursor=pointer]:
+            - img "Logo" [ref=e13]
+        - generic [ref=e22]:
+          - button "Help" [ref=e24] [cursor=pointer]:
+            - img "QuestionMarkFill" [ref=e25]
+          - button "Discord" [ref=e27] [cursor=pointer]:
+            - img "DiscordFill" [ref=e28]
+          - button "YouTube" [ref=e30] [cursor=pointer]:
+            - img "YoutubeFill" [ref=e31]
+          - button "Gift Center" [ref=e35] [cursor=pointer]:
+            - img "GiftBold" [ref=e36]
+          - button "Pricing" [ref=e38] [cursor=pointer]:
+            - generic [ref=e39]: Pricing
+          - button "Login" [ref=e40] [cursor=pointer]:
+            - generic [ref=e41]: Login
+          - button "Start for Free ArrowRight" [ref=e42] [cursor=pointer]:
+            - generic [ref=e43]: Start for Free
+            - img "ArrowRight" [ref=e45]
+      - generic [ref=e49]:
+        - complementary "Tool favorites" [ref=e51]:
+          - generic [ref=e52]:
+            - button "Widgets All Tools" [active] [ref=e54] [cursor=pointer]:
+              - img "Widgets" [ref=e57]
+              - generic [ref=e59]: All Tools
+            - button "HappyemojiFill Characters & Worlds" [ref=e61] [cursor=pointer]:
+              - img "HappyemojiFill" [ref=e64]
+              - generic [ref=e66]: Characters & Worlds
+            - generic [ref=e67]:
+              - paragraph [ref=e69]: Pinned
+              - button "AddBold Add Tools" [ref=e72] [cursor=pointer]:
+                - img "AddBold" [ref=e75]
+                - generic [ref=e77]: Add Tools
+              - generic [ref=e78]:
+                - generic [ref=e80]:
+                  - button "DragIndicator" [ref=e81]:
+                    - img "DragIndicator" [ref=e82]
+                  - button "Create Image Create Image" [ref=e84] [cursor=pointer]:
+                    - img "Create Image" [ref=e86]
+                    - generic [ref=e87]: Create Image
+                - generic [ref=e89]:
+                  - button "DragIndicator" [ref=e90]:
+                    - img "DragIndicator" [ref=e91]
+                  - button "Frame to Video Frame to Video" [ref=e93] [cursor=pointer]:
+                    - img "Frame to Video" [ref=e95]
+                    - generic [ref=e96]: Frame to Video
+                - generic [ref=e98]:
+                  - button "DragIndicator" [ref=e99]:
+                    - img "DragIndicator" [ref=e100]
+                  - button "Text to Video Text to Video" [ref=e102] [cursor=pointer]:
+                    - img "Text to Video" [ref=e104]
+                    - generic [ref=e105]: Text to Video
+                - generic [ref=e107]:
+                  - button "DragIndicator" [ref=e108]:
+                    - img "DragIndicator" [ref=e109]
+                  - button "Motion Sync Motion Sync" [ref=e111] [cursor=pointer]:
+                    - img "Motion Sync" [ref=e113]
+                    - generic [ref=e114]: Motion Sync
+                - generic [ref=e116]:
+                  - button "DragIndicator" [ref=e117]:
+                    - img "DragIndicator" [ref=e118]
+                  - button "Lip-Sync Lip-Sync" [ref=e120] [cursor=pointer]:
+                    - img "Lip-Sync" [ref=e122]
+                    - generic [ref=e123]: Lip-Sync
+                - generic [ref=e125]:
+                  - button "DragIndicator" [ref=e126]:
+                    - img "DragIndicator" [ref=e127]
+                  - button "Edit Image Edit Image" [ref=e129] [cursor=pointer]:
+                    - img "Edit Image" [ref=e131]
+                    - generic [ref=e132]: Edit Image
+                - generic [ref=e134]:
+                  - button "DragIndicator" [ref=e135]:
+                    - img "DragIndicator" [ref=e136]
+                  - button "Edit Video Edit Video" [ref=e138] [cursor=pointer]:
+                    - img "Edit Video" [ref=e140]
+                    - generic [ref=e141]: Edit Video
+                - status [ref=e142]
+        - separator [ref=e143]
+        - generic [ref=e310]:
+          - generic [ref=e312]:
+            - button "Widgets All" [ref=e313] [cursor=pointer]:
+              - img "Widgets" [ref=e314]
+              - generic [ref=e316]: All
+            - button "PinFill Pinned" [ref=e317] [cursor=pointer]:
+              - img "PinFill" [ref=e318]
+              - generic [ref=e320]: Pinned
+            - button "VideoFill Video" [ref=e321] [cursor=pointer]:
+              - img "VideoFill" [ref=e322]
+              - generic [ref=e324]: Video
+            - button "GalleryFill Image" [ref=e325] [cursor=pointer]:
+              - img "GalleryFill" [ref=e326]
+              - generic [ref=e330]: Image
+            - button "HappyemojiFill Character" [ref=e331] [cursor=pointer]:
+              - img "HappyemojiFill" [ref=e332]
+              - generic [ref=e334]: Character
+            - button "AiWorldFill World" [ref=e335] [cursor=pointer]:
+              - img "AiWorldFill" [ref=e336]
+              - generic [ref=e340]: World
+            - button "VoiceSquareFill Audio" [ref=e341] [cursor=pointer]:
+              - img "VoiceSquareFill" [ref=e342]
+              - generic [ref=e344]: Audio
+          - generic [ref=e346]:
+            - generic [ref=e347]:
+              - heading "Video" [level=2] [ref=e349]
+              - generic [ref=e350]:
+                - button "Frame to Video Unpin from sidebar Frame to Video" [ref=e351] [cursor=pointer]:
+                  - generic [ref=e352]:
+                    - img "Frame to Video" [ref=e354]
+                    - button "Unpin from sidebar" [pressed] [ref=e356]:
+                      - img "PinFill" [ref=e357]
+                  - paragraph [ref=e360]: Frame to Video
+                - button "Text to Video Unpin from sidebar Text to Video" [ref=e361] [cursor=pointer]:
+                  - generic [ref=e362]:
+                    - img "Text to Video" [ref=e364]
+                    - button "Unpin from sidebar" [pressed] [ref=e366]:
+                      - img "PinFill" [ref=e367]
+                  - paragraph [ref=e370]: Text to Video
+                - button "Edit Video Unpin from sidebar Edit Video" [ref=e371] [cursor=pointer]:
+                  - generic [ref=e372]:
+                    - img "Edit Video" [ref=e374]
+                    - button "Unpin from sidebar" [pressed] [ref=e376]:
+                      - img "PinFill" [ref=e377]
+                  - paragraph [ref=e380]: Edit Video
+                - button "Motion Sync Unpin from sidebar Motion Sync" [ref=e381] [cursor=pointer]:
+                  - generic [ref=e382]:
+                    - img "Motion Sync" [ref=e384]
+                    - button "Unpin from sidebar" [pressed] [ref=e386]:
+                      - img "PinFill" [ref=e387]
+                  - paragraph [ref=e390]: Motion Sync
+                - button "Lip-Sync Unpin from sidebar Lip-Sync" [ref=e391] [cursor=pointer]:
+                  - generic [ref=e392]:
+                    - img "Lip-Sync" [ref=e394]
+                    - button "Unpin from sidebar" [pressed] [ref=e396]:
+                      - img "PinFill" [ref=e397]
+                  - paragraph [ref=e400]: Lip-Sync
+                - button "Upscale Video Pin to sidebar Upscale Video" [ref=e401] [cursor=pointer]:
+                  - generic [ref=e402]:
+                    - img "Upscale Video" [ref=e404]
+                    - button "Pin to sidebar" [ref=e406]:
+                      - img "PinBold" [ref=e407]
+                  - paragraph [ref=e410]: Upscale Video
+                - button "Replace Character Pin to sidebar Replace Character" [ref=e411] [cursor=pointer]:
+                  - generic [ref=e412]:
+                    - img "Replace Character" [ref=e414]
+                    - button "Pin to sidebar" [ref=e416]:
+                      - img "PinBold" [ref=e417]
+                  - paragraph [ref=e420]: Replace Character
+                - button "Extend Video Pin to sidebar Extend Video" [ref=e421] [cursor=pointer]:
+                  - generic [ref=e422]:
+                    - img "Extend Video" [ref=e424]
+                    - button "Pin to sidebar" [ref=e426]:
+                      - img "PinBold" [ref=e427]
+                  - paragraph [ref=e430]: Extend Video
+                - button "Add Sound Effect Pin to sidebar Add Sound Effect" [ref=e431] [cursor=pointer]:
+                  - generic [ref=e432]:
+                    - img "Add Sound Effect" [ref=e434]
+                    - button "Pin to sidebar" [ref=e436]:
+                      - img "PinBold" [ref=e437]
+                  - paragraph [ref=e440]: Add Sound Effect
+                - button "Restyle Video Pin to sidebar Restyle Video" [ref=e441] [cursor=pointer]:
+                  - generic [ref=e442]:
+                    - img "Restyle Video" [ref=e444]
+                    - button "Pin to sidebar" [ref=e446]:
+                      - img "PinBold" [ref=e447]
+                  - paragraph [ref=e450]: Restyle Video
+            - generic [ref=e451]:
+              - heading "Image" [level=2] [ref=e453]
+              - generic [ref=e454]:
+                - button "Create Image Unpin from sidebar Create Image" [ref=e455] [cursor=pointer]:
+                  - generic [ref=e456]:
+                    - img "Create Image" [ref=e458]
+                    - button "Unpin from sidebar" [pressed] [ref=e460]:
+                      - img "PinFill" [ref=e461]
+                  - paragraph [ref=e464]: Create Image
+                - button "Image Variations Pin to sidebar Image Variations" [ref=e465] [cursor=pointer]:
+                  - generic [ref=e466]:
+                    - img "Image Variations" [ref=e468]
+                    - button "Pin to sidebar" [ref=e470]:
+                      - img "PinBold" [ref=e471]
+                  - paragraph [ref=e474]: Image Variations
+                - button "Edit Image Unpin from sidebar Edit Image" [ref=e475] [cursor=pointer]:
+                  - generic [ref=e476]:
+                    - img "Edit Image" [ref=e478]
+                    - button "Unpin from sidebar" [pressed] [ref=e480]:
+                      - img "PinFill" [ref=e481]
+                  - paragraph [ref=e484]: Edit Image
+                - button "Image Upscale Pin to sidebar Image Upscale" [ref=e485] [cursor=pointer]:
+                  - generic [ref=e486]:
+                    - img "Image Upscale" [ref=e488]
+                    - button "Pin to sidebar" [ref=e490]:
+                      - img "PinBold" [ref=e491]
+                  - paragraph [ref=e494]: Image Upscale
+                - button "Face Swap Pin to sidebar Face Swap" [ref=e495] [cursor=pointer]:
+                  - generic [ref=e496]:
+                    - img "Face Swap" [ref=e498]
+                    - button "Pin to sidebar" [ref=e500]:
+                      - img "PinBold" [ref=e501]
+                  - paragraph [ref=e504]: Face Swap
+                - button "Camera Angle Control Pin to sidebar Camera Angle Control" [ref=e505] [cursor=pointer]:
+                  - generic [ref=e506]:
+                    - img "Camera Angle Control" [ref=e508]
+                    - button "Pin to sidebar" [ref=e510]:
+                      - img "PinBold" [ref=e511]
+                  - paragraph [ref=e514]: Camera Angle Control
+                - button "Vellum Skin Enhancer Pin to sidebar Vellum Skin Enhancer" [ref=e515] [cursor=pointer]:
+                  - generic [ref=e516]:
+                    - img "Vellum Skin Enhancer" [ref=e518]
+                    - button "Pin to sidebar" [ref=e520]:
+                      - img "PinBold" [ref=e521]
+                  - paragraph [ref=e524]: Vellum Skin Enhancer
+                - button "Character Builder Pin to sidebar Character Builder" [ref=e525] [cursor=pointer]:
+                  - generic [ref=e526]:
+                    - img "Character Builder" [ref=e528]
+                    - button "Pin to sidebar" [ref=e530]:
+                      - img "PinBold" [ref=e531]
+                  - paragraph [ref=e534]: Character Builder
+            - generic [ref=e535]:
+              - heading "Character" [level=2] [ref=e537]
+              - generic [ref=e539]:
+                - button "Face FaceFill Create Character AddFill" [ref=e540] [cursor=pointer]:
+                  - generic [ref=e541]:
+                    - img "Face" [ref=e543]
+                    - img "FaceFill" [ref=e546]
+                  - paragraph [ref=e548]:
+                    - text: Create Character
+                    - img "AddFill" [ref=e549]
+                - button "Browse Library Browse Library ArrowRightFill1" [ref=e551] [cursor=pointer]:
+                  - img "Browse Library" [ref=e554]
+                  - paragraph [ref=e555]:
+                    - text: Browse Library
+                    - img "ArrowRightFill1" [ref=e556]
+                - button "Create Character Pin to sidebar New Create Character" [ref=e558] [cursor=pointer]:
+                  - generic [ref=e559]:
+                    - img "Create Character" [ref=e561]
+                    - button "Pin to sidebar" [ref=e563]:
+                      - img "PinBold" [ref=e564]
+                  - generic [ref=e567]: New
+                  - paragraph [ref=e569]: Create Character
+                - button "Character Image Unpin from sidebar Character Image" [ref=e570] [cursor=pointer]:
+                  - generic [ref=e571]:
+                    - img "Character Image" [ref=e573]
+                    - button "Unpin from sidebar" [pressed] [ref=e575]:
+                      - img "PinFill" [ref=e576]
+                  - paragraph [ref=e579]: Character Image
+                - button "Character Video Unpin from sidebar Character Video" [ref=e580] [cursor=pointer]:
+                  - generic [ref=e581]:
+                    - img "Character Video" [ref=e583]
+                    - button "Unpin from sidebar" [pressed] [ref=e585]:
+                      - img "PinFill" [ref=e586]
+                  - paragraph [ref=e589]: Character Video
+                - button "Talking Video Unpin from sidebar Talking Video" [ref=e590] [cursor=pointer]:
+                  - generic [ref=e591]:
+                    - img "Talking Video" [ref=e593]
+                    - button "Unpin from sidebar" [pressed] [ref=e595]:
+                      - img "PinFill" [ref=e596]
+                  - paragraph [ref=e599]: Talking Video
+                - button "Motion Sync Unpin from sidebar Motion Sync" [ref=e600] [cursor=pointer]:
+                  - generic [ref=e601]:
+                    - img "Motion Sync" [ref=e603]
+                    - button "Unpin from sidebar" [pressed] [ref=e605]:
+                      - img "PinFill" [ref=e606]
+                  - paragraph [ref=e609]: Motion Sync
+            - generic [ref=e610]:
+              - heading "World" [level=2] [ref=e612]
+              - generic [ref=e614]:
+                - button "AiWorld AiWorldBold Create 3D World AddFill" [ref=e615] [cursor=pointer]:
+                  - generic [ref=e616]:
+                    - img "AiWorld" [ref=e618]
+                    - img "AiWorldBold" [ref=e623]
+                  - paragraph [ref=e627]:
+                    - text: Create 3D World
+                    - img "AddFill" [ref=e628]
+                - button "Browse Library Browse Library ArrowRightFill1" [ref=e630] [cursor=pointer]:
+                  - img "Browse Library" [ref=e633]
+                  - paragraph [ref=e634]:
+                    - text: Browse Library
+                    - img "ArrowRightFill1" [ref=e635]
+                - button "Create 3D World Pin to sidebar Create 3D World" [ref=e637] [cursor=pointer]:
+                  - generic [ref=e638]:
+                    - img "Create 3D World" [ref=e640]
+                    - button "Pin to sidebar" [ref=e642]:
+                      - img "PinBold" [ref=e643]
+                  - paragraph [ref=e646]: Create 3D World
+                - button "3D World Cam Pin to sidebar 3D World Cam" [ref=e647] [cursor=pointer]:
+                  - generic [ref=e648]:
+                    - img "3D World Cam" [ref=e650]
+                    - button "Pin to sidebar" [ref=e652]:
+                      - img "PinBold" [ref=e653]
+                  - paragraph [ref=e656]: 3D World Cam
+                - button "Cast in Scene Pin to sidebar Cast in Scene" [ref=e657] [cursor=pointer]:
+                  - generic [ref=e658]:
+                    - img "Cast in Scene" [ref=e660]
+                    - button "Pin to sidebar" [ref=e662]:
+                      - img "PinBold" [ref=e663]
+                  - paragraph [ref=e666]: Cast in Scene
+            - generic [ref=e667]:
+              - heading "Audio" [level=2] [ref=e669]
+              - generic [ref=e670]:
+                - button "Create voice-over Pin to sidebar Create voice-over" [ref=e671] [cursor=pointer]:
+                  - generic [ref=e672]:
+                    - img "Create voice-over" [ref=e674]
+                    - button "Pin to sidebar" [ref=e676]:
+                      - img "PinBold" [ref=e677]
+                  - paragraph [ref=e680]: Create voice-over
+                - button "Voice Clone Pin to sidebar Voice Clone" [ref=e681] [cursor=pointer]:
+                  - generic [ref=e682]:
+                    - img "Voice Clone" [ref=e684]
+                    - button "Pin to sidebar" [ref=e686]:
+                      - img "PinBold" [ref=e687]
+                  - paragraph [ref=e690]: Voice Clone
+                - button "Voice Changer Pin to sidebar Voice Changer" [ref=e691] [cursor=pointer]:
+                  - generic [ref=e692]:
+                    - img "Voice Changer" [ref=e694]
+                    - button "Pin to sidebar" [ref=e696]:
+                      - img "PinBold" [ref=e697]
+                  - paragraph [ref=e700]: Voice Changer
+  - region "Notifications alt+T"
+  - alert [ref=e231]

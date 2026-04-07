@@ -61,7 +61,7 @@ interface JwtPayload {
 }
 
 interface DevSessionPayload {
-  kind: "skygems.dev_session.v1";
+  kind: "skygems.dev_session.v2";
   tenantId: string;
   tenantName: string;
   tenantSlug: string;
@@ -71,6 +71,15 @@ interface DevSessionPayload {
   displayName: string | null;
   role: "owner" | "editor" | "viewer";
   permissions: string[];
+  iat: number;
+  exp: number;
+}
+
+interface ArtifactAccessTokenPayload {
+  kind: "skygems.artifact_access.v1";
+  artifactId: string;
+  tenantId: string;
+  projectId: string;
   iat: number;
   exp: number;
 }
@@ -88,7 +97,8 @@ interface JwksResponse {
   keys: JwksKey[];
 }
 
-const DEV_SESSION_KIND = "skygems.dev_session.v1" as const;
+const DEV_SESSION_KIND = "skygems.dev_session.v2" as const;
+const ARTIFACT_ACCESS_KIND = "skygems.artifact_access.v1" as const;
 const LOCAL_ONLY_DEV_BOOTSTRAP_SECRET = "skygems-local-dev-bootstrap";
 const JWKS_CACHE_TTL_MS = 5 * 60 * 1000;
 const jwksCache = new Map<string, { expiresAt: number; value: JwksResponse }>();
@@ -456,4 +466,69 @@ export async function issueDevBootstrapSession(
     token: `${encodedHeader}.${encodedPayload}.${signature}`,
     expiresAt,
   };
+}
+
+export async function issueArtifactAccessToken(
+  params: {
+    artifactId: string;
+    tenantId: string;
+    projectId: string;
+  },
+  env: ApiEnv,
+  options: {
+    allowLocalFallback?: boolean;
+    ttlMinutes?: number;
+  } = {},
+): Promise<string> {
+  const allowLocalFallback = options.allowLocalFallback ?? false;
+  const secret = resolveDevBootstrapSecret(env, allowLocalFallback);
+  const issuedAt = Math.floor(Date.now() / 1000);
+  const expiresAt = issuedAt + ((options.ttlMinutes ?? 15) * 60);
+  const payload: ArtifactAccessTokenPayload = {
+    kind: ARTIFACT_ACCESS_KIND,
+    artifactId: params.artifactId,
+    tenantId: params.tenantId,
+    projectId: params.projectId,
+    iat: issuedAt,
+    exp: expiresAt,
+  };
+  const header = {
+    alg: "HS256",
+    typ: "JWT",
+  };
+  const encodedHeader = encodeJsonPart(header);
+  const encodedPayload = encodeJsonPart(payload);
+  const signature = await signHmac(`${encodedHeader}.${encodedPayload}`, secret);
+  return `${encodedHeader}.${encodedPayload}.${signature}`;
+}
+
+export async function verifyArtifactAccessToken(
+  token: string,
+  env: ApiEnv,
+  options: {
+    allowLocalFallback?: boolean;
+  } = {},
+): Promise<ArtifactAccessTokenPayload> {
+  const parts = token.split(".");
+  if (parts.length !== 3) {
+    throw new HttpError(401, "unauthorized", "Artifact access token is malformed.");
+  }
+
+  const header = decodeJsonPart<JwtHeader>(parts[0]);
+  const payload = decodeJsonPart<ArtifactAccessTokenPayload>(parts[1]);
+  if (header.alg !== "HS256" || payload.kind !== ARTIFACT_ACCESS_KIND) {
+    throw new HttpError(401, "unauthorized", "Artifact access token is invalid.");
+  }
+
+  const secret = resolveDevBootstrapSecret(env, options.allowLocalFallback ?? false);
+  const verified = await verifyHmac(`${parts[0]}.${parts[1]}`, parts[2], secret);
+  if (!verified) {
+    throw new HttpError(401, "unauthorized", "Artifact access token signature verification failed.");
+  }
+
+  if (payload.exp <= Math.floor(Date.now() / 1000)) {
+    throw new HttpError(401, "unauthorized", "Artifact access token has expired.");
+  }
+
+  return payload;
 }

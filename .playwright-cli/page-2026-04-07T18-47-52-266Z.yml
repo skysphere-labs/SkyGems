@@ -1,0 +1,322 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e5] [cursor=pointer]:
+      - generic [ref=e6]:
+        - img "Star icon" [ref=e8]
+        - generic [ref=e10]:
+          - img "Seedance 2.0" [ref=e11]
+          - text: is live on OpenArt Suite.
+      - link "Go to the new workspace" [ref=e12]:
+        - /url: /suite/home
+        - text: Go to the new workspace
+        - img [ref=e13]
+    - generic [ref=e15]:
+      - link "OpenArt Logo" [ref=e17] [cursor=pointer]:
+        - /url: /suite/home
+        - img "OpenArt Logo" [ref=e19]
+      - generic [ref=e20]:
+        - button "Help Center - Access tutorials, wiki, and support" [ref=e21] [cursor=pointer]:
+          - img [ref=e22]
+        - link [ref=e24] [cursor=pointer]:
+          - /url: https://discord.gg/openart-ai-1009536403555750018
+          - img [ref=e25]
+        - link [ref=e28] [cursor=pointer]:
+          - /url: https://www.youtube.com/@openart_ai?sub_confirmation=1
+          - img [ref=e29]
+        - generic [ref=e31]:
+          - button "Upgrade" [ref=e32] [cursor=pointer]: Upgrade
+          - link "Create" [ref=e33] [cursor=pointer]:
+            - /url: /image/create
+            - img [ref=e35]
+            - text: Create
+          - generic [ref=e37]:
+            - link "Sign in" [ref=e38] [cursor=pointer]:
+              - /url: /signin
+              - text: Sign in
+            - link "Sign up" [ref=e39] [cursor=pointer]:
+              - /url: /signup
+              - text: Sign up
+    - generic [ref=e40]:
+      - generic [ref=e41]:
+        - generic [ref=e42]:
+          - button "Toggle Secondary Menu" [expanded] [ref=e43] [cursor=pointer]:
+            - img [ref=e44]
+          - generic [ref=e47]:
+            - link "Home" [ref=e48] [cursor=pointer]:
+              - /url: /home
+              - img [ref=e50]
+              - paragraph [ref=e53]: Home
+            - link "Assets" [ref=e54] [cursor=pointer]:
+              - /url: /assets
+              - img [ref=e56]
+              - paragraph [ref=e58]: Assets
+          - generic [ref=e60]:
+            - link "Beta Story" [ref=e61] [cursor=pointer]:
+              - /url: /story
+              - generic [ref=e62]:
+                - img [ref=e63]
+                - paragraph [ref=e72]: Beta
+              - paragraph [ref=e73]: Story
+            - link "Video" [ref=e74] [cursor=pointer]:
+              - /url: /video
+              - img [ref=e76]
+              - paragraph [ref=e80]: Video
+            - link "Image" [ref=e81] [cursor=pointer]:
+              - /url: /image
+              - img [ref=e83]
+              - paragraph [ref=e86]: Image
+            - link "New Character" [ref=e87] [cursor=pointer]:
+              - /url: /characters
+              - generic [ref=e88]:
+                - img [ref=e89]
+                - paragraph [ref=e93]: New
+              - paragraph [ref=e94]: Character
+            - link "Audio" [ref=e95] [cursor=pointer]:
+              - /url: /audio
+              - img [ref=e97]
+              - paragraph [ref=e99]: Audio
+          - generic [ref=e102] [cursor=pointer]:
+            - img [ref=e104]
+            - paragraph [ref=e106]: More
+        - link "Tutorial" [ref=e108] [cursor=pointer]:
+          - /url: /tutorials
+          - img [ref=e110]
+          - paragraph [ref=e112]: Tutorial
+      - main [ref=e113]:
+        - generic [ref=e114]:
+          - generic [ref=e116]:
+            - generic [ref=e117]:
+              - heading "Image" [level=4] [ref=e118]
+              - link "Tutorial" [ref=e119] [cursor=pointer]:
+                - /url: /tutorials?category=Image+Generation
+                - generic [ref=e120]:
+                  - img [ref=e121]
+                  - paragraph [ref=e123]: Tutorial
+            - generic [ref=e124]:
+              - link "Image Home" [ref=e125] [cursor=pointer]:
+                - /url: /image
+                - img [ref=e126]
+                - paragraph [ref=e128]: Image Home
+              - link "Create Image" [ref=e129] [cursor=pointer]:
+                - /url: /image/create
+                - img [ref=e130]
+                - paragraph [ref=e132]: Create Image
+              - link "Edit Image" [ref=e133] [cursor=pointer]:
+                - /url: /image/edit
+                - img [ref=e134]
+                - paragraph [ref=e136]: Edit Image
+              - link "Chat to Edit" [ref=e137] [cursor=pointer]:
+                - /url: /image/chat
+                - img [ref=e138]
+                - paragraph [ref=e140]: Chat to Edit
+              - link "Character" [ref=e141] [cursor=pointer]:
+                - /url: /image/character
+                - img [ref=e142]
+                - paragraph [ref=e144]: Character
+              - link "Image Upscale" [ref=e145] [cursor=pointer]:
+                - /url: /image/upscale
+                - img [ref=e146]
+                - paragraph [ref=e149]: Image Upscale
+              - link "Train a Model" [ref=e150] [cursor=pointer]:
+                - /url: /model_training
+                - img [ref=e151]
+                - paragraph [ref=e156]: Train a Model
+              - link "Camera Angle Control" [ref=e157] [cursor=pointer]:
+                - /url: /image/camera-angle-control
+                - img [ref=e158]
+                - paragraph [ref=e162]: Camera Angle Control
+              - link "Face Realism" [ref=e163] [cursor=pointer]:
+                - /url: /image/photorealistic
+                - img [ref=e164]
+                - paragraph [ref=e168]: Face Realism
+              - link "Swap" [ref=e169] [cursor=pointer]:
+                - /url: /image/swap
+                - img [ref=e170]
+                - paragraph [ref=e172]: Swap
+          - generic [ref=e175]:
+            - heading "All-in-One Image Creation Tools" [level=1] [ref=e177]
+            - list [ref=e179]:
+              - listitem [ref=e180]:
+                - link "Create Image Generate images from text prompts Create Now → Create image" [ref=e181] [cursor=pointer]:
+                  - /url: /image/create
+                  - generic [ref=e182]:
+                    - generic [ref=e183]:
+                      - paragraph [ref=e184]: Create Image
+                      - paragraph [ref=e185]: Generate images from text prompts
+                    - generic [ref=e186]:
+                      - paragraph [ref=e187]: Create Now
+                      - paragraph: →
+                  - img "Create image" [ref=e191]
+              - listitem [ref=e192]:
+                - link "Chat to Edit Edit images through natural conversation Edit in Chat → Chat to Edit" [ref=e193] [cursor=pointer]:
+                  - /url: /image/chat
+                  - generic [ref=e194]:
+                    - generic [ref=e195]:
+                      - paragraph [ref=e196]: Chat to Edit
+                      - paragraph [ref=e197]: Edit images through natural conversation
+                    - generic [ref=e198]:
+                      - paragraph [ref=e199]: Edit in Chat
+                      - paragraph: →
+                  - img "Chat to Edit" [ref=e203]
+              - listitem [ref=e204]:
+                - link "Edit Image Powerful AI image editing tools Edit in Canvas → Edit image" [ref=e205] [cursor=pointer]:
+                  - /url: /image/edit
+                  - generic [ref=e206]:
+                    - generic [ref=e207]:
+                      - paragraph [ref=e208]: Edit Image
+                      - paragraph [ref=e209]: Powerful AI image editing tools
+                    - generic [ref=e210]:
+                      - paragraph [ref=e211]: Edit in Canvas
+                      - paragraph: →
+                  - img "Edit image" [ref=e215]
+            - generic [ref=e216]:
+              - heading "Image Tools" [level=2] [ref=e217]
+              - list [ref=e218]:
+                - listitem [ref=e219]:
+                  - link "Camera Angle ControlNew Control the camera angle of your image." [ref=e220] [cursor=pointer]:
+                    - /url: /image/camera-angle-control
+                    - generic [ref=e222]:
+                      - paragraph [ref=e223]: Camera Angle ControlNew
+                      - paragraph [ref=e224]: Control the camera angle of your image.
+                    - img [ref=e227]
+                - listitem [ref=e231]:
+                  - link "SwapNew Swap the face of your image with another image." [ref=e232] [cursor=pointer]:
+                    - /url: /image/swap
+                    - generic [ref=e234]:
+                      - paragraph [ref=e235]: SwapNew
+                      - paragraph [ref=e236]: Swap the face of your image with another image.
+                    - img [ref=e239]
+                - listitem [ref=e241]:
+                  - link "Face RealismNew Make your image more photorealistic." [ref=e242] [cursor=pointer]:
+                    - /url: /image/photorealistic
+                    - generic [ref=e244]:
+                      - paragraph [ref=e245]: Face RealismNew
+                      - paragraph [ref=e246]: Make your image more photorealistic.
+                    - img [ref=e249]
+                - listitem [ref=e253]:
+                  - link "Image Upscale Enhance image clarity with AI." [ref=e254] [cursor=pointer]:
+                    - /url: /image/upscale
+                    - generic [ref=e256]:
+                      - paragraph [ref=e257]: Image Upscale
+                      - paragraph [ref=e258]: Enhance image clarity with AI.
+                    - img [ref=e261]
+                - listitem [ref=e264]:
+                  - link "Train a Model Easily build and train custom AI models." [ref=e265] [cursor=pointer]:
+                    - /url: /model_training
+                    - generic [ref=e267]:
+                      - paragraph [ref=e268]: Train a Model
+                      - paragraph [ref=e269]: Easily build and train custom AI models.
+                    - img [ref=e272]
+                - listitem [ref=e277]:
+                  - link "Sketch to Image Transform sketches into realistic illustrations." [ref=e278] [cursor=pointer]:
+                    - /url: /apps/sketch-to-image
+                    - generic [ref=e280]:
+                      - paragraph [ref=e281]: Sketch to Image
+                      - paragraph [ref=e282]: Transform sketches into realistic illustrations.
+                    - img [ref=e285]
+                - listitem [ref=e289]:
+                  - link "Expand Image Extend your image with AI." [ref=e290] [cursor=pointer]:
+                    - /url: /image/edit/expand
+                    - generic [ref=e292]:
+                      - paragraph [ref=e293]: Expand Image
+                      - paragraph [ref=e294]: Extend your image with AI.
+                    - img [ref=e298]
+                - listitem [ref=e300]:
+                  - link "Remove Watermark Erase watermarks with smart AI." [ref=e301] [cursor=pointer]:
+                    - /url: /apps/remove-watermark
+                    - generic [ref=e303]:
+                      - paragraph [ref=e304]: Remove Watermark
+                      - paragraph [ref=e305]: Erase watermarks with smart AI.
+                    - img [ref=e308]
+                - listitem [ref=e312]:
+                  - link "Change Background Replace scenes with AI." [ref=e313] [cursor=pointer]:
+                    - /url: /image/edit/changeBackground?action_mode=background_change_background
+                    - generic [ref=e315]:
+                      - paragraph [ref=e316]: Change Background
+                      - paragraph [ref=e317]: Replace scenes with AI.
+                    - img [ref=e320]
+                - listitem [ref=e322]:
+                  - link "Remove background Isolate subjects automatically." [ref=e323] [cursor=pointer]:
+                    - /url: /image/edit/changeBackground?action_mode=background_manual_remove
+                    - generic [ref=e325]:
+                      - paragraph [ref=e326]: Remove background
+                      - paragraph [ref=e327]: Isolate subjects automatically.
+                    - img [ref=e330]
+                - listitem [ref=e343]:
+                  - link "AI Filters Transform your style with filters." [ref=e344] [cursor=pointer]:
+                    - /url: /apps/ai-filter
+                    - generic [ref=e346]:
+                      - paragraph [ref=e347]: AI Filters
+                      - paragraph [ref=e348]: Transform your style with filters.
+                    - img [ref=e351]
+                - listitem [ref=e353]:
+                  - link "Magic Remover Remove unwanted objects precisely." [ref=e354] [cursor=pointer]:
+                    - /url: /image/edit/removeObject
+                    - generic [ref=e356]:
+                      - paragraph [ref=e357]: Magic Remover
+                      - paragraph [ref=e358]: Remove unwanted objects precisely.
+                    - img [ref=e361]
+                - listitem [ref=e365]:
+                  - link "Stylize Reimagine images in artistic styles." [ref=e366] [cursor=pointer]:
+                    - /url: /image/edit/stylize
+                    - generic [ref=e368]:
+                      - paragraph [ref=e369]: Stylize
+                      - paragraph [ref=e370]: Reimagine images in artistic styles.
+                    - img [ref=e373]
+                - listitem [ref=e377]:
+                  - link "Image Blender Seamlessly merge visuals." [ref=e378] [cursor=pointer]:
+                    - /url: /apps/image-blender
+                    - generic [ref=e380]:
+                      - paragraph [ref=e381]: Image Blender
+                      - paragraph [ref=e382]: Seamlessly merge visuals.
+                    - img [ref=e386]
+                - listitem [ref=e390]:
+                  - link "Find and Replace Modify elements with AI." [ref=e391] [cursor=pointer]:
+                    - /url: /image/edit/findAndReplace
+                    - generic [ref=e393]:
+                      - paragraph [ref=e394]: Find and Replace
+                      - paragraph [ref=e395]: Modify elements with AI.
+                    - img [ref=e399]
+                - listitem [ref=e401]:
+                  - link "Change Facial Expression Adjust emotions with AI." [ref=e402] [cursor=pointer]:
+                    - /url: /image/edit/face
+                    - generic [ref=e404]:
+                      - paragraph [ref=e405]: Change Facial Expression
+                      - paragraph [ref=e406]: Adjust emotions with AI.
+                    - img [ref=e410]
+                - listitem [ref=e412]:
+                  - link "Magic Brush Paint and retouch with AI." [ref=e413] [cursor=pointer]:
+                    - /url: /apps/magic-brush
+                    - generic [ref=e415]:
+                      - paragraph [ref=e416]: Magic Brush
+                      - paragraph [ref=e417]: Paint and retouch with AI.
+                    - img [ref=e421]
+                - listitem [ref=e423]:
+                  - link "Fix Fingers Correct hand shapes with AI." [ref=e424] [cursor=pointer]:
+                    - /url: /image/edit/fixSomething
+                    - generic [ref=e426]:
+                      - paragraph [ref=e427]: Fix Fingers
+                      - paragraph [ref=e428]: Correct hand shapes with AI.
+                    - img [ref=e432]
+                - listitem [ref=e434]:
+                  - link "Blend Board Combine assets using AI." [ref=e435] [cursor=pointer]:
+                    - /url: /image/edit/inContainer
+                    - generic [ref=e437]:
+                      - paragraph [ref=e438]: Blend Board
+                      - paragraph [ref=e439]: Combine assets using AI.
+                    - img [ref=e442]
+                - listitem [ref=e447]:
+                  - link "AI QR Code Design scannable QR codes." [ref=e448] [cursor=pointer]:
+                    - /url: /apps/ai_qrcode
+                    - generic [ref=e450]:
+                      - paragraph [ref=e451]: AI QR Code
+                      - paragraph [ref=e452]: Design scannable QR codes.
+                    - img [ref=e456]
+                - listitem [ref=e458]:
+                  - link "AI Sticker Generator Create expressive AI stickers." [ref=e459] [cursor=pointer]:
+                    - /url: /apps/sticker-generator
+                    - generic [ref=e461]:
+                      - paragraph [ref=e462]: AI Sticker Generator
+                      - paragraph [ref=e463]: Create expressive AI stickers.
+                    - img [ref=e466]
+  - alert [ref=e471]

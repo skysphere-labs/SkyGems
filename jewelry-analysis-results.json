@@ -1,0 +1,444 @@
+{
+  "metadata": {
+    "source_folder": "elegant",
+    "analyzed_at": "2026-04-06T17:58:10.863Z",
+    "total_images": 74,
+    "total_products": 14,
+    "api_provider": "xAI Grok Vision",
+    "model": "grok-4-0709"
+  },
+  "products": {
+    "GR0324JS": {
+      "product_code": "GR0324JS",
+      "analyzed_image": "GR0324JS.JPG",
+      "all_images": [
+        "GR0324JS (1).JPG",
+        "GR0324JS (2).JPG",
+        "GR0324JS (3).JPG",
+        "GR0324JS (4).JPG",
+        "GR0324JS (5).JPG",
+        "GR0324JS (6).JPG",
+        "GR0324JS (7).JPG",
+        "GR0324JS.JPG"
+      ],
+      "image_count": 8,
+      "attributes": {
+        "piece_type": "ring",
+        "style_era": "contemporary",
+        "silhouette_form": "princess-cut solitaire with pavé band and matching wedding band",
+        "materials": [
+          "white gold"
+        ],
+        "gemstones": [
+          "diamond"
+        ],
+        "finish_texture": [
+          "high polish"
+        ],
+        "motifs": [
+          "pavé setting",
+          "split shank"
+        ],
+        "mood": "elegant and romantic"
+      }
+    },
+    "GR2970H-TT": {
+      "product_code": "GR2970H-TT",
+      "analyzed_image": "GR2970H-TT.jpg",
+      "all_images": [
+        "GR2970H-TT.jpg"
+      ],
+      "image_count": 1,
+      "attributes": {
+        "piece_type": "ring",
+        "style_era": "contemporary",
+        "silhouette_form": "circular band with a row of five prong-set stones",
+        "materials": [
+          "yellow gold",
+          "white gold"
+        ],
+        "gemstones": [
+          "diamonds"
+        ],
+        "finish_texture": [
+          "high polish"
+        ],
+        "motifs": [
+          "linear arrangement"
+        ],
+        "mood": "elegant and sparkling"
+      }
+    },
+    "GR2970H-U": {
+      "product_code": "GR2970H-U",
+      "analyzed_image": "GR2970H-U (5).JPG",
+      "all_images": [
+        "GR2970H-U (1).JPG",
+        "GR2970H-U (2).JPG",
+        "GR2970H-U (3).JPG",
+        "GR2970H-U (4).JPG",
+        "GR2970H-U (5).JPG",
+        "GR2970H-U (6).JPG"
+      ],
+      "image_count": 6,
+      "attributes": {
+        "piece_type": "ring",
+        "style_era": "contemporary",
+        "silhouette_form": "slim band with tapered top",
+        "materials": [
+          "yellow gold"
+        ],
+        "gemstones": [
+          "diamonds"
+        ],
+        "finish_texture": [
+          "high polish"
+        ],
+        "motifs": [
+          "three-stone linear arrangement"
+        ],
+        "mood": "elegant and timeless"
+      }
+    },
+    "KP0960H": {
+      "product_code": "KP0960H",
+      "analyzed_image": "KP0960H.JPG",
+      "all_images": [
+        "KP0960H.JPG"
+      ],
+      "image_count": 1,
+      "attributes": {
+        "piece_type": "pendant",
+        "style_era": "contemporary",
+        "silhouette_form": "Latin cross shape with rounded edges",
+        "materials": [
+          "white metal (likely white gold or silver)"
+        ],
+        "gemstones": [
+          "round brilliant cut diamonds"
+        ],
+        "finish_texture": [
+          "high polish"
+        ],
+        "motifs": [
+          "cross",
+          "pavé setting"
+        ],
+        "mood": "elegant and spiritual"
+      }
+    },
+    "KP0960H-SSCZ": {
+      "product_code": "KP0960H-SSCZ",
+      "analyzed_image": "KP0960H-SSCZ (1).JPG",
+      "all_images": [
+        "KP0960H-SSCZ (1).JPG",
+        "KP0960H-SSCZ (2) Copy.jpg",
+        "KP0960H-SSCZ (6) Copy.jpg"
+      ],
+      "image_count": 3,
+      "attributes": {
+        "piece_type": "necklace",
+        "style_era": "contemporary",
+        "silhouette_form": "Latin cross pendant on a thin chain",
+        "materials": [
+          "white metal"
+        ],
+        "gemstones": [
+          "diamonds"
+        ],
+        "finish_texture": [
+          "high polish"
+        ],
+        "motifs": [
+          "cross",
+          "pavé set stones"
+        ],
+        "mood": "elegant and spiritual"
+      }
+    },
+    "VE2966L": {
+      "product_code": "VE2966L",
+      "analyzed_image": "VE2966L.JPG",
+      "all_images": [
+        "VE2966L (1) copy.jpg",
+        "VE2966L (18).JPG",
+        "VE2966L (4).JPG",
+        "VE2966L (5).JPG",
+        "VE2966L (6) Copy.jpg",
+        "VE2966L.JPG"
+      ],
+      "image_count": 6,
+      "attributes": {
+        "piece_type": "earrings",
+        "style_era": "contemporary",
+        "silhouette_form": "small hoop with pavé-set band",
+        "materials": [
+          "white metal"
+        ],
+        "gemstones": [
+          "diamonds"
+        ],
+        "finish_texture": [
+          "high polish"
+        ],
+        "motifs": [
+          "pavé setting"
+        ],
+        "mood": "elegant and sparkling"
+      }
+    },
+    "VE2993D": {
+      "product_code": "VE2993D",
+      "analyzed_image": "VE2993D.jpg",
+      "all_images": [
+        "VE2993D (12) Copy.jpg",
+        "VE2993D (2) Copy.jpg",
+        "VE2993D (4) Copy.jpg",
+        "VE2993D (6).JPG",
+        "VE2993D (7) Copy.jpg",
+        "VE2993D.jpg"
+      ],
+      "image_count": 6,
+      "attributes": {
+        "piece_type": "earrings",
+        "style_era": "contemporary",
+        "silhouette_form": "round dome-shaped studs",
+        "materials": [
+          "white gold"
+        ],
+        "gemstones": [
+          "diamonds"
+        ],
+        "finish_texture": [
+          "high polish"
+        ],
+        "motifs": [
+          "pavé setting"
+        ],
+        "mood": "elegant and sparkling"
+      }
+    },
+    "VE3304M-WGB2": {
+      "product_code": "VE3304M-WGB2",
+      "analyzed_image": "VE3304M-WGB2 (9).JPG",
+      "all_images": [
+        "VE3304M-WGB2 (12).JPG",
+        "VE3304M-WGB2 (4).JPG",
+        "VE3304M-WGB2 (9).JPG",
+        "VE3304M-WGB2.jpg"
+      ],
+      "image_count": 4,
+      "attributes": {
+        "piece_type": "earrings",
+        "style_era": "contemporary",
+        "silhouette_form": "circular hoop with hinge clasp",
+        "materials": [
+          "white metal"
+        ],
+        "gemstones": [
+          "diamonds"
+        ],
+        "finish_texture": [
+          "high polish"
+        ],
+        "motifs": [
+          "pavé set stones"
+        ],
+        "mood": "elegant and sparkling"
+      }
+    },
+    "WE0072Z": {
+      "product_code": "WE0072Z",
+      "analyzed_image": "WE0072Z.JPG",
+      "all_images": [
+        "WE0072Z (11).JPG",
+        "WE0072Z (2).JPG",
+        "WE0072Z (4) copy.jpg",
+        "WE0072Z (4).JPG",
+        "WE0072Z (9).JPG",
+        "WE0072Z.JPG"
+      ],
+      "image_count": 6,
+      "attributes": {
+        "piece_type": "earrings",
+        "style_era": "contemporary",
+        "silhouette_form": "interlinked oval links forming a chain-like structure",
+        "materials": [
+          "silver-tone metal"
+        ],
+        "gemstones": [
+          "diamonds"
+        ],
+        "finish_texture": [
+          "high polish",
+          "pavé set"
+        ],
+        "motifs": [
+          "chain links"
+        ],
+        "mood": "elegant and luxurious"
+      }
+    },
+    "WE0094K": {
+      "product_code": "WE0094K",
+      "analyzed_image": "WE0094K (13).JPG",
+      "all_images": [
+        "WE0094K (13).JPG",
+        "WE0094K (14) c.jpg",
+        "WE0094K (2) copy.jpg",
+        "WE0094K (6) copy.jpg"
+      ],
+      "image_count": 4,
+      "attributes": {
+        "piece_type": "earring",
+        "style_era": "contemporary",
+        "silhouette_form": "circular hoop with hinged clasp",
+        "materials": [
+          "gold"
+        ],
+        "gemstones": [
+          "clear gemstones"
+        ],
+        "finish_texture": [
+          "high polish"
+        ],
+        "motifs": [
+          "crescent waves",
+          "pavé setting"
+        ],
+        "mood": "elegant and sparkling"
+      }
+    },
+    "WE0094K-SSCZ": {
+      "product_code": "WE0094K-SSCZ",
+      "analyzed_image": "WE0094K-SSCZ.jpg",
+      "all_images": [
+        "WE0094K-SSCZ.jpg"
+      ],
+      "image_count": 1,
+      "attributes": {
+        "piece_type": "earrings",
+        "style_era": "contemporary",
+        "silhouette_form": "small circular hoop",
+        "materials": [
+          "white metal"
+        ],
+        "gemstones": [
+          "clear round gemstones"
+        ],
+        "finish_texture": [
+          "high polish"
+        ],
+        "motifs": [
+          "pavé set stones"
+        ],
+        "mood": "elegant and sparkling"
+      }
+    },
+    "ZR0071K": {
+      "product_code": "ZR0071K",
+      "analyzed_image": "ZR0071K.jpg",
+      "all_images": [
+        "ZR0071K (10) copy.jpg",
+        "ZR0071K (13) copy.jpg",
+        "ZR0071K (17) copy.jpg",
+        "ZR0071K (2) copy.jpg",
+        "ZR0071K (20).JPG",
+        "ZR0071K (21) copy.jpg",
+        "ZR0071K (25).JPG",
+        "ZR0071K (26).JPG",
+        "ZR0071K (27).JPG",
+        "ZR0071K (6) Copy.jpg",
+        "ZR0071K.jpg"
+      ],
+      "image_count": 11,
+      "attributes": {
+        "piece_type": "ring",
+        "style_era": "contemporary",
+        "silhouette_form": "wide band with multiple horizontal rows of pavé-set stones",
+        "materials": [
+          "white gold"
+        ],
+        "gemstones": [
+          "diamonds"
+        ],
+        "finish_texture": [
+          "high polish"
+        ],
+        "motifs": [
+          "pavé setting",
+          "rows of round brilliants"
+        ],
+        "mood": "opulent and glamorous"
+      }
+    },
+    "ZR0085NE": {
+      "product_code": "ZR0085NE",
+      "analyzed_image": "ZR0085NE.jpg",
+      "all_images": [
+        "ZR0085NE (14) copy.jpg",
+        "ZR0085NE (2) Copy.jpg",
+        "ZR0085NE (20) copy.jpg",
+        "ZR0085NE (26) copy.jpg",
+        "ZR0085NE (30) copy.jpg",
+        "ZR0085NE (34) c.jpg",
+        "ZR0085NE (38).JPG",
+        "ZR0085NE (8) c.jpg",
+        "ZR0085NE.jpg"
+      ],
+      "image_count": 9,
+      "attributes": {
+        "piece_type": "ring",
+        "style_era": "contemporary",
+        "silhouette_form": "square cluster center with halo and pavé split shank band",
+        "materials": [
+          "white gold"
+        ],
+        "gemstones": [
+          "diamonds"
+        ],
+        "finish_texture": [
+          "high polish"
+        ],
+        "motifs": [
+          "cluster",
+          "pavé setting"
+        ],
+        "mood": "opulent and glamorous"
+      }
+    },
+    "ZR0233P": {
+      "product_code": "ZR0233P",
+      "analyzed_image": "ZR0233P.jpg",
+      "all_images": [
+        "ZR0233P (10) copy copy.jpg",
+        "ZR0233P (13) copy copy.jpg",
+        "ZR0233P (16) copy copy.jpg",
+        "ZR0233P (19) copy copy.jpg",
+        "ZR0233P (2) copy.jpg",
+        "ZR0233P (20).JPG",
+        "ZR0233P (6) copy copy.jpg",
+        "ZR0233P.jpg"
+      ],
+      "image_count": 8,
+      "attributes": {
+        "piece_type": "ring",
+        "style_era": "modern",
+        "silhouette_form": "circular eternity band with continuous round gemstones",
+        "materials": [
+          "white metal"
+        ],
+        "gemstones": [
+          "diamonds"
+        ],
+        "finish_texture": [
+          "high polish"
+        ],
+        "motifs": [
+          "eternity loop"
+        ],
+        "mood": "elegant and timeless"
+      }
+    }
+  }
+}

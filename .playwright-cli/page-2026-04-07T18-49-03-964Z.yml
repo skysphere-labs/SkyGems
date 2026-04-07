@@ -1,0 +1,92 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e5] [cursor=pointer]:
+      - generic [ref=e6]:
+        - img "Star icon" [ref=e8]
+        - generic [ref=e10]:
+          - img "Seedance 2.0" [ref=e11]
+          - text: is live on OpenArt Suite.
+      - link "Go to the new workspace" [ref=e12]:
+        - /url: /suite/home
+        - text: Go to the new workspace
+        - img [ref=e13]
+    - generic [ref=e15]:
+      - link "OpenArt Logo" [ref=e17] [cursor=pointer]:
+        - /url: /suite/home
+        - img "OpenArt Logo" [ref=e19]
+      - generic [ref=e20]:
+        - button "Help Center - Access tutorials, wiki, and support" [ref=e21] [cursor=pointer]:
+          - img [ref=e22]
+        - link [ref=e24] [cursor=pointer]:
+          - /url: https://discord.gg/openart-ai-1009536403555750018
+          - img [ref=e25]
+        - link [ref=e28] [cursor=pointer]:
+          - /url: https://www.youtube.com/@openart_ai?sub_confirmation=1
+          - img [ref=e29]
+        - generic [ref=e31]:
+          - button "Upgrade" [ref=e32] [cursor=pointer]: Upgrade
+          - link "Create" [ref=e33] [cursor=pointer]:
+            - /url: /image/create
+            - img [ref=e35]
+            - text: Create
+          - generic [ref=e37]:
+            - link "Sign in" [ref=e38] [cursor=pointer]:
+              - /url: /signin
+              - text: Sign in
+            - link "Sign up" [ref=e39] [cursor=pointer]:
+              - /url: /signup
+              - text: Sign up
+    - generic [ref=e40]:
+      - generic [ref=e41]:
+        - generic [ref=e42]:
+          - button "Toggle Secondary Menu" [disabled]:
+            - img
+          - generic [ref=e44]:
+            - link "Home" [ref=e45] [cursor=pointer]:
+              - /url: /home
+              - img [ref=e47]
+              - paragraph [ref=e50]: Home
+            - link "Assets" [ref=e51] [cursor=pointer]:
+              - /url: /assets
+              - img [ref=e53]
+              - paragraph [ref=e55]: Assets
+          - generic [ref=e57]:
+            - link "Beta Story" [ref=e58] [cursor=pointer]:
+              - /url: /story
+              - generic [ref=e59]:
+                - img [ref=e60]
+                - paragraph [ref=e69]: Beta
+              - paragraph [ref=e70]: Story
+            - link "Video" [ref=e71] [cursor=pointer]:
+              - /url: /video
+              - img [ref=e73]
+              - paragraph [ref=e77]: Video
+            - link "Image" [ref=e78] [cursor=pointer]:
+              - /url: /image
+              - img [ref=e80]
+              - paragraph [ref=e83]: Image
+            - link "New Character" [ref=e84] [cursor=pointer]:
+              - /url: /characters
+              - generic [ref=e85]:
+                - img [ref=e86]
+                - paragraph [ref=e90]: New
+              - paragraph [ref=e91]: Character
+            - link "Audio" [ref=e92] [cursor=pointer]:
+              - /url: /audio
+              - img [ref=e94]
+              - paragraph [ref=e96]: Audio
+          - generic [ref=e99] [cursor=pointer]:
+            - img [ref=e101]
+            - paragraph [ref=e103]: More
+        - link "Tutorial" [ref=e105] [cursor=pointer]:
+          - /url: /tutorials
+          - img [ref=e107]
+          - paragraph [ref=e109]: Tutorial
+      - main [ref=e110]:
+        - generic [ref=e113]:
+          - paragraph [ref=e115]: Sorry, page not found!
+          - paragraph [ref=e117]: Sorry, we couldn’t find the page you’re looking for. Perhaps you’ve mistyped the URL? Be sure to check your spelling.
+          - link "Go to Home ->" [ref=e118] [cursor=pointer]:
+            - /url: /
+            - text: Go to Home ->
+  - alert [ref=e119]

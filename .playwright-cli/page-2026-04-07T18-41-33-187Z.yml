@@ -1,0 +1,359 @@
+- generic [active] [ref=e99]:
+  - main [ref=e101]:
+    - generic [ref=e102]:
+      - navigation [ref=e103]:
+        - button "Go to home" [ref=e106] [cursor=pointer]:
+          - img "Logo" [ref=e107]
+        - generic [ref=e116]:
+          - button "Help" [ref=e118] [cursor=pointer]:
+            - img "QuestionMarkFill" [ref=e119]
+          - button "Discord" [ref=e121] [cursor=pointer]:
+            - img "DiscordFill" [ref=e122]
+          - button "YouTube" [ref=e124] [cursor=pointer]:
+            - img "YoutubeFill" [ref=e125]
+          - button "Gift Center" [ref=e129] [cursor=pointer]:
+            - img "GiftBold" [ref=e130]
+          - button "Pricing" [ref=e132] [cursor=pointer]:
+            - generic [ref=e133]: Pricing
+          - button "Login" [ref=e134] [cursor=pointer]:
+            - generic [ref=e135]: Login
+          - button "Start for Free ArrowRight" [ref=e136] [cursor=pointer]:
+            - generic [ref=e137]: Start for Free
+            - img "ArrowRight" [ref=e139]
+      - generic [ref=e144]:
+        - generic [ref=e145]:
+          - heading "What would you like to create today? Hero Pointer" [level=1] [ref=e146]:
+            - text: What would you like
+            - text: to create today?
+            - img "Hero Pointer" [ref=e148]
+          - navigation [ref=e149]:
+            - button "AiPlayVideoFill Story Caret Down" [ref=e150] [cursor=pointer]:
+              - img "AiPlayVideoFill" [ref=e152]
+              - generic [ref=e157]:
+                - generic [ref=e158]: Story
+                - img "Caret Down" [ref=e159]
+            - button "VideoFill Video Caret Down" [ref=e161] [cursor=pointer]:
+              - img "VideoFill" [ref=e163]
+              - generic [ref=e165]:
+                - generic [ref=e166]: Video
+                - img "Caret Down" [ref=e167]
+            - button "GalleryFill Image Caret Down" [ref=e169] [cursor=pointer]:
+              - img "GalleryFill" [ref=e171]
+              - generic [ref=e175]:
+                - generic [ref=e176]: Image
+                - img "Caret Down" [ref=e177]
+            - button "HappyemojiFill Character Caret Down" [ref=e179] [cursor=pointer]:
+              - img "HappyemojiFill" [ref=e181]
+              - generic [ref=e183]:
+                - generic [ref=e184]: Character
+                - img "Caret Down" [ref=e185]
+            - button "AiWorldFill World Caret Down NEW" [ref=e187] [cursor=pointer]:
+              - img "AiWorldFill" [ref=e189]
+              - generic [ref=e193]:
+                - generic [ref=e194]: World
+                - img "Caret Down" [ref=e195]
+              - generic [ref=e197]: NEW
+            - button "VoiceSquareFill Audio Caret Down" [ref=e198] [cursor=pointer]:
+              - img "VoiceSquareFill" [ref=e200]
+              - generic [ref=e202]:
+                - generic [ref=e203]: Audio
+                - img "Caret Down" [ref=e204]
+        - generic [ref=e210]:
+          - generic [ref=e214] [cursor=pointer]:
+            - paragraph [ref=e215]: Seedance 2.0
+            - link "Create Video" [ref=e217]:
+              - /url: /suite/create-video/byte-plus-seedance-2
+          - generic [ref=e221] [cursor=pointer]:
+            - paragraph [ref=e222]: Create Your Own AI World
+            - link "Create 3D World" [ref=e224]:
+              - /url: /suite/world?create=true
+          - generic [ref=e227] [cursor=pointer]:
+            - generic [ref=e228]:
+              - img "Clock" [ref=e229]
+              - generic [ref=e233]: "12d : 13h : 17m : 26s"
+            - generic [ref=e234]:
+              - paragraph [ref=e235]: AI Personality of the Year Awards
+              - link "Create. Post. Win $90K" [ref=e237]:
+                - /url: https://www.aipersonality.ai/
+        - generic [ref=e238]:
+          - generic [ref=e239]:
+            - heading "OpenArt Suite" [level=2] [ref=e240]
+            - button "More →" [ref=e241] [cursor=pointer]
+          - generic [ref=e242]:
+            - generic [ref=e244] [cursor=pointer]:
+              - img "Text to Video" [ref=e246]
+              - generic [ref=e247]:
+                - heading "Text to Video Text to Video" [level=3] [ref=e248]:
+                  - text: Text to Video
+                  - generic [ref=e249]: Text to Video
+                - paragraph [ref=e250]: Generate videos from text prompts
+                - img "ArrowOutwardBold" [ref=e251]
+            - generic [ref=e254] [cursor=pointer]:
+              - img "Frame to Video" [ref=e256]
+              - generic [ref=e257]:
+                - heading "Frame to Video Frame to Video" [level=3] [ref=e258]:
+                  - text: Frame to Video
+                  - generic [ref=e259]: Frame to Video
+                - paragraph [ref=e260]: Generate videos from images
+                - img "ArrowOutwardBold" [ref=e261]
+            - generic [ref=e264] [cursor=pointer]:
+              - img "Motion Sync" [ref=e266]
+              - generic [ref=e267]:
+                - heading "Motion Sync Motion Sync" [level=3] [ref=e268]:
+                  - text: Motion Sync
+                  - generic [ref=e269]: Motion Sync
+                - paragraph [ref=e270]: Motion sync videos from image and motion reference
+                - img "ArrowOutwardBold" [ref=e271]
+            - generic [ref=e274] [cursor=pointer]:
+              - img "Lip-Sync" [ref=e276]
+              - generic [ref=e277]:
+                - heading "Lip-Sync Lip-Sync" [level=3] [ref=e278]:
+                  - text: Lip-Sync
+                  - generic [ref=e279]: Lip-Sync
+                - paragraph [ref=e280]: Lip-sync videos from audio and image
+                - img "ArrowOutwardBold" [ref=e281]
+            - generic [ref=e284] [cursor=pointer]:
+              - img "Edit Video" [ref=e286]
+              - generic [ref=e287]:
+                - heading "Edit Video Edit Video" [level=3] [ref=e288]:
+                  - text: Edit Video
+                  - generic [ref=e289]: Edit Video
+                - paragraph [ref=e290]: Modify or retake videos (Kling O1, LTX-2)
+                - img "ArrowOutwardBold" [ref=e291]
+            - generic [ref=e294] [cursor=pointer]:
+              - img "Create Image" [ref=e296]
+              - generic [ref=e297]:
+                - heading "Create Image Create Image" [level=3] [ref=e298]:
+                  - text: Create Image
+                  - generic [ref=e299]: Create Image
+                - paragraph [ref=e300]: Generate images from text prompts
+                - img "ArrowOutwardBold" [ref=e301]
+            - generic [ref=e304] [cursor=pointer]:
+              - img "Edit Image" [ref=e306]
+              - generic [ref=e307]:
+                - heading "Edit Image Edit Image" [level=3] [ref=e308]:
+                  - text: Edit Image
+                  - generic [ref=e309]: Edit Image
+                - paragraph [ref=e310]: Edit images with AI models
+                - img "ArrowOutwardBold" [ref=e311]
+            - generic [ref=e314] [cursor=pointer]:
+              - img "Image Upscale" [ref=e316]
+              - generic [ref=e317]:
+                - heading "Image Upscale Image Upscale" [level=3] [ref=e318]:
+                  - text: Image Upscale
+                  - generic [ref=e319]: Image Upscale
+                - paragraph [ref=e320]: Upscale and enhance image quality
+                - img "ArrowOutwardBold" [ref=e321]
+            - generic [ref=e324] [cursor=pointer]:
+              - img "Camera Angle Control" [ref=e326]
+              - generic [ref=e327]:
+                - heading "Camera Angle Control Camera Angle Control" [level=3] [ref=e328]:
+                  - text: Camera Angle Control
+                  - generic [ref=e329]: Camera Angle Control
+                - paragraph [ref=e330]: Control the camera angle of the image
+                - img "ArrowOutwardBold" [ref=e331]
+            - generic [ref=e334] [cursor=pointer]:
+              - img "Create voice-over" [ref=e336]
+              - generic [ref=e337]:
+                - heading "Create voice-over Create voice-over" [level=3] [ref=e338]:
+                  - text: Create voice-over
+                  - generic [ref=e339]: Create voice-over
+                - paragraph [ref=e340]: Generate natural-sounding voiceovers from text.
+                - img "ArrowOutwardBold" [ref=e341]
+        - generic [ref=e343]:
+          - generic [ref=e344]:
+            - heading "Latest AI Models" [level=2] [ref=e345]
+            - button "More →" [ref=e346] [cursor=pointer]
+          - generic [ref=e347]:
+            - generic [ref=e348] [cursor=pointer]:
+              - generic [ref=e350]:
+                - img "Seedance 2.0" [ref=e353]
+                - img "ArrowOutwardBold" [ref=e355]
+              - generic [ref=e357]:
+                - heading "Seedance 2.0 Seedance 2.0" [level=3] [ref=e358]:
+                  - text: Seedance 2.0
+                  - generic [ref=e359]: Seedance 2.0
+                - paragraph [ref=e360]: Multi-modal AI video generation
+            - generic [ref=e361] [cursor=pointer]:
+              - generic [ref=e363]:
+                - img "Qwen Image 2" [ref=e366]
+                - img "ArrowOutwardBold" [ref=e368]
+              - generic [ref=e370]:
+                - heading "Qwen Image 2 Qwen Image 2" [level=3] [ref=e371]:
+                  - text: Qwen Image 2
+                  - generic [ref=e372]: Qwen Image 2
+                - paragraph [ref=e373]: Enhanced realism and improved text rendering
+            - generic [ref=e374] [cursor=pointer]:
+              - generic [ref=e376]:
+                - img "Nano Banana Pro" [ref=e379]
+                - img "ArrowOutwardBold" [ref=e381]
+              - generic [ref=e383]:
+                - heading "Nano Banana Pro Nano Banana Pro" [level=3] [ref=e384]:
+                  - text: Nano Banana Pro
+                  - generic [ref=e385]: Nano Banana Pro
+                - paragraph [ref=e386]: Fast and efficient image generation
+            - generic [ref=e387] [cursor=pointer]:
+              - generic [ref=e389]:
+                - img "Kling 3.0 Omni" [ref=e392]
+                - img "ArrowOutwardBold" [ref=e394]
+              - generic [ref=e396]:
+                - heading "Kling 3.0 Omni Kling 3.0 Omni" [level=3] [ref=e397]:
+                  - text: Kling 3.0 Omni
+                  - generic [ref=e398]: Kling 3.0 Omni
+                - paragraph [ref=e399]: Enhanced multimodal references
+        - generic [ref=e400]:
+          - generic [ref=e401]:
+            - heading "Inspirations" [level=2] [ref=e402]
+            - generic [ref=e403]:
+              - button "AiImageFill Image" [ref=e404]:
+                - img "AiImageFill" [ref=e405]
+                - generic [ref=e409]: Image
+              - button "AiVideocameraFill Video" [ref=e410]:
+                - img "AiVideocameraFill" [ref=e411]
+                - generic [ref=e415]: Video
+          - generic [ref=e417]:
+            - generic [ref=e418]:
+              - generic [ref=e420] [cursor=pointer]:
+                - generic [ref=e421]:
+                  - img "A surreal cinematic landscape" [ref=e423]
+                  - button "Use" [ref=e425]:
+                    - generic [ref=e2]: Use
+                - paragraph [ref=e427]: A surreal cinematic landscape
+              - generic [ref=e429] [cursor=pointer]:
+                - generic [ref=e430]:
+                  - img "Template cover" [ref=e432]
+                  - button "Use" [ref=e434]:
+                    - generic [ref=e4]: Use
+                - generic [ref=e435]:
+                  - paragraph
+              - generic [ref=e437] [cursor=pointer]:
+                - generic [ref=e438]:
+                  - img "Template cover" [ref=e440]
+                  - button "Use" [ref=e442]:
+                    - generic [ref=e6]: Use
+                - generic [ref=e443]:
+                  - paragraph
+              - generic [ref=e445] [cursor=pointer]:
+                - generic [ref=e446]:
+                  - img "Template cover" [ref=e448]
+                  - button "Use" [ref=e450]:
+                    - generic [ref=e8]: Use
+                - generic [ref=e451]:
+                  - paragraph
+            - generic [ref=e452]:
+              - generic [ref=e454] [cursor=pointer]:
+                - generic [ref=e455]:
+                  - img "Surreal animals watching tornado near farmhouse" [ref=e457]
+                  - button "Use" [ref=e459]:
+                    - generic [ref=e10]: Use
+                - paragraph [ref=e461]: Surreal animals watching tornado near farmhouse
+              - generic [ref=e463] [cursor=pointer]:
+                - generic [ref=e464]:
+                  - img "Template cover" [ref=e466]
+                  - button "Use" [ref=e468]:
+                    - generic [ref=e12]: Use
+                - generic [ref=e469]:
+                  - paragraph
+              - generic [ref=e471] [cursor=pointer]:
+                - generic [ref=e472]:
+                  - img "Template cover" [ref=e474]
+                  - button "Use" [ref=e476]:
+                    - generic [ref=e14]: Use
+                - generic [ref=e477]:
+                  - paragraph
+              - generic [ref=e479] [cursor=pointer]:
+                - generic [ref=e480]:
+                  - img "Template cover" [ref=e482]
+                  - button "Use" [ref=e484]:
+                    - generic [ref=e16]: Use
+                - generic [ref=e485]:
+                  - paragraph
+              - generic [ref=e487] [cursor=pointer]:
+                - generic [ref=e488]:
+                  - img "Template cover" [ref=e490]
+                  - button "Use" [ref=e492]:
+                    - generic [ref=e18]: Use
+                - generic [ref=e493]:
+                  - paragraph
+            - generic [ref=e494]:
+              - generic [ref=e496] [cursor=pointer]:
+                - generic [ref=e497]:
+                  - img "Template cover" [ref=e499]
+                  - button "Use" [ref=e501]:
+                    - generic [ref=e20]: Use
+                - generic [ref=e502]:
+                  - paragraph
+              - generic [ref=e504] [cursor=pointer]:
+                - generic [ref=e505]:
+                  - img "Template cover" [ref=e507]
+                  - button "Use" [ref=e509]:
+                    - generic [ref=e22]: Use
+                - generic [ref=e510]:
+                  - paragraph
+              - generic [ref=e512] [cursor=pointer]:
+                - generic [ref=e513]:
+                  - img "Template cover" [ref=e515]
+                  - button "Use" [ref=e517]:
+                    - generic [ref=e24]: Use
+                - generic [ref=e518]:
+                  - paragraph
+              - generic [ref=e520] [cursor=pointer]:
+                - generic [ref=e521]:
+                  - img "Template cover" [ref=e523]
+                  - button "Use" [ref=e525]:
+                    - generic [ref=e26]: Use
+                - generic [ref=e526]:
+                  - paragraph
+            - generic [ref=e527]:
+              - generic [ref=e529] [cursor=pointer]:
+                - generic [ref=e530]:
+                  - img "Template cover" [ref=e532]
+                  - button "Use" [ref=e534]:
+                    - generic [ref=e28]: Use
+                - generic [ref=e535]:
+                  - paragraph
+              - generic [ref=e537] [cursor=pointer]:
+                - generic [ref=e538]:
+                  - img "Template cover" [ref=e540]
+                  - button "Use" [ref=e542]:
+                    - generic [ref=e30]: Use
+                - generic [ref=e543]:
+                  - paragraph
+              - generic [ref=e545] [cursor=pointer]:
+                - generic [ref=e546]:
+                  - img "Template cover" [ref=e548]
+                  - button "Use" [ref=e550]:
+                    - generic [ref=e32]: Use
+                - generic [ref=e551]:
+                  - paragraph
+            - generic [ref=e552]:
+              - generic [ref=e554] [cursor=pointer]:
+                - generic [ref=e555]:
+                  - img "Template cover" [ref=e557]
+                  - button "Use" [ref=e559]:
+                    - generic [ref=e34]: Use
+                - generic [ref=e560]:
+                  - paragraph
+              - generic [ref=e562] [cursor=pointer]:
+                - generic [ref=e563]:
+                  - img "Template cover" [ref=e565]
+                  - button "Use" [ref=e567]:
+                    - generic [ref=e36]: Use
+                - generic [ref=e568]:
+                  - paragraph
+              - generic [ref=e570] [cursor=pointer]:
+                - generic [ref=e571]:
+                  - img "Template cover" [ref=e573]
+                  - button "Use" [ref=e575]:
+                    - generic [ref=e38]: Use
+                - generic [ref=e576]:
+                  - paragraph
+              - generic [ref=e578] [cursor=pointer]:
+                - generic [ref=e579]:
+                  - img "Template cover" [ref=e581]
+                  - button "Use" [ref=e583]:
+                    - generic [ref=e40]: Use
+                - generic [ref=e584]:
+                  - paragraph
+  - region "Notifications alt+T"
+  - alert [ref=e585]

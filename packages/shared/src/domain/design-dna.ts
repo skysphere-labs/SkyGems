@@ -364,6 +364,66 @@ function buildProviderRenderDirective(provider: PromptPreviewProvider): string {
   return "Favor luxury editorial wording with crisp metal reflections, gemstone depth, and premium hero-object staging.";
 }
 
+const promptPreviewSketchLabel = "Sketch prompt:";
+const promptPreviewRenderLabel = "Render prompt:";
+const promptPreviewNegativeLabel = "Negative prompt:";
+
+export function formatPromptBundlePreviewText(promptBundle: PromptBundle): string {
+  return [
+    promptPreviewSketchLabel,
+    promptBundle.sketchPrompt,
+    "",
+    promptPreviewRenderLabel,
+    promptBundle.renderPrompt,
+    "",
+    promptPreviewNegativeLabel,
+    promptBundle.negativePrompt,
+  ]
+    .join("\n")
+    .slice(0, 8000);
+}
+
+export function parsePromptBundleText(
+  promptText: string,
+  options: {
+    fallbackNegativePrompt?: string;
+  } = {},
+): PromptBundle {
+  const normalized = promptText.trim().replace(/\r\n/g, "\n");
+  const fallbackNegativePrompt = options.fallbackNegativePrompt ?? defaultNegativePrompt;
+
+  const sketchIndex = normalized.indexOf(promptPreviewSketchLabel);
+  const renderIndex = normalized.indexOf(promptPreviewRenderLabel);
+  const negativeIndex = normalized.indexOf(promptPreviewNegativeLabel);
+
+  if (sketchIndex !== -1 && renderIndex !== -1 && renderIndex > sketchIndex) {
+    const sketchPrompt = normalized
+      .slice(sketchIndex + promptPreviewSketchLabel.length, renderIndex)
+      .trim();
+    const renderPrompt = (
+      negativeIndex !== -1 && negativeIndex > renderIndex
+        ? normalized.slice(renderIndex + promptPreviewRenderLabel.length, negativeIndex)
+        : normalized.slice(renderIndex + promptPreviewRenderLabel.length)
+    ).trim();
+    const negativePrompt =
+      negativeIndex !== -1 && negativeIndex > renderIndex
+        ? normalized.slice(negativeIndex + promptPreviewNegativeLabel.length).trim()
+        : fallbackNegativePrompt;
+
+    return PromptBundleSchema.parse({
+      sketchPrompt: sketchPrompt || normalized,
+      renderPrompt: renderPrompt || sketchPrompt || normalized,
+      negativePrompt,
+    });
+  }
+
+  return PromptBundleSchema.parse({
+    sketchPrompt: normalized,
+    renderPrompt: normalized,
+    negativePrompt: fallbackNegativePrompt,
+  });
+}
+
 export function buildPromptBundle(
   designDna: DesignDna,
   userNotes?: string,
@@ -467,9 +527,6 @@ export async function buildPromptPreviewWithOptions(
     }),
     designDnaPreview: await buildDesignDnaPreview(normalizedInput),
     promptSummary: buildPromptSummary(normalizedInput),
-    promptText: `Sketch prompt:\n${promptBundle.sketchPrompt}\n\nRender prompt:\n${promptBundle.renderPrompt}\n\nNegative prompt:\n${promptBundle.negativePrompt}`.slice(
-      0,
-      8000,
-    ),
+    promptText: formatPromptBundlePreviewText(promptBundle),
   };
 }

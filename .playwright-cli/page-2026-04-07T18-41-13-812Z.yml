@@ -1,0 +1,445 @@
+- generic:
+  - generic:
+    - main:
+      - generic:
+        - navigation:
+          - generic:
+            - generic:
+              - button:
+                - img
+          - generic:
+            - generic:
+              - button:
+                - img
+            - button:
+              - img
+            - button:
+              - img
+            - button:
+              - img
+            - button:
+              - generic: Pricing
+            - button:
+              - generic: Login
+            - button:
+              - generic: Start for Free
+              - generic:
+                - img
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - heading [level=1]:
+                    - text: What would you like to create today?
+                    - generic:
+                      - img
+                  - navigation:
+                    - button:
+                      - generic:
+                        - img
+                      - generic:
+                        - generic: Story
+                        - img
+                    - button:
+                      - generic:
+                        - img
+                      - generic:
+                        - generic: Video
+                        - img
+                    - button:
+                      - generic:
+                        - img
+                      - generic:
+                        - generic: Image
+                        - img
+                    - button:
+                      - generic:
+                        - img
+                      - generic:
+                        - generic: Character
+                        - img
+                    - button:
+                      - generic:
+                        - img
+                      - generic:
+                        - generic: World
+                        - img
+                      - generic: NEW
+                    - button:
+                      - generic:
+                        - img
+                      - generic:
+                        - generic: Audio
+                        - img
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - paragraph: Seedance 2.0
+                                  - generic:
+                                    - link:
+                                      - /url: /suite/create-video/byte-plus-seedance-2
+                                      - text: Create Video
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - paragraph: Create Your Own AI World
+                                  - generic:
+                                    - link:
+                                      - /url: /suite/world?create=true
+                                      - text: Create 3D World
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - img
+                                  - generic: "12d : 13h : 17m : 46s"
+                                - generic:
+                                  - paragraph: AI Personality of the Year Awards
+                                  - generic:
+                                    - link:
+                                      - /url: https://www.aipersonality.ai/
+                                      - text: Create. Post. Win $90K
+                - generic:
+                  - generic:
+                    - heading [level=2]: OpenArt Suite
+                    - button: More →
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img
+                        - generic:
+                          - heading [level=3]:
+                            - text: Text to Video
+                            - generic: Text to Video
+                          - paragraph: Generate videos from text prompts
+                          - img
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img
+                        - generic:
+                          - heading [level=3]:
+                            - text: Frame to Video
+                            - generic: Frame to Video
+                          - paragraph: Generate videos from images
+                          - img
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img
+                        - generic:
+                          - heading [level=3]:
+                            - text: Motion Sync
+                            - generic: Motion Sync
+                          - paragraph: Motion sync videos from image and motion reference
+                          - img
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img
+                        - generic:
+                          - heading [level=3]:
+                            - text: Lip-Sync
+                            - generic: Lip-Sync
+                          - paragraph: Lip-sync videos from audio and image
+                          - img
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img
+                        - generic:
+                          - heading [level=3]:
+                            - text: Edit Video
+                            - generic: Edit Video
+                          - paragraph: Modify or retake videos (Kling O1, LTX-2)
+                          - img
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img
+                        - generic:
+                          - heading [level=3]:
+                            - text: Create Image
+                            - generic: Create Image
+                          - paragraph: Generate images from text prompts
+                          - img
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img
+                        - generic:
+                          - heading [level=3]:
+                            - text: Edit Image
+                            - generic: Edit Image
+                          - paragraph: Edit images with AI models
+                          - img
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img
+                        - generic:
+                          - heading [level=3]:
+                            - text: Image Upscale
+                            - generic: Image Upscale
+                          - paragraph: Upscale and enhance image quality
+                          - img
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img
+                        - generic:
+                          - heading [level=3]:
+                            - text: Camera Angle Control
+                            - generic: Camera Angle Control
+                          - paragraph: Control the camera angle of the image
+                          - img
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img
+                        - generic:
+                          - heading [level=3]:
+                            - text: Create voice-over
+                            - generic: Create voice-over
+                          - paragraph: Generate natural-sounding voiceovers from text.
+                          - img
+                - generic:
+                  - generic:
+                    - heading [level=2]: Latest AI Models
+                    - button: More →
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - img
+                          - generic:
+                            - img
+                      - generic:
+                        - heading [level=3]:
+                          - text: Seedance 2.0
+                          - generic: Seedance 2.0
+                        - paragraph: Multi-modal AI video generation
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - img
+                          - generic:
+                            - img
+                      - generic:
+                        - heading [level=3]:
+                          - text: Qwen Image 2
+                          - generic: Qwen Image 2
+                        - paragraph: Enhanced realism and improved text rendering
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - img
+                          - generic:
+                            - img
+                      - generic:
+                        - heading [level=3]:
+                          - text: Nano Banana Pro
+                          - generic: Nano Banana Pro
+                        - paragraph: Fast and efficient image generation
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - img
+                          - generic:
+                            - img
+                      - generic:
+                        - heading [level=3]:
+                          - text: Kling 3.0 Omni
+                          - generic: Kling 3.0 Omni
+                        - paragraph: Enhanced multimodal references
+                - generic:
+                  - generic:
+                    - heading [level=2]: Inspirations
+                    - generic:
+                      - button:
+                        - img
+                        - generic: Image
+                      - button:
+                        - img
+                        - generic: Video
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - button [ref=e1] [cursor=pointer]:
+                                - generic [ref=e2]: Use
+                            - generic:
+                              - paragraph: A surreal cinematic landscape
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - button [ref=e3] [cursor=pointer]:
+                                - generic [ref=e4]: Use
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - button [ref=e5] [cursor=pointer]:
+                                - generic [ref=e6]: Use
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - button [ref=e7] [cursor=pointer]:
+                                - generic [ref=e8]: Use
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - button [ref=e9] [cursor=pointer]:
+                                - generic [ref=e10]: Use
+                            - generic:
+                              - paragraph: Surreal animals watching tornado near farmhouse
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - button [ref=e11] [cursor=pointer]:
+                                - generic [ref=e12]: Use
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - button [ref=e13] [cursor=pointer]:
+                                - generic [ref=e14]: Use
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - button [ref=e15] [cursor=pointer]:
+                                - generic [ref=e16]: Use
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - button [ref=e17] [cursor=pointer]:
+                                - generic [ref=e18]: Use
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - button [ref=e19] [cursor=pointer]:
+                                - generic [ref=e20]: Use
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - button [ref=e21] [cursor=pointer]:
+                                - generic [ref=e22]: Use
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - button [ref=e23] [cursor=pointer]:
+                                - generic [ref=e24]: Use
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - button [ref=e25] [cursor=pointer]:
+                                - generic [ref=e26]: Use
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - button [ref=e27] [cursor=pointer]:
+                                - generic [ref=e28]: Use
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - button [ref=e29] [cursor=pointer]:
+                                - generic [ref=e30]: Use
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - button [ref=e31] [cursor=pointer]:
+                                - generic [ref=e32]: Use
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - button [ref=e33] [cursor=pointer]:
+                                - generic [ref=e34]: Use
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - button [ref=e35] [cursor=pointer]:
+                                - generic [ref=e36]: Use
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - button [ref=e37] [cursor=pointer]:
+                                - generic [ref=e38]: Use
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - button [ref=e39] [cursor=pointer]:
+                                - generic [ref=e40]: Use
+  - region "Notifications alt+T"
+  - alert
+  - dialog "SEEDANCE 2.0 IS HERE" [ref=e42]:
+    - button "Close" [active] [ref=e43] [cursor=pointer]:
+      - img "CloseBold" [ref=e44]
+    - generic [ref=e49]:
+      - generic [ref=e50]:
+        - generic [ref=e51]: What's New - April 2026
+        - generic [ref=e52]:
+          - heading "SEEDANCE 2.0 IS HERE" [level=2] [ref=e53]
+          - paragraph [ref=e54]: The most powerful video generation model yet— now available exclusively for Teams and Enterprise customers.
+      - link "Try Now" [ref=e55] [cursor=pointer]:
+        - /url: https://openart.ai/suite/create-video/byte-plus-seedance-2

@@ -1,0 +1,261 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e5] [cursor=pointer]:
+      - generic [ref=e6]:
+        - img "Star icon" [ref=e8]
+        - generic [ref=e10]:
+          - img "Seedance 2.0" [ref=e11]
+          - text: is live on OpenArt Suite.
+      - link "Go to the new workspace" [ref=e12]:
+        - /url: /suite/home
+        - text: Go to the new workspace
+        - img [ref=e13]
+    - generic [ref=e15]:
+      - link "OpenArt Logo" [ref=e17] [cursor=pointer]:
+        - /url: /suite/home
+        - img "OpenArt Logo" [ref=e19]
+      - generic [ref=e20]:
+        - button "Help Center - Access tutorials, wiki, and support" [ref=e21] [cursor=pointer]:
+          - img [ref=e22]
+        - link [ref=e24] [cursor=pointer]:
+          - /url: https://discord.gg/openart-ai-1009536403555750018
+          - img [ref=e25]
+        - link [ref=e28] [cursor=pointer]:
+          - /url: https://www.youtube.com/@openart_ai?sub_confirmation=1
+          - img [ref=e29]
+        - generic [ref=e31]:
+          - button "Upgrade" [ref=e32] [cursor=pointer]: Upgrade
+          - link "Create" [ref=e33] [cursor=pointer]:
+            - /url: /image/create
+            - img [ref=e35]
+            - text: Create
+          - generic [ref=e37]:
+            - link "Sign in" [ref=e38] [cursor=pointer]:
+              - /url: /signin
+              - text: Sign in
+            - link "Sign up" [ref=e39] [cursor=pointer]:
+              - /url: /signup
+              - text: Sign up
+    - generic [ref=e40]:
+      - generic [ref=e41]:
+        - generic [ref=e42]:
+          - button "Toggle Secondary Menu" [expanded] [ref=e43] [cursor=pointer]:
+            - img [ref=e44]
+          - generic [ref=e47]:
+            - link "Home" [ref=e48] [cursor=pointer]:
+              - /url: /home
+              - img [ref=e50]
+              - paragraph [ref=e53]: Home
+            - link "Assets" [ref=e54] [cursor=pointer]:
+              - /url: /assets
+              - img [ref=e56]
+              - paragraph [ref=e58]: Assets
+          - generic [ref=e60]:
+            - link "Beta Story" [ref=e61] [cursor=pointer]:
+              - /url: /story
+              - generic [ref=e62]:
+                - img [ref=e63]
+                - paragraph [ref=e72]: Beta
+              - paragraph [ref=e73]: Story
+            - link "Video" [ref=e74] [cursor=pointer]:
+              - /url: /video
+              - img [ref=e76]
+              - paragraph [ref=e80]: Video
+            - link "Image" [ref=e81] [cursor=pointer]:
+              - /url: /image
+              - img [ref=e83]
+              - paragraph [ref=e86]: Image
+            - link "New Character" [ref=e87] [cursor=pointer]:
+              - /url: /characters
+              - generic [ref=e88]:
+                - img [ref=e89]
+                - paragraph [ref=e93]: New
+              - paragraph [ref=e94]: Character
+            - link "Audio" [ref=e95] [cursor=pointer]:
+              - /url: /audio
+              - img [ref=e97]
+              - paragraph [ref=e99]: Audio
+          - generic [ref=e102] [cursor=pointer]:
+            - img [ref=e104]
+            - paragraph [ref=e106]: More
+        - link "Tutorial" [ref=e108] [cursor=pointer]:
+          - /url: /tutorials
+          - img [ref=e110]
+          - paragraph [ref=e112]: Tutorial
+      - main [ref=e113]:
+        - generic [ref=e114]:
+          - generic [ref=e116]:
+            - generic [ref=e117]:
+              - heading "Image" [level=4] [ref=e118]
+              - link "Tutorial" [ref=e119] [cursor=pointer]:
+                - /url: /tutorials?category=Image+Generation
+                - generic [ref=e120]:
+                  - img [ref=e121]
+                  - paragraph [ref=e123]: Tutorial
+            - generic [ref=e124]:
+              - link "Image Home" [ref=e125] [cursor=pointer]:
+                - /url: /image
+                - img [ref=e126]
+                - paragraph [ref=e128]: Image Home
+              - link "Create Image" [ref=e129] [cursor=pointer]:
+                - /url: /image/create
+                - img [ref=e130]
+                - paragraph [ref=e132]: Create Image
+              - link "Edit Image" [ref=e133] [cursor=pointer]:
+                - /url: /image/edit
+                - img [ref=e134]
+                - paragraph [ref=e136]: Edit Image
+              - link "Chat to Edit" [ref=e137] [cursor=pointer]:
+                - /url: /image/chat
+                - img [ref=e138]
+                - paragraph [ref=e140]: Chat to Edit
+              - link "Character" [ref=e141] [cursor=pointer]:
+                - /url: /image/character
+                - img [ref=e142]
+                - paragraph [ref=e144]: Character
+              - link "Image Upscale" [ref=e145] [cursor=pointer]:
+                - /url: /image/upscale
+                - img [ref=e146]
+                - paragraph [ref=e149]: Image Upscale
+              - link "Train a Model" [ref=e150] [cursor=pointer]:
+                - /url: /model_training
+                - img [ref=e151]
+                - paragraph [ref=e156]: Train a Model
+              - link "Camera Angle Control" [ref=e157] [cursor=pointer]:
+                - /url: /image/camera-angle-control
+                - img [ref=e158]
+                - paragraph [ref=e162]: Camera Angle Control
+              - link "Face Realism" [ref=e163] [cursor=pointer]:
+                - /url: /image/photorealistic
+                - img [ref=e164]
+                - paragraph [ref=e168]: Face Realism
+              - link "Swap" [ref=e169] [cursor=pointer]:
+                - /url: /image/swap
+                - img [ref=e170]
+                - paragraph [ref=e172]: Swap
+          - generic [ref=e175]:
+            - generic [ref=e176]:
+              - generic [ref=e177]:
+                - generic [ref=e178]:
+                  - img "Character Vlog" [ref=e179]
+                  - img "Character Vlog" [ref=e180]
+                  - img "Character Vlog" [ref=e181]
+                - generic [ref=e182]:
+                  - paragraph [ref=e183]: Create Your Story Video
+                  - paragraph [ref=e184]: Turn your ideas into animated stories — from character vlogs to music videos, all in one place.
+              - generic [ref=e185]:
+                - button "Dismiss" [ref=e186] [cursor=pointer]: Dismiss
+                - link "Try Now" [ref=e187] [cursor=pointer]:
+                  - /url: /story/create
+                  - text: Try Now
+            - generic [ref=e188]:
+              - generic [ref=e189]:
+                - generic [ref=e190]:
+                  - generic "Select" [ref=e191] [cursor=pointer]:
+                    - img [ref=e192]
+                  - generic "Move Canvas" [ref=e193] [cursor=pointer]:
+                    - img [ref=e195]
+                  - generic "Move Elements" [ref=e197] [cursor=pointer]:
+                    - img [ref=e199]
+                  - generic "Add Text" [ref=e201] [cursor=pointer]:
+                    - img [ref=e203]
+                  - generic [ref=e205]:
+                    - generic "Add Rectangle" [ref=e206] [cursor=pointer]:
+                      - img [ref=e208]
+                    - generic "Add Rectangle" [ref=e210] [cursor=pointer]:
+                      - img [ref=e212]
+                  - separator [ref=e214]
+                  - button "73%" [ref=e216] [cursor=pointer]:
+                    - text: 73%
+                    - img [ref=e218]
+                  - separator [ref=e220]
+                - generic [ref=e222]:
+                  - generic:
+                    - img
+                  - tablist [ref=e225]:
+                    - tab "Inpaint" [ref=e226] [cursor=pointer]:
+                      - generic [ref=e227]:
+                        - img [ref=e228]
+                        - generic [ref=e229]: Inpaint
+                    - tab "Remove" [selected] [ref=e230] [cursor=pointer]:
+                      - generic [ref=e231]:
+                        - img [ref=e232]
+                        - generic [ref=e233]: Remove
+                    - tab "Expand" [ref=e234] [cursor=pointer]:
+                      - generic [ref=e235]:
+                        - img [ref=e236]
+                        - generic [ref=e237]: Expand
+                    - tab "Stylize" [ref=e238] [cursor=pointer]:
+                      - generic [ref=e239]:
+                        - img [ref=e241]
+                        - generic [ref=e247]: Stylize
+                    - tab "Background" [ref=e248] [cursor=pointer]:
+                      - generic [ref=e249]:
+                        - img [ref=e250]
+                        - generic [ref=e251]: Background
+                    - tab "Face" [ref=e252] [cursor=pointer]:
+                      - generic [ref=e253]:
+                        - img [ref=e255]
+                        - generic [ref=e257]: Face
+                    - tab "Edit People" [ref=e258] [cursor=pointer]:
+                      - generic [ref=e259]:
+                        - img [ref=e260]
+                        - generic [ref=e261]: Edit People
+                    - tab "Blend Layers" [ref=e262] [cursor=pointer]:
+                      - generic [ref=e263]:
+                        - img [ref=e265]
+                        - generic [ref=e267]: Blend Layers
+                    - tab "Find & Replace" [ref=e268] [cursor=pointer]:
+                      - generic [ref=e269]:
+                        - img [ref=e271]
+                        - generic [ref=e273]: Find & Replace
+                    - tab "Upscale" [ref=e274] [cursor=pointer]:
+                      - generic [ref=e275]:
+                        - img [ref=e276]
+                        - generic [ref=e277]: Upscale
+                  - img [ref=e279] [cursor=pointer]
+                - generic [ref=e281]:
+                  - button "View and edit your saved drafts." [ref=e283] [cursor=pointer]:
+                    - img [ref=e284]
+                    - text: Editing History
+                  - img [ref=e287] [cursor=pointer]
+                  - img [ref=e289]
+                - generic [ref=e291]:
+                  - button "Create a new board for blending and composing elements seamlessly." [ref=e294] [cursor=pointer]:
+                    - img [ref=e296]
+                    - text: Start a Blend Board
+                  - button "Add an image to the canvas." [ref=e299] [cursor=pointer]:
+                    - img [ref=e301]
+                    - generic [ref=e303]: Add Image
+              - generic [ref=e309]:
+                - generic "Smart Select" [ref=e310]:
+                  - img [ref=e311]
+                - generic "Remove Background" [ref=e312]:
+                  - img [ref=e314]
+                - generic "Crop" [ref=e317]:
+                  - img [ref=e318]
+                - generic "Convert your image to a Blend Board for advanced blending and composition." [ref=e319]:
+                  - img [ref=e321]
+                - generic "Add Text" [ref=e323]:
+                  - img [ref=e325]
+                - generic "Add Shapes" [ref=e328] [cursor=pointer]:
+                  - img [ref=e330]
+                - generic "Download to local" [ref=e333]:
+                  - img [ref=e335]
+                - generic "Save to history" [ref=e337]:
+                  - img [ref=e339]
+                - img [ref=e343]
+              - button "Sign up to edit image for FREE" [ref=e346] [cursor=pointer]: Sign up to edit image for FREE
+  - img [ref=e348] [cursor=pointer]
+  - alert [ref=e350]
+  - tooltip "New On OpenArt! Seamlessly blend multiple images together with our image fusion feature! Start a Blend Board" [ref=e351]:
+    - generic [ref=e354]:
+      - generic [ref=e355]:
+        - generic [ref=e356]:
+          - img [ref=e357]
+          - paragraph [ref=e359]: New On OpenArt!
+        - img [ref=e360] [cursor=pointer]
+      - paragraph [ref=e362]: Seamlessly blend multiple images together with our image fusion feature!
+      - button "Start a Blend Board" [ref=e363] [cursor=pointer]:
+        - text: Start a Blend Board
+        - img [ref=e365]

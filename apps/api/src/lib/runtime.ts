@@ -12,6 +12,7 @@ export type ApiEnv = Env & {
   SKYGEMS_DEV_BOOTSTRAP_DISPLAY_NAME?: string;
   SKYGEMS_DEV_BOOTSTRAP_PROJECT_NAME?: string;
   SKYGEMS_DEV_BOOTSTRAP_PROJECT_DESCRIPTION?: string;
+  SKYGEMS_REQUIRE_EXPLICIT_DEV_BOOTSTRAP_IDENTITY?: string;
   SKYGEMS_GENERATE_EXECUTION_MODE?: string;
   XAI_API_KEY?: string;
   GOOGLE_API_KEY?: string;
@@ -44,6 +45,19 @@ export function isLocalDevelopmentRequest(request: Request): boolean {
 
 export function isDevBootstrapEnabled(request: Request, env: ApiEnv): boolean {
   return isLocalDevelopmentRequest(request) || isTruthyEnv(env.SKYGEMS_ENABLE_DEV_BOOTSTRAP);
+}
+
+export function requiresExplicitDevBootstrapIdentity(request: Request, env: ApiEnv): boolean {
+  const configured = env.SKYGEMS_REQUIRE_EXPLICIT_DEV_BOOTSTRAP_IDENTITY?.trim().toLowerCase();
+  if (!configured) {
+    return true;
+  }
+
+  if (configured === "0" || configured === "false" || configured === "no" || configured === "off") {
+    return false;
+  }
+
+  return isTruthyEnv(configured);
 }
 
 export function resolveGenerateExecutionMode(

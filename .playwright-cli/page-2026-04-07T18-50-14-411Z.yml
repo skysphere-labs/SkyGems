@@ -1,0 +1,109 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e367]:
+    - generic [ref=e368]:
+      - link "OpenArt Logo" [ref=e370] [cursor=pointer]:
+        - /url: /suite/home
+        - img "OpenArt Logo" [ref=e372]
+      - generic [ref=e373]:
+        - button "Help Center - Access tutorials, wiki, and support" [ref=e374] [cursor=pointer]:
+          - img [ref=e375]
+        - link [ref=e377] [cursor=pointer]:
+          - /url: https://discord.gg/openart-ai-1009536403555750018
+          - img [ref=e378]
+        - link [ref=e381] [cursor=pointer]:
+          - /url: https://www.youtube.com/@openart_ai?sub_confirmation=1
+          - img [ref=e382]
+        - generic [ref=e384]:
+          - button "Upgrade" [ref=e385] [cursor=pointer]: Upgrade
+          - link "Create" [ref=e386] [cursor=pointer]:
+            - /url: /image/create
+            - img [ref=e388]
+            - text: Create
+          - generic [ref=e390]:
+            - link "Sign in" [ref=e391] [cursor=pointer]:
+              - /url: /signin
+              - text: Sign in
+            - link "Sign up" [ref=e392] [cursor=pointer]:
+              - /url: /signup
+              - text: Sign up
+    - generic [ref=e393]:
+      - generic [ref=e394]:
+        - generic [ref=e395]:
+          - button "Toggle Secondary Menu" [disabled] [expanded]:
+            - img
+          - generic [ref=e397]:
+            - link "Home" [ref=e398] [cursor=pointer]:
+              - /url: /home
+              - img [ref=e400]
+              - paragraph [ref=e403]: Home
+            - link "Assets" [ref=e404] [cursor=pointer]:
+              - /url: /assets
+              - img [ref=e406]
+              - paragraph [ref=e408]: Assets
+          - generic [ref=e410]:
+            - link "Beta Story" [ref=e411] [cursor=pointer]:
+              - /url: /story
+              - generic [ref=e412]:
+                - img [ref=e413]
+                - paragraph [ref=e422]: Beta
+              - paragraph [ref=e423]: Story
+            - link "Video" [ref=e424] [cursor=pointer]:
+              - /url: /video
+              - img [ref=e426]
+              - paragraph [ref=e430]: Video
+            - link "Image" [ref=e431] [cursor=pointer]:
+              - /url: /image
+              - img [ref=e433]
+              - paragraph [ref=e438]: Image
+            - link "New Character" [ref=e439] [cursor=pointer]:
+              - /url: /characters
+              - generic [ref=e440]:
+                - img [ref=e441]
+                - paragraph [ref=e445]: New
+              - paragraph [ref=e446]: Character
+            - link "Audio" [ref=e447] [cursor=pointer]:
+              - /url: /audio
+              - img [ref=e449]
+              - paragraph [ref=e451]: Audio
+          - generic [ref=e454] [cursor=pointer]:
+            - img [ref=e456]
+            - paragraph [ref=e458]: More
+        - link "Tutorial" [ref=e460] [cursor=pointer]:
+          - /url: /tutorials
+          - img [ref=e462]
+          - paragraph [ref=e464]: Tutorial
+      - main [ref=e465]:
+        - generic [ref=e472]:
+          - link "OpenArt" [ref=e473] [cursor=pointer]:
+            - /url: /?callbackUrl=https%3A%2F%2Fopenart.ai%2Fimage%2Fedit
+            - img "OpenArt" [ref=e475]
+          - heading "Welcome back to OpenArt" [level=1] [ref=e476]
+          - generic [ref=e477]:
+            - button "Sign in with Google" [ref=e478] [cursor=pointer]:
+              - img [ref=e480]
+              - text: Sign in with Google
+            - button "Sign in with Discord" [ref=e485] [cursor=pointer]:
+              - img [ref=e487]
+              - text: Sign in with Discord
+            - button "Sign in with Twitter" [ref=e489] [cursor=pointer]:
+              - img [ref=e491]
+              - text: Sign in with Twitter
+          - generic [ref=e493]:
+            - separator [ref=e494]:
+              - generic [ref=e495]: OR
+            - generic [ref=e496]:
+              - generic [ref=e498]:
+                - textbox "Email Address *" [ref=e499]
+                - group
+              - generic [ref=e501]:
+                - textbox "Password *" [ref=e502]
+                - button [ref=e504] [cursor=pointer]:
+                  - img [ref=e505]
+                - group
+              - button "Sign In" [disabled]
+            - generic [ref=e507]:
+              - link "Forget Password" [ref=e508] [cursor=pointer]:
+                - /url: /forget-password?callbackUrl=https%3A%2F%2Fopenart.ai%2Fimage%2Fedit
+              - link "Sign Up for Free" [ref=e509] [cursor=pointer]:
+                - /url: /signup?callbackUrl=https%3A%2F%2Fopenart.ai%2Fimage%2Fedit
+  - alert [ref=e350]: Sign in
