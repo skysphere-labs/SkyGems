@@ -243,24 +243,40 @@ export function DesignGenerator() {
 
   // ── Prompt state — only populated when user clicks Generate ──
   const [promptSource, setPromptSource] = useState<'agent' | 'fallback' | 'idle'>('idle');
+  const [agentSteps, setAgentSteps] = useState<Array<{ label: string; status: 'done' | 'active' | 'pending'; detail?: string }>>([]);
+  const [agentError, setAgentError] = useState<string | null>(null);
 
   const handlePromptChange = (v: string) => { setPromptText(v); setPromptEdited(true); };
   const handleResetPrompt = () => { setPromptEdited(false); };
 
   const handleGenerate = async () => {
     designConfigRef.current = { type: selectedType, metal: selectedMetal, gemstones: selectedStones, style: selectedStyle, complexity, variations };
-    // Save to history
     setConfigHistory(prev => [...prev.slice(0, historyIndex + 1), designConfigRef.current]);
     setHistoryIndex(prev => prev + 1);
 
-    // Ask the prompt-agent to craft the prompt BEFORE running the pipeline
+    // Show agent activity in real-time
     setPromptSource('idle');
+    setAgentError(null);
+    setAgentSteps([
+      { label: 'Loading jewelry wiki', status: 'active', detail: `Reading ${selectedType}, ${selectedMetal}, ${selectedStones.join(', ')}, ${selectedStyle} knowledge...` },
+      { label: 'Sending to AI agent', status: 'pending' },
+      { label: 'Agent crafting prompt', status: 'pending' },
+      { label: 'Starting generation pipeline', status: 'pending' },
+    ]);
+
     const notesParts: string[] = [];
     if (designForm) notesParts.push(`Design form: ${designForm}`);
     if (inspiration.length) notesParts.push(`Inspired by: ${inspiration.join(', ')}`);
     if (finish) notesParts.push(`Surface finish: ${finish}`);
     if (stoneCut) notesParts.push(`Stone cut: ${stoneCut}`);
     if (stoneSetting) notesParts.push(`Setting type: ${stoneSetting}`);
+
+    // Step 1: done — wiki context loaded on backend
+    await new Promise(r => setTimeout(r, 300));
+    setAgentSteps(prev => prev.map((s, i) =>
+      i === 0 ? { ...s, status: 'done', detail: `Wiki pages: ${selectedType}, ${selectedMetal}, ${selectedStones.join(', ')}, ${selectedStyle}` } :
+      i === 1 ? { ...s, status: 'active', detail: 'Calling /v1/prompt-preview with your selections...' } : s
+    ));
 
     try {
       const result = await fetchPromptPreview({
@@ -271,16 +287,41 @@ export function DesignGenerator() {
         complexity,
         userNotes: notesParts.length > 0 ? notesParts.join('. ') : undefined,
       });
-      setPromptText(result.promptText);
-      setPromptSource(result.source === 'live' ? 'agent' : 'fallback');
-      if (result.source === 'fallback' && result.errorMessage) {
-        console.warn('[SkyGems] Prompt agent fallback:', result.errorMessage);
+
+      if (result.source === 'live') {
+        // Step 2 & 3: done — agent crafted prompt via LLM
+        setAgentSteps(prev => prev.map((s, i) =>
+          i <= 1 ? { ...s, status: 'done' } :
+          i === 2 ? { ...s, status: 'done', detail: `LLM crafted ${result.promptText.length} chars of expert prompt` } :
+          i === 3 ? { ...s, status: 'active', detail: 'Launching image generation...' } : s
+        ));
+        setPromptText(result.promptText);
+        setPromptSource('agent');
+      } else {
+        // Fallback path
+        setAgentSteps(prev => prev.map((s, i) =>
+          i <= 1 ? { ...s, status: 'done' } :
+          i === 2 ? { ...s, status: 'done', detail: result.errorMessage ? `Fallback: ${result.errorMessage}` : 'Used template fallback' } :
+          i === 3 ? { ...s, status: 'active' } : s
+        ));
+        setPromptText(result.promptText);
+        setPromptSource('fallback');
+        setAgentError(result.errorMessage || null);
       }
     } catch (err) {
-      console.error('[SkyGems] Prompt preview failed:', err);
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      setAgentSteps(prev => prev.map((s, i) =>
+        i <= 1 ? { ...s, status: 'done' } :
+        i === 2 ? { ...s, status: 'done', detail: `Error: ${msg}` } :
+        i === 3 ? { ...s, status: 'active' } : s
+      ));
       setPromptSource('fallback');
+      setAgentError(msg);
+      console.error('[SkyGems] Prompt preview failed:', err);
     }
 
+    // Step 4: start pipeline
+    setAgentSteps(prev => prev.map((s, i) => i === 3 ? { ...s, status: 'done' } : s));
     setPipelineRunCount(cnt => cnt + 1);
     setHasGenerated(true);
   };
@@ -840,6 +881,35 @@ export function DesignGenerator() {
 
         {/* ═══ Canvas ═══ */}
         <div className="flex-1 flex flex-col overflow-hidden" style={{ background: 'linear-gradient(135deg, #f8f9fa, #f0f1f3)' }}>
+
+          {/* Agent Activity — shows what the AI agent is doing in real-time */}
+          {agentSteps.length > 0 && agentSteps.some(s => s.status !== 'done' || promptSource !== 'idle') && (
+            <div className="border-b px-5 py-3 flex-shrink-0" style={{ borderColor: c.border, backgroundColor: '#fefefe' }}>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: c.gradFrom }} />
+                <span style={{ fontSize: 12, fontWeight: 600, color: c.fg }}>Prompt Agent</span>
+                {agentError && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ backgroundColor: '#fef2f2', color: '#991b1b' }}>{agentError}</span>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                {agentSteps.map((step, i) => (
+                  <div key={i} className="flex items-start gap-2">
+                    <span className="mt-0.5 flex-shrink-0">
+                      {step.status === 'done' ? <Check className="w-3 h-3" style={{ color: '#22c55e' }} /> :
+                       step.status === 'active' ? <span className="block w-3 h-3 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: c.gradFrom, borderTopColor: 'transparent' }} /> :
+                       <span className="block w-3 h-3 rounded-full" style={{ backgroundColor: '#e5e7eb' }} />}
+                    </span>
+                    <div className="min-w-0">
+                      <span style={{ fontSize: 11, fontWeight: 500, color: step.status === 'pending' ? c.fgMuted : c.fg }}>{step.label}</span>
+                      {step.detail && <p className="text-[10px] truncate" style={{ color: c.fgMuted }}>{step.detail}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="flex-1 overflow-hidden">
             <PipelineView isRunning={pipelineRunCount > 0} runKey={pipelineRunCount}
               designConfigs={designConfigRef.current} promptText={promptText} layoutMode="graph"
