@@ -1,0 +1,7 @@
+# Worker secrets and local-only runtime vars for `wrangler dev --env dev`
+SKYGEMS_PROVIDER_PRIMARY=xai
+SKYGEMS_PROVIDER_SECONDARY=google
+SKYGEMS_GENERATE_EXECUTION_MODE=local
+DEV_BOOTSTRAP_SECRET=replace-with-a-long-random-local-secret
+XAI_API_KEY=replace-with-xai-key
+GOOGLE_API_KEY=replace-with-google-key

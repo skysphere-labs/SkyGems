@@ -1,0 +1,283 @@
+@custom-variant dark (&:is(.dark *));
+
+/* ── SkyGems Design System ──────────────────────────────────────────
+   Dark luxury foundation — gold accent system.
+   The app identity is dark-first. Landing page uses hardcoded light classes.
+   ─────────────────────────────────────────────────────────────────── */
+
+:root {
+  --font-size: 16px;
+  --text-base: 1rem;
+
+  /* ── Dark Luxury Tokens (default identity) ─────────────────────── */
+
+  /* Backgrounds */
+  --background: #0A0A0A;
+  --foreground: #E5E5E5;
+  --card: #111111;
+  --card-foreground: #E5E5E5;
+  --popover: #111111;
+  --popover-foreground: #E5E5E5;
+
+  /* Primary — gold on dark */
+  --primary: #D4AF37;
+  --primary-foreground: #0A0A0A;
+
+  /* Secondary */
+  --secondary: #1A1A1A;
+  --secondary-foreground: #E5E5E5;
+
+  /* Muted */
+  --muted: #1A1A1A;
+  --muted-foreground: #999999;
+
+  /* Accent */
+  --accent: #1A1A1A;
+  --accent-foreground: #E5E5E5;
+
+  /* Destructive */
+  --destructive: #EF5350;
+  --destructive-foreground: #ffffff;
+
+  /* Form & Chrome */
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.06);
+  --input-background: #111111;
+  --switch-background: #333333;
+  --ring: #D4AF37;
+
+  /* Layout */
+  --radius: 0.625rem;
+  --sidebar: #0C0C0C;
+  --sidebar-foreground: #E5E5E5;
+  --sidebar-primary: #D4AF37;
+  --sidebar-primary-foreground: #0A0A0A;
+  --sidebar-accent: #1A1A1A;
+  --sidebar-accent-foreground: #E5E5E5;
+  --sidebar-border: rgba(255, 255, 255, 0.06);
+  --sidebar-ring: #D4AF37;
+
+  /* Overlay */
+  --surface-overlay: rgba(0, 0, 0, 0.7);
+
+  /* Charts — gold-first palette */
+  --chart-1: #D4AF37;
+  --chart-2: #4CAF50;
+  --chart-3: #64B5F6;
+  --chart-4: #FF9800;
+  --chart-5: #EF5350;
+
+  /* Font weights */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+
+  /* ── Legacy aliases (used by 23+ component files) ─────────────── */
+  --bg-primary: #0A0A0A;
+  --bg-secondary: #111111;
+  --bg-tertiary: #1A1A1A;
+  --bg-elevated: #222222;
+  --bg-hover: #2A2A2A;
+  --bg-subtle: #151515;
+  --accent-gold: #D4AF37;
+  --accent-gold-muted: #B8941F;
+  --accent-gold-light: #F5DEB3;
+  --accent-gold-glow: rgba(212, 175, 55, 0.15);
+  --text-primary: #E5E5E5;
+  --text-secondary: #999999;
+  --text-muted: #666666;
+  --text-inverse: #0A0A0A;
+  --border-default: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.16);
+  --border-active: rgba(212, 175, 55, 0.5);
+  --status-success: #4CAF50;
+  --status-warning: #FF9800;
+  --status-error: #EF5350;
+  --status-info: #64B5F6;
+
+  /* ── SkyGems Brand ───────────────────────────────────────────────── */
+  --sg-gold: #D4AF37;
+  --sg-gold-dark: #B8941F;
+  --sg-gold-light: #F5DEB3;
+  --sg-gradient: linear-gradient(135deg, #D4AF37, #B8941F);
+  --sg-gradient-hover: linear-gradient(135deg, #F5DEB3, #D4AF37);
+
+  /* ── Spacing ─────────────────────────────────────────────────────── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ── Radius ──────────────────────────────────────────────────────── */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* ── Motion ──────────────────────────────────────────────────────── */
+  --ease-default: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-fast: 120ms;
+  --duration-normal: 200ms;
+  --duration-slow: 350ms;
+}
+
+/* ── Dark Mode — mirrors root (identity is already dark) ──────────── */
+.dark {
+  --background: #0A0A0A;
+  --foreground: #E5E5E5;
+  --card: #111111;
+  --card-foreground: #E5E5E5;
+  --popover: #111111;
+  --popover-foreground: #E5E5E5;
+
+  --primary: #D4AF37;
+  --primary-foreground: #0A0A0A;
+
+  --secondary: #1A1A1A;
+  --secondary-foreground: #E5E5E5;
+
+  --muted: #1A1A1A;
+  --muted-foreground: #999999;
+
+  --accent: #1A1A1A;
+  --accent-foreground: #E5E5E5;
+
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.06);
+  --input-background: #111111;
+  --switch-background: #333333;
+  --ring: #D4AF37;
+
+  --sidebar: #0C0C0C;
+  --sidebar-foreground: #E5E5E5;
+  --sidebar-primary: #D4AF37;
+  --sidebar-primary-foreground: #0A0A0A;
+  --sidebar-accent: #1A1A1A;
+  --sidebar-accent-foreground: #E5E5E5;
+  --sidebar-border: rgba(255, 255, 255, 0.06);
+  --sidebar-ring: #D4AF37;
+
+  --surface-overlay: rgba(0, 0, 0, 0.7);
+
+  --bg-primary: #0A0A0A;
+  --bg-secondary: #111111;
+  --bg-tertiary: #1A1A1A;
+  --bg-elevated: #222222;
+  --bg-hover: #2A2A2A;
+  --bg-subtle: #151515;
+  --accent-gold: #D4AF37;
+  --accent-gold-muted: #B8941F;
+  --accent-gold-light: #F5DEB3;
+  --accent-gold-glow: rgba(212, 175, 55, 0.15);
+  --text-primary: #E5E5E5;
+  --text-secondary: #999999;
+  --text-muted: #666666;
+  --text-inverse: #0A0A0A;
+  --border-default: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.16);
+  --border-active: rgba(212, 175, 55, 0.5);
+
+  --chart-1: #D4AF37;
+  --chart-2: #4CAF50;
+  --chart-3: #64B5F6;
+  --chart-4: #FF9800;
+  --chart-5: #EF5350;
+}
+
+/* ── Tailwind / shadcn @theme inline mapping ───────────────────────── */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/* ── Base Layer ────────────────────────────────────────────────────── */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    font-size: var(--font-size);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html, body, #root {
+    height: 100vh;
+    overflow: hidden;
+    margin: 0;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* Typography defaults — Playfair Display for display, Inter for body */
+  h1 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.875rem; font-weight: 600; line-height: 1.15; letter-spacing: -0.025em; }
+  h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.5rem; font-weight: 600; line-height: 1.2; letter-spacing: -0.02em; }
+  h3 { font-size: 1.125rem; font-weight: 600; line-height: 1.3; }
+  h4 { font-size: 0.9375rem; font-weight: 500; line-height: 1.4; }
+
+  label, button { font-size: var(--text-base); font-weight: var(--font-weight-medium); line-height: 1.5; }
+  input { font-size: var(--text-base); font-weight: var(--font-weight-normal); line-height: 1.5; }
+
+  /* Selection — gold accent */
+  ::selection {
+    background: rgba(212, 175, 55, 0.3);
+    color: inherit;
+  }
+
+  .dark ::selection {
+    background: rgba(212, 175, 55, 0.35);
+    color: #fff;
+  }
+
+  /* Scrollbar — dark mode */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.08); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.16); }
+}

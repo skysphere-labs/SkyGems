@@ -1,0 +1,16 @@
+{
+  "name": "@skygems/api",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --config ../../wrangler.toml",
+    "db:migrate:local": "wrangler d1 migrations apply skygems --local --config ../../wrangler.toml",
+    "db:migrate:remote": "wrangler d1 migrations apply skygems --remote --config ../../wrangler.toml",
+    "cf:typegen": "wrangler types --config ../../wrangler.toml",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@skygems/shared": "file:../../packages/shared"
+  }
+}
