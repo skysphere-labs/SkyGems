@@ -1,7 +1,13 @@
 import type {
+  DesignDetailResponse,
+  DesignGenerationSummary,
+  DesignSummary,
+  DesignSelectResponse,
+  DevBootstrapResponse,
   GallerySearchResponse,
   GenerateDesignResponse,
   GenerationStatusResponse,
+  ProjectDesignsResponse,
   ProjectResponse,
   PromptPreviewResponse,
 } from "@skygems/shared";
@@ -27,6 +33,7 @@ import {
   listGenerationsForProject,
   rememberLastActiveProject,
   searchGalleryResults,
+  stubCreateDrafts,
   stubDesigns,
   stubGenerations,
   stubProjects,
@@ -55,6 +62,8 @@ const DEFAULT_AUTH_HEADERS = {
 } as const;
 
 const LIVE_GENERATION_CONTEXT_STORAGE_KEY = "skygems.live-generation-context.v1";
+const DEV_BOOTSTRAP_SESSION_STORAGE_KEY = "skygems.dev-bootstrap-session.v1";
+const LIVE_PROJECT_CACHE_STORAGE_KEY = "skygems.live-project-cache.v1";
 
 interface LiveGenerationContext {
   generationId: string;
@@ -65,6 +74,18 @@ interface LiveGenerationContext {
   promptSummary: string;
   promptText: string;
   createdAt: string;
+}
+
+interface DevBootstrapSessionRecord {
+  sessionToken: string;
+  sessionExpiresAt: string;
+}
+
+type RequestAuthMode = "none" | "cached" | "bootstrap";
+
+interface RequestJsonOptions {
+  authMode?: RequestAuthMode;
+  bootstrapProjectName?: string;
 }
 
 export interface PromptPreviewResult {
@@ -88,6 +109,177 @@ function getApiBaseUrl() {
 function buildApiUrl(pathname: string) {
   const baseUrl = getApiBaseUrl();
   return baseUrl ? `${baseUrl}${pathname}` : pathname;
+}
+
+function getApiMode() {
+  return import.meta.env.VITE_API_MODE ?? "live";
+}
+
+function isLiveApiEnabled() {
+  return getApiMode() !== "stub";
+}
+
+function readStorageItem(key: string) {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writeStorageItem(key: string, value: string | null) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    if (value === null) {
+      window.localStorage.removeItem(key);
+      return;
+    }
+
+    window.localStorage.setItem(key, value);
+  } catch {
+    // Ignore storage failures and keep the frontend operational.
+  }
+}
+
+function readBootstrapSession() {
+  const raw = readStorageItem(DEV_BOOTSTRAP_SESSION_STORAGE_KEY);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as DevBootstrapSessionRecord;
+    const expiresAt = new Date(parsed.sessionExpiresAt);
+    if (Number.isNaN(expiresAt.getTime()) || expiresAt.getTime() <= Date.now()) {
+      writeStorageItem(DEV_BOOTSTRAP_SESSION_STORAGE_KEY, null);
+      return null;
+    }
+
+    return parsed;
+  } catch {
+    writeStorageItem(DEV_BOOTSTRAP_SESSION_STORAGE_KEY, null);
+    return null;
+  }
+}
+
+function writeBootstrapSession(session: DevBootstrapSessionRecord | null) {
+  writeStorageItem(
+    DEV_BOOTSTRAP_SESSION_STORAGE_KEY,
+    session ? JSON.stringify(session) : null,
+  );
+}
+
+function readCachedLiveProjects(): ProjectWorkspace[] {
+  const raw = readStorageItem(LIVE_PROJECT_CACHE_STORAGE_KEY);
+  if (!raw) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as ProjectWorkspace[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    writeStorageItem(LIVE_PROJECT_CACHE_STORAGE_KEY, null);
+    return [];
+  }
+}
+
+function writeCachedLiveProjects(projects: ProjectWorkspace[]) {
+  writeStorageItem(LIVE_PROJECT_CACHE_STORAGE_KEY, JSON.stringify(projects));
+}
+
+function upsertCachedLiveProject(project: ProjectWorkspace) {
+  const cachedProjects = readCachedLiveProjects();
+  const existing = cachedProjects.find(
+    (candidate) => candidate.projectId === project.projectId,
+  );
+
+  if (existing) {
+    Object.assign(existing, project);
+  } else {
+    cachedProjects.unshift(project);
+  }
+
+  writeCachedLiveProjects(cachedProjects);
+}
+
+function buildDefaultDraft(projectId: string): CreateDraftState {
+  return {
+    projectId,
+    inputs: DEFAULT_INPUT,
+    inputRevision: 1,
+    promptMode: "synced",
+    promptValue: generatePromptPreview(DEFAULT_INPUT).prompt,
+    previewStatus: "ready",
+    previewRevision: 1,
+  };
+}
+
+function syncProjectWorkspace(project: ProjectWorkspace) {
+  const existingProject = stubProjects.find(
+    (candidate) => candidate.projectId === project.projectId,
+  );
+
+  if (existingProject) {
+    Object.assign(existingProject, project);
+  } else {
+    stubProjects.unshift(project);
+  }
+
+  if (!stubCreateDrafts[project.projectId]) {
+    stubCreateDrafts[project.projectId] = buildDefaultDraft(project.projectId);
+  }
+
+  rememberLastActiveProject(project.projectId);
+  upsertCachedLiveProject(project);
+}
+
+async function bootstrapLiveProject(projectName?: string): Promise<ProjectWorkspace | null> {
+  if (!isLiveApiEnabled()) {
+    return null;
+  }
+
+  const response = await fetch(buildApiUrl("/v1/dev/bootstrap"), {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(
+      projectName ? { projectName } : {},
+    ),
+  });
+
+  if (!response.ok) {
+    throw new Error(await getErrorMessage(response));
+  }
+
+  const payload = (await response.json()) as DevBootstrapResponse;
+  writeBootstrapSession({
+    sessionToken: payload.sessionToken,
+    sessionExpiresAt: payload.sessionExpiresAt,
+  });
+
+  const project: ProjectWorkspace = {
+    projectId: payload.project.id,
+    name: payload.project.name,
+    description: payload.project.description,
+    status: payload.project.status,
+    currentGenerationId: null,
+    selectedDesignId: null,
+    designCount: 0,
+    createdAt: formatDisplayTimestamp(payload.project.createdAt),
+    updatedAt: formatDisplayTimestamp(payload.project.updatedAt),
+  };
+  syncProjectWorkspace(project);
+  return project;
 }
 
 function buildAuthHeaders(): Record<string, string> {
@@ -116,13 +308,13 @@ function buildAuthHeaders(): Record<string, string> {
   };
 }
 
-function buildRequestHeaders(initHeaders?: HeadersInit) {
+function buildRequestHeaders(initHeaders?: HeadersInit): Record<string, string> {
   return {
     Accept: "application/json",
     "Content-Type": "application/json",
     ...buildAuthHeaders(),
     ...(initHeaders ?? {}),
-  };
+  } as Record<string, string>;
 }
 
 function formatDisplayTimestamp(value: string) {
@@ -157,10 +349,29 @@ async function getErrorMessage(response: Response) {
   return `${response.status} ${response.statusText}`.trim();
 }
 
-async function requestJson<T>(pathname: string, init?: RequestInit): Promise<T> {
+async function requestJson<T>(
+  pathname: string,
+  init?: RequestInit,
+  options?: RequestJsonOptions,
+): Promise<T> {
+  const authMode = options?.authMode ?? "cached";
+  const session =
+    authMode === "bootstrap"
+      ? await bootstrapLiveProject(options?.bootstrapProjectName)
+          .then(() => readBootstrapSession())
+          .catch(() => null)
+      : authMode === "cached"
+        ? readBootstrapSession()
+        : null;
+  const headers = buildRequestHeaders(init?.headers);
+
+  if (session?.sessionToken) {
+    headers.Authorization = `Bearer ${session.sessionToken}`;
+  }
+
   const response = await fetch(buildApiUrl(pathname), {
     ...init,
-    headers: buildRequestHeaders(init?.headers),
+    headers,
   });
 
   if (!response.ok) {
@@ -255,109 +466,224 @@ function buildGenerationMessage(
   }
 }
 
-function buildLiveDesignFromGeneration(payload: GenerationStatusResponse): Design | null {
-  if (!payload.pair) {
-    return null;
+function mapLiveStageStatus(status: DesignSummary["stageStatuses"]["spec"]): Design["stages"]["spec"]["status"] {
+  switch (status) {
+    case "running":
+      return "processing";
+    case "succeeded":
+      return "ready";
+    default:
+      return status;
+  }
+}
+
+function buildLiveStageSnapshot(options: {
+  stage: "spec" | "technicalSheet" | "svg" | "cad";
+  status: DesignSummary["stageStatuses"]["spec"];
+  selected: boolean;
+  availableId: string | null;
+}) {
+  const status = mapLiveStageStatus(options.status);
+  const stageLabel =
+    options.stage === "technicalSheet"
+      ? "technical sheet"
+      : options.stage === "svg"
+        ? "SVG package"
+        : options.stage === "cad"
+          ? "CAD export"
+          : "specification";
+
+  if (options.availableId) {
+    return {
+      status,
+      summary: `Backend truth marks the ${stageLabel} stage as available for this design.`,
+      versionLabel: options.availableId,
+    };
   }
 
-  const context = getLiveGenerationContext(payload.generationId);
-  const draftInput = context?.inputs ?? getCreateDraftByProjectId(payload.projectId)?.inputs ?? DEFAULT_INPUT;
-  const designDna = buildDesignDna(draftInput);
-  const selectedAt =
-    payload.status === "succeeded"
-      ? formatDisplayTimestamp(payload.completedAt ?? payload.createdAt)
-      : undefined;
+  if (!options.selected) {
+    return {
+      status: "absent" as const,
+      summary: `Select this design to make ${stageLabel} the active downstream lane.`,
+    };
+  }
+
+  switch (status) {
+    case "queued":
+      return {
+        status,
+        summary: `The ${stageLabel} stage is queued in the backend pipeline.`,
+      };
+    case "processing":
+      return {
+        status,
+        summary: `The ${stageLabel} stage is actively being prepared.`,
+      };
+    case "failed":
+      return {
+        status,
+        summary: `The ${stageLabel} stage failed and needs another run.`,
+      };
+    case "skipped":
+      return {
+        status,
+        summary: `The ${stageLabel} stage was skipped for this design revision.`,
+      };
+    default:
+      return {
+        status,
+        summary: `The ${stageLabel} stage has not been requested yet.`,
+      };
+  }
+}
+
+function mapRecentGenerationActivity(item: DesignGenerationSummary) {
+  return {
+    generationId: item.generationId,
+    requestKind: item.requestKind,
+    status: mapGenerationStatus(item.status),
+    createdAt: formatDisplayTimestamp(item.createdAt),
+    completedAt: item.completedAt ? formatDisplayTimestamp(item.completedAt) : undefined,
+    errorMessage: item.error?.message ?? undefined,
+  };
+}
+
+function mapDesignSummary(
+  summary: DesignSummary,
+  recentGenerations?: DesignGenerationSummary[],
+): Design {
+  const fallbackDesign = getDesignById(summary.designId);
+  const context = summary.sourceGenerationId
+    ? getLiveGenerationContext(summary.sourceGenerationId)
+    : null;
+  const selected = summary.selectionState === "selected";
+  const sketch = summary.pair?.sketch;
+  const render = summary.pair?.render;
 
   return {
-    id: payload.designId,
-    projectId: payload.projectId,
-    parentDesignId: null,
-    sourceKind: payload.requestKind,
-    sourceGenerationId: payload.generationId,
-    selectionState: payload.pair.selectionState,
-    displayName: `${designDna.style} ${designDna.jewelryType} concept`,
+    id: summary.designId,
+    projectId: summary.projectId,
+    parentDesignId: summary.parentDesignId ?? undefined,
+    sourceKind: summary.sourceKind,
+    sourceGenerationId:
+      summary.sourceGenerationId ??
+      recentGenerations?.[0]?.generationId ??
+      fallbackDesign?.sourceGenerationId ??
+      "",
+    selectionState: summary.selectionState,
+    displayName: summary.displayName,
     promptSummary:
-      context?.promptSummary ??
-      generatePromptPreview(draftInput).summary,
-    designDna,
-    latestPairId: payload.pair.pairId,
-    createdAt: formatDisplayTimestamp(payload.createdAt),
-    selectedAt,
+      summary.promptSummary ||
+      context?.promptSummary ||
+      fallbackDesign?.promptSummary ||
+      generatePromptPreview(
+        getCreateDraftByProjectId(summary.projectId)?.inputs ?? DEFAULT_INPUT,
+      ).summary,
+    designDna: summary.designDna,
+    latestPairId: summary.latestPairId ?? undefined,
+    createdAt: formatDisplayTimestamp(summary.createdAt),
+    selectedAt: summary.selectedAt ? formatDisplayTimestamp(summary.selectedAt) : undefined,
+    updatedAt: formatDisplayTimestamp(summary.updatedAt),
     sketch: {
-      artifactId: payload.pair.sketch.artifactId,
-      label: "Pair Sketch",
-      alt: "Generated design sketch",
-      url: payload.pair.sketch.signedUrl,
+      artifactId: sketch?.artifactId ?? fallbackDesign?.sketch.artifactId ?? `${summary.designId}-sketch`,
+      label: fallbackDesign?.sketch.label ?? "Pair Sketch",
+      alt: fallbackDesign?.sketch.alt ?? "Generated design sketch",
+      url: sketch?.signedUrl ?? fallbackDesign?.sketch.url ?? "",
       kind: "image",
     },
     render: {
-      artifactId: payload.pair.render.artifactId,
-      label: "Pair Render",
-      alt: "Generated design render",
-      url: payload.pair.render.signedUrl,
+      artifactId: render?.artifactId ?? fallbackDesign?.render.artifactId ?? `${summary.designId}-render`,
+      label: fallbackDesign?.render.label ?? "Pair Render",
+      alt: fallbackDesign?.render.alt ?? "Generated design render",
+      url: render?.signedUrl ?? fallbackDesign?.render.url ?? "",
       kind: "image",
     },
     stages: {
-      spec: {
-        status: "not_requested",
-        summary: "Specification has not been requested for this live design yet.",
-      },
-      technicalSheet: {
-        status: "not_requested",
-        summary: "Technical sheet is waiting on spec approval.",
-      },
-      svg: {
-        status: "not_requested",
-        summary: "SVG generation is waiting on the technical sheet stage.",
-      },
-      cad: {
-        status: "not_requested",
-        summary: "CAD export has not been started for this live design yet.",
-      },
+      spec: buildLiveStageSnapshot({
+        stage: "spec",
+        status: summary.stageStatuses.spec,
+        selected,
+        availableId: summary.latestSpecId,
+      }),
+      technicalSheet: buildLiveStageSnapshot({
+        stage: "technicalSheet",
+        status: summary.stageStatuses.technicalSheet,
+        selected,
+        availableId: summary.latestTechnicalSheetId,
+      }),
+      svg: buildLiveStageSnapshot({
+        stage: "svg",
+        status: summary.stageStatuses.svg,
+        selected,
+        availableId: summary.latestSvgAssetId,
+      }),
+      cad: buildLiveStageSnapshot({
+        stage: "cad",
+        status: summary.stageStatuses.cad,
+        selected,
+        availableId: summary.latestCadJobId,
+      }),
     },
-    refinePresets: [
-      "Tighten silhouette",
-      "Push gemstone hierarchy",
-      "Reduce crown height",
-      "Introduce temple detail",
-    ],
-    refineTargetGenerationId: undefined,
+    refinePresets:
+      fallbackDesign?.refinePresets ?? [
+        "Tighten silhouette",
+        "Push gemstone hierarchy",
+        "Reduce crown height",
+        "Introduce temple detail",
+      ],
+    refineTargetGenerationId:
+      recentGenerations?.[0]?.generationId ?? fallbackDesign?.refineTargetGenerationId,
     lineageNotes: [
-      "Live generation response promoted this pair into the selected-design workspace.",
-      "Downstream stages remain untouched until spec work begins.",
+      selected
+        ? "This design is the active workspace truth for the project."
+        : "This design remains available as a candidate until it is explicitly selected.",
+      summary.sourceKind === "refine"
+        ? "This revision came from a refinement cycle."
+        : "This revision came from the primary create flow.",
+      summary.latestPairId
+        ? "Pair artifacts are available for review in the current workspace."
+        : "Pair artifacts are still pending for this revision.",
     ],
-    specData: {
-      versionLabel: "Not generated",
-      summary: "Specification is pending for this live design.",
-      geometry: [],
-      materials: [],
-      gemstones: [],
-      constructionNotes: [],
-      riskFlags: [],
-      missingInformation: [],
-    },
-    technicalSheetData: {
-      versionLabel: "Not generated",
-      generatedAt: "Awaiting specification approval",
-      geometryAndDimensions: [],
-      materialsAndMetalDetails: [],
-      gemstoneSchedule: [],
-      constructionAndAssemblyNotes: [],
-      tolerancesAndConstraints: [],
-      riskFlags: [],
-      missingInformation: [],
-    },
-    svgViews: [],
-    cadJobs: [],
+    specData:
+      fallbackDesign?.specData ?? {
+        versionLabel: summary.latestSpecId ?? "Not generated",
+        summary: selected
+          ? "Specification fields will populate from backend artifacts as the downstream slice lands."
+          : "Select this design before starting specification work.",
+        geometry: [],
+        materials: [],
+        gemstones: [],
+        constructionNotes: [],
+        riskFlags: [],
+        missingInformation: [],
+      },
+    technicalSheetData:
+      fallbackDesign?.technicalSheetData ?? {
+        versionLabel: summary.latestTechnicalSheetId ?? "Not generated",
+        generatedAt: summary.latestTechnicalSheetId
+          ? formatDisplayTimestamp(summary.updatedAt)
+          : "Awaiting specification approval",
+        geometryAndDimensions: [],
+        materialsAndMetalDetails: [],
+        gemstoneSchedule: [],
+        constructionAndAssemblyNotes: [],
+        tolerancesAndConstraints: [],
+        riskFlags: [],
+        missingInformation: [],
+      },
+    svgViews: fallbackDesign?.svgViews ?? [],
+    cadJobs: fallbackDesign?.cadJobs ?? [],
+    recentGenerations: recentGenerations?.map((item) => mapRecentGenerationActivity(item)),
   };
+}
+
+function buildLiveDesignFromGeneration(payload: GenerationStatusResponse): Design {
+  return mapDesignSummary(payload.design);
 }
 
 function mapGenerationResponse(payload: GenerationStatusResponse): Generation {
   const context = getLiveGenerationContext(payload.generationId);
-  const designDna = context
-    ? buildDesignDna(context.inputs)
-    : getDesignById(payload.designId)?.designDna ??
-      buildDesignDna(getCreateDraftByProjectId(payload.projectId)?.inputs ?? DEFAULT_INPUT);
+  const liveDesign = mapDesignSummary(payload.design);
 
   return {
     id: payload.generationId,
@@ -370,7 +696,10 @@ function mapGenerationResponse(payload: GenerationStatusResponse): Generation {
       ? formatDisplayTimestamp(payload.completedAt)
       : undefined,
     errorMessage: payload.error?.message ?? undefined,
-    message: buildGenerationMessage(payload, context?.promptSummary),
+    message: buildGenerationMessage(
+      payload,
+      context?.promptSummary ?? liveDesign.promptSummary,
+    ),
     readyPairs: payload.pair ? 1 : 0,
     totalPairs: 1,
     reconnecting: false,
@@ -378,20 +707,26 @@ function mapGenerationResponse(payload: GenerationStatusResponse): Generation {
       ? [
           {
             designId: payload.designId,
-            pairLabel: "Hero Pair",
-            designDna,
+            pairLabel:
+              payload.design.selectionState === "selected" ? "Active Pair" : "Hero Pair",
+            designDna: liveDesign.designDna,
             status: "ready",
             sketchArtifactUrl: payload.pair.sketch.signedUrl,
             renderArtifactUrl: payload.pair.render.signedUrl,
             sourceGenerationId: payload.generationId,
             note: context
               ? `Generated from ${context.promptSummary}.`
-              : "Live generation response.",
+              : payload.design.selectionState === "selected"
+                ? "Already promoted into the active project workspace."
+                : "Ready to be promoted into the active workspace.",
           },
         ]
       : [],
     source: "live",
     lastCheckedAt: new Date().toISOString(),
+    projectSelectedDesignId: payload.projectSelectedDesignId,
+    canSelect: payload.canSelect,
+    designSelectionState: payload.design.selectionState,
   };
 }
 
@@ -437,7 +772,16 @@ function buildIdempotencyKey() {
 
 export async function fetchProjects(): Promise<ProjectWorkspace[]> {
   await delay(180);
-  return stubProjects;
+  const liveProjects = readCachedLiveProjects();
+  const projects = [...liveProjects];
+
+  for (const stubProject of stubProjects) {
+    if (!projects.some((candidate) => candidate.projectId === stubProject.projectId)) {
+      projects.push(stubProject);
+    }
+  }
+
+  return projects;
 }
 
 export async function fetchProject(projectId: string): Promise<ProjectWorkspace> {
@@ -445,8 +789,14 @@ export async function fetchProject(projectId: string): Promise<ProjectWorkspace>
 
   try {
     const payload = await requestJson<ProjectResponse>(`/v1/projects/${projectId}`);
-    rememberLastActiveProject(projectId);
-    return mapProjectResponse(payload);
+    const project = mapProjectResponse(payload);
+    syncProjectWorkspace(project);
+
+    if (payload.selectedDesign) {
+      stubDesigns[payload.selectedDesign.designId] = mapDesignSummary(payload.selectedDesign);
+    }
+
+    return project;
   } catch {
     const project = getProjectById(projectId);
     if (!project) {
@@ -473,9 +823,19 @@ export async function fetchCreateDraft(projectId: string): Promise<CreateDraftSt
 
 export async function bootstrapProject(name?: string): Promise<ProjectWorkspace> {
   await delay(160);
-  const project = bootstrapProjectWorkspace(name);
-  rememberLastActiveProject(project.projectId);
-  return project;
+
+  try {
+    const liveProject = await bootstrapLiveProject(name);
+    if (liveProject) {
+      return liveProject;
+    }
+  } catch {
+    // Fall through to the local bootstrap path.
+  }
+
+  const fallbackProject = bootstrapProjectWorkspace(name);
+  rememberLastActiveProject(fallbackProject.projectId);
+  return fallbackProject;
 }
 
 export async function postPromptPreview(input: {
@@ -562,6 +922,19 @@ export async function postGenerateDesign(input: {
     if (project) {
       project.currentGenerationId = payload.generationId;
       project.updatedAt = formatDisplayTimestamp(payload.createdAt);
+      upsertCachedLiveProject(project);
+    } else {
+      syncProjectWorkspace({
+        projectId: input.projectId,
+        name: `Project ${input.projectId.slice(-6)}`,
+        description: "Live backend workspace in progress.",
+        status: "active",
+        currentGenerationId: payload.generationId,
+        selectedDesignId: null,
+        designCount: 0,
+        createdAt: formatDisplayTimestamp(payload.createdAt),
+        updatedAt: formatDisplayTimestamp(payload.createdAt),
+      });
     }
     rememberLastActiveProject(input.projectId);
 
@@ -587,10 +960,16 @@ export async function fetchGeneration(generationId: string): Promise<Generation>
     );
     const mappedGeneration = mapGenerationResponse(payload);
     const liveDesign = buildLiveDesignFromGeneration(payload);
-    if (liveDesign) {
-      stubDesigns[payload.designId] = liveDesign;
-    }
+    stubDesigns[payload.designId] = liveDesign;
     stubGenerations[generationId] = mappedGeneration;
+    const project = getProjectById(payload.projectId);
+    if (project) {
+      project.currentGenerationId = payload.generationId;
+      project.selectedDesignId = payload.projectSelectedDesignId;
+      project.updatedAt = formatDisplayTimestamp(
+        payload.completedAt ?? payload.startedAt ?? payload.createdAt,
+      );
+    }
     return mappedGeneration;
   } catch {
     await delay(220);
@@ -613,22 +992,93 @@ export async function fetchProjectGenerations(projectId: string): Promise<Genera
 }
 
 export async function fetchDesign(designId: string): Promise<Design> {
-  await delay(160);
-  const design = getDesignById(designId);
-  if (!design) throw new Error(`Design ${designId} not found`);
-  return design;
+  try {
+    const payload = await requestJson<DesignDetailResponse>(`/v1/designs/${designId}`);
+    const design = mapDesignSummary(payload.design, payload.recentGenerations);
+    stubDesigns[designId] = design;
+
+    const project = getProjectById(payload.projectId);
+    if (project) {
+      project.selectedDesignId = payload.selectedDesignId;
+    }
+
+    return design;
+  } catch {
+    await delay(160);
+    const design = getDesignById(designId);
+    if (!design) throw new Error(`Design ${designId} not found`);
+    return design;
+  }
 }
 
 export async function fetchSelectedDesign(projectId: string): Promise<Design | null> {
-  await delay(180);
-  const project = getProjectById(projectId);
-  if (!project?.selectedDesignId) return null;
-  return getDesignById(project.selectedDesignId);
+  try {
+    const payload = await requestJson<ProjectResponse>(`/v1/projects/${projectId}`);
+    const project = mapProjectResponse(payload);
+    syncProjectWorkspace(project);
+
+    if (!payload.selectedDesign) {
+      return null;
+    }
+
+    const design = mapDesignSummary(payload.selectedDesign);
+    stubDesigns[design.id] = design;
+    return design;
+  } catch {
+    await delay(180);
+    const project = getProjectById(projectId);
+    if (!project?.selectedDesignId) return null;
+    return getDesignById(project.selectedDesignId);
+  }
 }
 
 export async function fetchProjectDesigns(projectId: string): Promise<Design[]> {
-  await delay(160);
-  return listDesignsForProject(projectId);
+  try {
+    const payload = await requestJson<ProjectDesignsResponse>(
+      `/v1/projects/${projectId}/designs`,
+    );
+    const designs = payload.items.map((item) => mapDesignSummary(item));
+    designs.forEach((design) => {
+      stubDesigns[design.id] = design;
+    });
+
+    const project = getProjectById(projectId);
+    if (project) {
+      project.designCount = payload.total;
+      project.selectedDesignId = payload.selectedDesignId;
+    }
+
+    return designs;
+  } catch {
+    await delay(160);
+    return listDesignsForProject(projectId);
+  }
+}
+
+export async function postSelectDesign(designId: string): Promise<Design> {
+  const payload = await requestJson<DesignSelectResponse>(
+    `/v1/designs/${designId}/select`,
+    {
+      method: "POST",
+    },
+  );
+  const design = mapDesignSummary(payload.design, payload.recentGenerations);
+  stubDesigns[designId] = design;
+
+  const project = getProjectById(payload.projectId);
+  if (project) {
+    project.selectedDesignId = payload.selectedDesignId;
+    project.updatedAt = design.updatedAt ?? project.updatedAt;
+  }
+
+  if (payload.previousSelectedDesignId && stubDesigns[payload.previousSelectedDesignId]) {
+    stubDesigns[payload.previousSelectedDesignId] = {
+      ...stubDesigns[payload.previousSelectedDesignId],
+      selectionState: "superseded",
+    };
+  }
+
+  return design;
 }
 
 export async function postRefineDesign(designId: string) {

@@ -1,57 +1,72 @@
-import { Crown, GalleryVerticalEnd, Layers3, Sparkles } from "lucide-react";
-import { NavLink, Outlet } from "react-router";
+import { Crown, GalleryVerticalEnd, Home } from "lucide-react";
+import { NavLink, Outlet, useLocation } from "react-router";
 
 import { appRoutes } from "../lib/routes";
 
-const PRIMARY_NAV = [
-  { label: "Projects", to: appRoutes.projects, icon: Layers3 },
-  { label: "Create", to: appRoutes.createRedirect, icon: Sparkles },
+const NAV_ITEMS = [
+  { label: "Home", to: appRoutes.projects, icon: Home },
   { label: "Gallery", to: appRoutes.gallery, icon: GalleryVerticalEnd },
 ];
 
 export function AppShell() {
+  const location = useLocation();
+
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">
-      <header className="sticky top-0 z-40 border-b border-white/6 bg-[rgba(7,9,15,0.88)] backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex size-11 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#d4af37_0%,#8b6b1d_100%)] text-black shadow-[0_10px_30px_rgba(212,175,55,0.25)]">
-              <Crown className="size-5" />
+      <header
+        className="fixed top-0 z-50 w-full border-b bg-[var(--bg-secondary)]"
+        style={{ borderColor: "var(--border-default)", height: 56 }}
+      >
+        <div className="mx-auto flex h-full max-w-[1200px] items-center justify-between px-6">
+          <NavLink
+            to={appRoutes.projects}
+            className="flex items-center gap-3"
+          >
+            <div className="flex size-9 items-center justify-center rounded-xl bg-[var(--accent-gold)] text-[var(--text-inverse)]">
+              <Crown className="size-4" />
             </div>
-            <div>
-              <p className="eyebrow">SkyGems</p>
-              <p className="text-base font-semibold text-[var(--text-primary)]">
-                Jewelry Design Studio
-              </p>
-            </div>
-          </div>
+            <span className="text-base font-semibold text-[var(--text-primary)]">
+              SkyGems
+            </span>
+          </NavLink>
 
-          <nav className="flex items-center gap-2">
-            {PRIMARY_NAV.map((item) => {
+          <nav className="flex items-center gap-1">
+            {NAV_ITEMS.map((item) => {
               const Icon = item.icon;
+              const isActive =
+                location.pathname === item.to ||
+                location.pathname.startsWith(item.to + "/");
               return (
                 <NavLink
                   key={item.to}
                   to={item.to}
-                  className={({ isActive }) =>
-                    [
-                      "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors",
-                      isActive
-                        ? "border-[rgba(212,175,55,0.26)] bg-[rgba(212,175,55,0.1)] text-[var(--accent-gold)]"
-                        : "border-white/6 bg-[rgba(255,255,255,0.02)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]",
-                    ].join(" ")
-                  }
+                  className="relative flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+                  style={{
+                    color: isActive
+                      ? "var(--accent-gold)"
+                      : "var(--text-secondary)",
+                  }}
                 >
                   <Icon className="size-4" />
                   {item.label}
+                  {isActive && (
+                    <span
+                      className="absolute bottom-0 left-4 right-4 h-0.5 rounded-full"
+                      style={{ backgroundColor: "var(--accent-gold)" }}
+                    />
+                  )}
                 </NavLink>
               );
             })}
           </nav>
+
+          <div className="flex size-8 items-center justify-center rounded-full bg-[var(--bg-tertiary)] text-xs font-medium text-[var(--text-secondary)]">
+            S
+          </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-6 py-6">
+      <main className="pt-14">
         <Outlet />
       </main>
     </div>

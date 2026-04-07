@@ -1,104 +1,160 @@
 import { useEffect, useState } from "react";
-import { Download } from "lucide-react";
-import { useParams } from "react-router";
+import { ArrowLeft, Download, Sparkles } from "lucide-react";
+import { Link, useParams } from "react-router";
 
-import { Button, Card, CardContent, CardHeader, CardTitle } from "@skygems/ui";
+import { Button } from "@skygems/ui";
 
 import { fetchDesign } from "../contracts/api";
 import { CAD_FORMAT_OPTIONS } from "../contracts/constants";
 import type { Design } from "../contracts/types";
 import { StageStatusPill } from "../components/status/StageStatusPill";
+import { appRoutes } from "../lib/routes";
 
 export function CadScreen() {
-  const { designId } = useParams();
+  const { designId, projectId } = useParams();
   const [design, setDesign] = useState<Design | null>(null);
 
   useEffect(() => {
-    if (!designId) {
-      return;
-    }
-
+    if (!designId) return;
     fetchDesign(designId).then(setDesign);
   }, [designId]);
 
-  if (!design) {
+  if (!design || !projectId) {
     return (
-      <Card className="border-white/6 bg-[var(--bg-secondary)]">
-        <CardContent className="py-12 text-center text-[var(--text-secondary)]">
-          Loading CAD workspace...
-        </CardContent>
-      </Card>
+      <div className="py-20 text-center">
+        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[var(--accent-gold)] border-t-transparent" />
+        <p className="mt-4 text-sm text-[var(--text-secondary)]">
+          Loading CAD exports...
+        </p>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <Card className="border-white/6 bg-[var(--bg-secondary)]">
-        <CardContent className="py-6">
-          <p className="eyebrow">CAD</p>
-          <h1 className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">
-            Format selection and job tracking
+    <div className="animate-entrance space-y-8">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <div className="mb-2 flex items-center gap-2">
+            <p className="eyebrow">CAD Export</p>
+            <StageStatusPill status={design.stages.cad.status} />
+          </div>
+          <h1
+            className="text-3xl font-semibold text-[var(--text-primary)]"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+          >
+            Manufacturing Files
           </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
-            Keep CAD contextual to the selected design instead of a detached export route.
+          <p className="mt-2 text-sm text-[var(--text-secondary)]">
+            Download production-ready CAD files for manufacturing.
           </p>
-        </CardContent>
-      </Card>
+        </div>
+        <Button
+          asChild
+          variant="outline"
+          className="border-[var(--border-default)]"
+        >
+          <Link to={appRoutes.svg(projectId, design.id)}>
+            <ArrowLeft className="size-4" />
+            Back to SVG
+          </Link>
+        </Button>
+      </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      {/* Format cards */}
+      <div className="stagger-children grid gap-5 lg:grid-cols-3">
         {CAD_FORMAT_OPTIONS.map((format) => {
-          const job = design.cadJobs.find((candidate) => candidate.format === format.id);
+          const job = design.cadJobs.find((j) => j.format === format.id);
+          const hasArtifact = !!job?.artifact;
+
           return (
-            <Card key={format.id} className="border-white/6 bg-[var(--bg-secondary)]">
-              <CardHeader>
-                <CardTitle className="text-lg text-[var(--text-primary)]">
+            <div
+              key={format.id}
+              className="rounded-2xl border p-6"
+              style={{
+                borderColor: hasArtifact
+                  ? "rgba(212,175,55,0.16)"
+                  : "var(--border-default)",
+                backgroundColor: "var(--bg-tertiary)",
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-[var(--text-primary)]">
                   {format.label}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm leading-6 text-[var(--text-secondary)]">
-                  {format.description}
-                </p>
+                </h3>
                 <StageStatusPill status={job?.status ?? "absent"} />
-                <Button variant="outline" disabled={!job?.artifact}>
-                  <Download className="size-4" />
-                  {job?.artifact ? "Download artifact" : "Awaiting artifact"}
-                </Button>
-              </CardContent>
-            </Card>
+              </div>
+              <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                {format.description}
+              </p>
+              <div className="mt-5">
+                {hasArtifact ? (
+                  <Button className="btn-gold w-full">
+                    <Download className="size-4" />
+                    Download {format.label}
+                  </Button>
+                ) : job ? (
+                  <Button
+                    variant="outline"
+                    className="w-full border-[var(--border-default)]"
+                    disabled={
+                      job.status === "processing" || job.status === "running"
+                    }
+                  >
+                    {job.status === "processing" || job.status === "running"
+                      ? "Generating..."
+                      : "Awaiting artifact"}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    className="w-full border-[var(--border-default)]"
+                  >
+                    <Sparkles className="size-4" />
+                    Generate {format.label}
+                  </Button>
+                )}
+              </div>
+              {job?.note && (
+                <p className="mt-3 text-xs text-[var(--text-muted)]">
+                  {job.note}
+                </p>
+              )}
+            </div>
           );
         })}
       </div>
 
-      <Card className="border-white/6 bg-[var(--bg-secondary)]">
-        <CardHeader>
-          <CardTitle className="text-lg text-[var(--text-primary)]">
-            Existing CAD jobs
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {design.cadJobs.length > 0 ? (
-            design.cadJobs.map((job) => (
+      {/* Existing jobs summary */}
+      {design.cadJobs.length > 0 && (
+        <div
+          className="rounded-2xl border p-5"
+          style={{
+            borderColor: "var(--border-default)",
+            backgroundColor: "var(--bg-tertiary)",
+          }}
+        >
+          <p className="eyebrow mb-4">Job History</p>
+          <div className="space-y-3">
+            {design.cadJobs.map((job) => (
               <div
                 key={job.format}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/6 bg-[rgba(255,255,255,0.02)] px-4 py-3"
+                className="flex items-center justify-between rounded-xl p-3"
+                style={{ backgroundColor: "rgba(255,255,255,0.02)" }}
               >
                 <div>
-                  <p className="text-sm font-semibold text-[var(--text-primary)]">
+                  <p className="text-sm font-medium text-[var(--text-primary)]">
                     {job.format.toUpperCase()}
                   </p>
-                  <p className="mt-1 text-sm text-[var(--text-secondary)]">{job.note}</p>
+                  <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
+                    {job.note}
+                  </p>
                 </div>
                 <StageStatusPill status={job.status} />
               </div>
-            ))
-          ) : (
-            <p className="text-sm text-[var(--text-secondary)]">
-              No CAD jobs have been queued for this design yet.
-            </p>
-          )}
-        </CardContent>
-      </Card>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

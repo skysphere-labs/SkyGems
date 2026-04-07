@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { ArrowRight, FolderClock, Sparkles } from "lucide-react";
+import { ArrowRight, Clock3, Sparkles } from "lucide-react";
 import { Link, useParams } from "react-router";
 
-import { Button, Card, CardContent, CardHeader, CardTitle } from "@skygems/ui";
+import { Button, ImageWithFallback } from "@skygems/ui";
 
 import {
   fetchProject,
@@ -11,7 +11,6 @@ import {
   fetchSelectedDesign,
 } from "../contracts/api";
 import type { Design, Generation, ProjectWorkspace } from "../contracts/types";
-import { SelectionSummaryPanel } from "../components/status/SelectionSummaryPanel";
 import { appRoutes } from "../lib/routes";
 
 export function ProjectHome() {
@@ -22,10 +21,7 @@ export function ProjectHome() {
   const [generations, setGenerations] = useState<Generation[]>([]);
 
   useEffect(() => {
-    if (!projectId) {
-      return;
-    }
-
+    if (!projectId) return;
     fetchProject(projectId).then(setProject);
     fetchSelectedDesign(projectId).then(setSelectedDesign);
     fetchProjectDesigns(projectId).then(setDesigns);
@@ -34,132 +30,224 @@ export function ProjectHome() {
 
   if (!projectId || !project) {
     return (
-      <Card className="border-white/6 bg-[var(--bg-secondary)]">
-        <CardContent className="py-10 text-center text-[var(--text-secondary)]">
-          Loading project workspace...
-        </CardContent>
-      </Card>
+      <div className="py-20 text-center">
+        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[var(--accent-gold)] border-t-transparent" />
+        <p className="mt-4 text-sm text-[var(--text-secondary)]">
+          Loading project...
+        </p>
+      </div>
     );
   }
 
-  const latestGeneration = generations[0] ?? null;
-
   return (
-    <div className="space-y-6">
-      <Card className="border-white/6 bg-[var(--bg-secondary)]">
-        <CardContent className="flex flex-wrap items-center justify-between gap-4 py-6">
-          <div>
-            <p className="eyebrow">Project Workspace Home</p>
-            <h1 className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">
-              {project.name}
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
-              Resume the current creation lane, inspect the selected design, or
-              jump directly into the latest generation session.
-            </p>
-          </div>
-          <Button asChild>
-            <Link to={appRoutes.create(projectId)}>
-              <Sparkles className="size-4" />
-              Resume Create
-            </Link>
-          </Button>
-        </CardContent>
-      </Card>
+    <div className="animate-entrance space-y-10">
+      {/* Project header */}
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1
+            className="text-3xl font-semibold text-[var(--text-primary)]"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+          >
+            {project.name}
+          </h1>
+          <p className="mt-2 text-sm text-[var(--text-secondary)]">
+            {project.description ?? "No description yet"}
+          </p>
+          <p className="mt-1 text-xs text-[var(--text-muted)]">
+            {project.designCount} designs
+          </p>
+        </div>
+        <Button asChild className="btn-gold" style={{ height: 44 }}>
+          <Link to={appRoutes.create(projectId)}>
+            <Sparkles className="size-4" />
+            New Design
+          </Link>
+        </Button>
+      </div>
 
+      {/* Selected design hero */}
       {selectedDesign ? (
-        <SelectionSummaryPanel design={selectedDesign} />
-      ) : (
-        <Card className="border-white/6 bg-[var(--bg-secondary)]">
-          <CardContent className="py-10 text-center">
-            <p className="text-lg font-semibold text-[var(--text-primary)]">
-              No selected design yet
-            </p>
-            <p className="mt-2 text-sm text-[var(--text-secondary)]">
-              Start from Create or resume the latest generation to choose the active pair.
-            </p>
-            <div className="mt-6 flex justify-center">
-              <Button asChild>
-                <Link to={appRoutes.create(projectId)}>Open Create</Link>
-              </Button>
+        <div>
+          <p className="eyebrow mb-4">Selected Design</p>
+          <Link
+            to={appRoutes.design(projectId, selectedDesign.id)}
+            className="group block overflow-hidden rounded-2xl border transition-all card-hover"
+            style={{
+              borderColor: "rgba(212,175,55,0.12)",
+              backgroundColor: "var(--bg-secondary)",
+            }}
+          >
+            <div className="grid gap-4 p-5 sm:grid-cols-[1fr_1fr_1fr]">
+              <div
+                className="overflow-hidden rounded-xl"
+                style={{ border: "1px solid var(--border-default)" }}
+              >
+                <ImageWithFallback
+                  src={selectedDesign.sketch.url}
+                  alt={selectedDesign.sketch.alt}
+                  className="aspect-[4/3] w-full object-cover img-hover-zoom"
+                />
+              </div>
+              <div
+                className="overflow-hidden rounded-xl"
+                style={{ border: "1px solid var(--border-default)" }}
+              >
+                <ImageWithFallback
+                  src={selectedDesign.render.url}
+                  alt={selectedDesign.render.alt}
+                  className="aspect-[4/3] w-full object-cover img-hover-zoom"
+                />
+              </div>
+              <div className="flex flex-col justify-center p-2">
+                <h3 className="text-lg font-semibold text-[var(--text-primary)]">
+                  {selectedDesign.displayName}
+                </h3>
+                <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                  {selectedDesign.promptSummary}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {[
+                    selectedDesign.designDna.jewelryType,
+                    selectedDesign.designDna.metal,
+                  ].map((tag) => (
+                    <span
+                      key={tag}
+                      className="rounded-full px-2 py-0.5 text-[10px] font-medium"
+                      style={{
+                        backgroundColor: "rgba(212,175,55,0.06)",
+                        color: "var(--accent-gold-light)",
+                      }}
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+                <span className="mt-4 flex items-center gap-1 text-sm font-medium text-[var(--accent-gold)]">
+                  Open workspace <ArrowRight className="size-3.5" />
+                </span>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+          </Link>
+        </div>
+      ) : (
+        <div
+          className="rounded-2xl border py-14 text-center"
+          style={{
+            borderColor: "var(--border-default)",
+            backgroundColor: "var(--bg-tertiary)",
+          }}
+        >
+          <Sparkles
+            className="mx-auto size-10 text-[var(--accent-gold)]"
+            style={{ opacity: 0.4 }}
+          />
+          <p className="mt-4 text-lg font-semibold text-[var(--text-primary)]">
+            No selected design yet
+          </p>
+          <p className="mt-2 text-sm text-[var(--text-secondary)]">
+            Generate a design pair and select your favorite.
+          </p>
+          <Button asChild className="btn-gold mt-5" style={{ height: 44 }}>
+            <Link to={appRoutes.create(projectId)}>Start Creating</Link>
+          </Button>
+        </div>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="border-white/6 bg-[var(--bg-secondary)]">
-          <CardHeader>
-            <CardTitle className="text-lg text-[var(--text-primary)]">
-              Recent generations
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {latestGeneration ? (
-              generations.slice(0, 3).map((generation) => (
-                <div
-                  key={generation.id}
-                  className="rounded-2xl border border-white/6 bg-[rgba(255,255,255,0.02)] p-4"
+      {/* Recent activity */}
+      <div className="grid gap-8 lg:grid-cols-2">
+        {/* Recent generations */}
+        <div>
+          <p className="eyebrow mb-4">Recent Generations</p>
+          {generations.length > 0 ? (
+            <div className="stagger-children space-y-3">
+              {generations.slice(0, 3).map((gen) => (
+                <Link
+                  key={gen.id}
+                  to={appRoutes.generation(projectId, gen.id)}
+                  className="block rounded-xl border p-4 card-hover"
+                  style={{
+                    borderColor: "var(--border-default)",
+                    backgroundColor: "var(--bg-tertiary)",
+                  }}
                 >
-                  <p className="text-sm font-semibold text-[var(--text-primary)]">
-                    {generation.requestKind === "refine" ? "Refine" : "Create"} generation
-                  </p>
-                  <p className="mt-2 text-sm text-[var(--text-secondary)]">
-                    {generation.message}
-                  </p>
-                  <div className="mt-4">
-                    <Button asChild variant="outline">
-                      <Link to={appRoutes.generation(projectId, generation.id)}>
-                        Open Generation
-                        <ArrowRight className="size-4" />
-                      </Link>
-                    </Button>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-[var(--text-primary)]">
+                      {gen.requestKind === "refine"
+                        ? "Refinement"
+                        : "Generation"}
+                    </p>
+                    <span
+                      className="flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium"
+                      style={{
+                        backgroundColor:
+                          gen.readyPairs > 0
+                            ? "rgba(76,175,80,0.1)"
+                            : "rgba(255,255,255,0.04)",
+                        color:
+                          gen.readyPairs > 0
+                            ? "var(--status-success)"
+                            : "var(--text-muted)",
+                      }}
+                    >
+                      {gen.readyPairs}/{gen.totalPairs} ready
+                    </span>
                   </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-[var(--text-secondary)]">
-                No generations available yet.
-              </p>
-            )}
-          </CardContent>
-        </Card>
+                  <p className="mt-1 text-sm text-[var(--text-secondary)] line-clamp-1">
+                    {gen.message}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-[var(--text-muted)]">
+              No generations yet.
+            </p>
+          )}
+        </div>
 
-        <Card className="border-white/6 bg-[var(--bg-secondary)]">
-          <CardHeader>
-            <CardTitle className="text-lg text-[var(--text-primary)]">
-              Recent designs
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {designs.slice(0, 3).map((design) => (
-              <div
-                key={design.id}
-                className="rounded-2xl border border-white/6 bg-[rgba(255,255,255,0.02)] p-4"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-[var(--text-primary)]">
+        {/* Designs */}
+        <div>
+          <p className="eyebrow mb-4">Designs</p>
+          {designs.length > 0 ? (
+            <div className="stagger-children space-y-3">
+              {designs.slice(0, 3).map((design) => (
+                <Link
+                  key={design.id}
+                  to={appRoutes.design(projectId, design.id)}
+                  className="flex items-center gap-4 rounded-xl border p-4 card-hover"
+                  style={{
+                    borderColor: "var(--border-default)",
+                    backgroundColor: "var(--bg-tertiary)",
+                  }}
+                >
+                  {/* Design thumbnail */}
+                  <div
+                    className="size-12 shrink-0 overflow-hidden rounded-lg"
+                    style={{ border: "1px solid var(--border-default)" }}
+                  >
+                    <ImageWithFallback
+                      src={design.render.url}
+                      alt={design.render.alt}
+                      className="size-full object-cover"
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-[var(--text-primary)]">
                       {design.displayName}
                     </p>
-                    <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                    <p className="mt-0.5 text-xs text-[var(--text-secondary)] line-clamp-1">
                       {design.promptSummary}
                     </p>
                   </div>
-                  <FolderClock className="mt-0.5 size-4 text-[var(--accent-gold)]" />
-                </div>
-                <div className="mt-4">
-                  <Button asChild variant="outline">
-                    <Link to={appRoutes.design(projectId, design.id)}>
-                      Open Design
-                      <ArrowRight className="size-4" />
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-[var(--text-muted)]">
+              No designs yet.
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

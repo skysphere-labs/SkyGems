@@ -1,171 +1,270 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, RefreshCw, Sparkles } from "lucide-react";
-import { Link, useParams } from "react-router";
+import { ArrowLeft, Sparkles } from "lucide-react";
+import { Link, useNavigate, useParams } from "react-router";
 
-import { Button, Card, CardContent } from "@skygems/ui";
+import { Button, ImageWithFallback } from "@skygems/ui";
 
-import { fetchGeneration } from "../contracts/api";
+import { fetchGeneration, postSelectDesign } from "../contracts/api";
 import type { Generation } from "../contracts/types";
-import { GenerationStatusBanner } from "../components/status/GenerationStatusBanner";
-import { PairCardV1 } from "../components/status/PairCardV1";
 import { appRoutes } from "../lib/routes";
+
+function PairUnveil({
+  pair,
+  projectId,
+}: {
+  pair: Generation["pairs"][0];
+  projectId: string;
+}) {
+  const navigate = useNavigate();
+  const [isSelecting, setIsSelecting] = useState(false);
+
+  async function handleSelect() {
+    setIsSelecting(true);
+    try {
+      await postSelectDesign(pair.designId);
+      navigate(appRoutes.design(projectId, pair.designId));
+    } catch {
+      navigate(appRoutes.design(projectId, pair.designId));
+    } finally {
+      setIsSelecting(false);
+    }
+  }
+
+  return (
+    <div className="animate-unveil space-y-8">
+      {/* Dramatic pair display */}
+      <div className="mx-auto grid max-w-[960px] gap-6 sm:grid-cols-2">
+        <div
+          className="group overflow-hidden rounded-2xl"
+          style={{
+            border: "1px solid rgba(212,175,55,0.12)",
+            boxShadow: "0 0 40px rgba(212,175,55,0.04)",
+          }}
+        >
+          <div className="overflow-hidden">
+            <ImageWithFallback
+              src={pair.sketchArtifactUrl}
+              alt={`${pair.pairLabel} sketch`}
+              className="aspect-[4/3] w-full object-cover transition-transform duration-[400ms] ease-out group-hover:scale-[1.03]"
+            />
+          </div>
+          <div
+            className="px-4 py-3"
+            style={{
+              borderTop: "1px solid var(--border-default)",
+              backgroundColor: "var(--bg-secondary)",
+            }}
+          >
+            <p className="eyebrow">Sketch</p>
+          </div>
+        </div>
+        <div
+          className="group overflow-hidden rounded-2xl"
+          style={{
+            border: "1px solid rgba(212,175,55,0.12)",
+            boxShadow: "0 0 40px rgba(212,175,55,0.04)",
+          }}
+        >
+          <div className="overflow-hidden">
+            <ImageWithFallback
+              src={pair.renderArtifactUrl}
+              alt={`${pair.pairLabel} render`}
+              className="aspect-[4/3] w-full object-cover transition-transform duration-[400ms] ease-out group-hover:scale-[1.03]"
+            />
+          </div>
+          <div
+            className="px-4 py-3"
+            style={{
+              borderTop: "1px solid var(--border-default)",
+              backgroundColor: "var(--bg-secondary)",
+            }}
+          >
+            <p className="eyebrow">Render</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Select CTA */}
+      {pair.status === "ready" && (
+        <div className="mx-auto max-w-[960px] text-center">
+          <Button
+            onClick={handleSelect}
+            disabled={isSelecting}
+            className="btn-gold"
+            style={{
+              height: 48,
+              minWidth: 220,
+              fontSize: 14,
+              borderRadius: 8,
+            }}
+          >
+            <Sparkles className="size-4" />
+            {isSelecting ? "Selecting..." : "Select This Design"}
+          </Button>
+          <p className="mt-3 text-xs text-[var(--text-muted)]">
+            Promote this pair to your workspace
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SkeletonPair() {
+  return (
+    <div className="mx-auto grid max-w-[960px] gap-6 sm:grid-cols-2">
+      <div className="overflow-hidden rounded-2xl" style={{ border: "1px solid var(--border-default)" }}>
+        <div className="skeleton-shimmer aspect-[4/3]" />
+        <div className="h-11" style={{ borderTop: "1px solid var(--border-default)", backgroundColor: "var(--bg-secondary)" }} />
+      </div>
+      <div className="overflow-hidden rounded-2xl" style={{ border: "1px solid var(--border-default)" }}>
+        <div className="skeleton-shimmer aspect-[4/3]" />
+        <div className="h-11" style={{ borderTop: "1px solid var(--border-default)", backgroundColor: "var(--bg-secondary)" }} />
+      </div>
+    </div>
+  );
+}
 
 export function GenerationScreen() {
   const { generationId, projectId } = useParams();
   const [generation, setGeneration] = useState<Generation | null>(null);
 
   useEffect(() => {
-    if (!generationId) {
-      return;
-    }
+    if (!generationId) return;
 
     let cancelled = false;
     let intervalId: number | undefined;
 
-    const loadGeneration = async () => {
-      const nextGeneration = await fetchGeneration(generationId);
-      if (!cancelled) {
-        setGeneration(nextGeneration);
-      }
+    const load = async () => {
+      const next = await fetchGeneration(generationId);
+      if (!cancelled) setGeneration(next);
     };
 
-    void loadGeneration();
+    void load();
 
-    if (!generation || ["queued", "processing", "running"].includes(generation.status)) {
-      intervalId = window.setInterval(() => {
-        void loadGeneration();
-      }, 3500);
+    if (
+      !generation ||
+      ["queued", "processing", "running"].includes(generation.status)
+    ) {
+      intervalId = window.setInterval(() => void load(), 3500);
     }
 
     return () => {
       cancelled = true;
-      if (intervalId) {
-        window.clearInterval(intervalId);
-      }
+      if (intervalId) window.clearInterval(intervalId);
     };
   }, [generation?.status, generationId]);
 
   if (!projectId || !generation) {
     return (
-      <Card className="border-white/6 bg-[var(--bg-secondary)] shadow-[0_30px_80px_rgba(0,0,0,0.24)]">
-        <CardContent className="py-14 text-center text-[var(--text-secondary)]">
-          Loading generation state...
-        </CardContent>
-      </Card>
+      <div className="space-y-8">
+        <div>
+          <h1
+            className="text-3xl font-semibold text-[var(--text-primary)]"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+          >
+            Your Designs
+          </h1>
+          <p className="mt-2 text-sm text-[var(--text-secondary)]">
+            Preparing your results...
+          </p>
+        </div>
+        <SkeletonPair />
+      </div>
     );
   }
 
-  const isPolling = ["queued", "processing", "running"].includes(generation.status);
-  const statusCopy =
-    generation.source === "live"
-      ? "Polling the backend generation status endpoint."
-      : "Showing the protected fallback lane while backend data is unavailable.";
+  const isPolling = ["queued", "processing", "running"].includes(
+    generation.status,
+  );
+  const isComplete = ["completed", "succeeded"].includes(generation.status);
+  const hasPairs = generation.pairs.length > 0;
 
   return (
-    <div className="space-y-6">
-      <Card className="overflow-hidden border-[rgba(212,175,55,0.16)] bg-[linear-gradient(135deg,rgba(212,175,55,0.08)_0%,rgba(17,17,17,1)_34%,rgba(10,10,10,1)_100%)]">
-        <CardContent className="relative flex flex-wrap items-center justify-between gap-5 py-8">
-          <div
-            className="absolute -left-12 bottom-0 size-40 rounded-full blur-3xl"
-            style={{ backgroundColor: "rgba(212,175,55,0.08)" }}
-          />
-          <div>
-            <p className="eyebrow">Generate Pair / Select</p>
-            <h1 className="mt-3 text-4xl font-semibold text-[var(--text-primary)]">
-              Generation status
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
-              Review the active generation, watch status changes land, and move the
-              best pair forward into the selected-design workspace.
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {[
-                generation.requestKind === "refine" ? "Refine request" : "Create request",
-                generation.source === "live" ? "Live status" : "Fallback status",
-                generation.id,
-              ].map((chip) => (
-                <span
-                  key={chip}
-                  className="rounded-full border px-3 py-1 text-xs font-medium"
-                  style={{
-                    borderColor: "rgba(212,175,55,0.18)",
-                    backgroundColor: "rgba(255,255,255,0.03)",
-                    color: "var(--text-primary)",
-                  }}
-                >
-                  {chip}
-                </span>
-              ))}
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <Button asChild variant="outline">
-              <Link to={appRoutes.create(projectId)}>
-                <ArrowLeft className="size-4" />
-                Back to Create
-              </Link>
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (generationId) {
-                  void fetchGeneration(generationId).then(setGeneration);
-                }
-              }}
-            >
-              <RefreshCw className={`size-4 ${isPolling ? "animate-spin" : ""}`} />
-              Refresh
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <GenerationStatusBanner generation={generation} />
-
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-white/6 bg-[rgba(255,255,255,0.02)] px-5 py-4">
-        <p className="text-sm text-[var(--text-secondary)]">{statusCopy}</p>
-        <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
-          <span>{generation.readyPairs}/{generation.totalPairs} ready</span>
-          {generation.lastCheckedAt ? (
-            <span>Checked {new Date(generation.lastCheckedAt).toLocaleTimeString()}</span>
-          ) : null}
+    <div className="animate-entrance space-y-8">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1
+            className="text-3xl font-semibold text-[var(--text-primary)]"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+          >
+            Your Designs
+          </h1>
+          <p className="mt-2 text-sm text-[var(--text-secondary)]">
+            {isPolling
+              ? "Designing your piece..."
+              : isComplete && hasPairs
+                ? "Your design pair is ready. Select your favorite to continue."
+                : generation.message}
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <Button
+            asChild
+            variant="outline"
+            className="border-[var(--border-default)]"
+          >
+            <Link to={appRoutes.create(projectId)}>
+              <ArrowLeft className="size-4" />
+              Edit Config
+            </Link>
+          </Button>
         </div>
       </div>
 
-      {generation.pairs.length > 0 ? (
-        <div className="grid gap-6 xl:grid-cols-2">
-          {generation.pairs.map((pair, index) => (
-            <PairCardV1
-              key={`${pair.designId}-${index}`}
-              pair={pair}
-              pairIndex={index}
-              isSelected={false}
-              selectHref={
-                pair.status === "ready"
-                  ? appRoutes.design(projectId, pair.designId)
-                  : undefined
-              }
-              openHref={
-                pair.status === "ready"
-                  ? appRoutes.design(projectId, pair.designId)
-                  : undefined
-              }
-            />
-          ))}
+      {/* Status indicator */}
+      {isPolling && (
+        <div
+          className="mx-auto flex max-w-[960px] items-center justify-center gap-3 rounded-xl py-5"
+          style={{ backgroundColor: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.08)" }}
+        >
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-[var(--accent-gold)] border-t-transparent" />
+          <span className="text-sm font-medium text-[var(--accent-gold-light)]">
+            {generation.status === "queued"
+              ? "Queued for generation..."
+              : "Crafting your design pair..."}
+          </span>
         </div>
+      )}
+
+      {/* Pair display or skeleton */}
+      {hasPairs ? (
+        generation.pairs.map((pair, i) => (
+          <PairUnveil
+            key={`${pair.designId}-${i}`}
+            pair={pair}
+            projectId={projectId}
+          />
+        ))
+      ) : isPolling ? (
+        <SkeletonPair />
       ) : (
-        <Card className="border-white/6 bg-[var(--bg-secondary)] shadow-[0_30px_80px_rgba(0,0,0,0.24)]">
-          <CardContent className="py-12 text-center">
-            <Sparkles className="mx-auto size-8 text-[var(--accent-gold)]" />
-            <p className="mt-4 text-lg font-semibold text-[var(--text-primary)]">
-              Waiting for pair candidates
-            </p>
-            <p className="mt-2 text-sm text-[var(--text-secondary)]">
-              The request is active, but no fully resolved pair is available yet.
-              Keep this workspace open while the status surface refreshes.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="py-16 text-center">
+          <Sparkles
+            className="mx-auto size-10 text-[var(--accent-gold)]"
+            style={{ opacity: 0.5 }}
+          />
+          <p className="mt-4 text-lg font-semibold text-[var(--text-primary)]">
+            Waiting for results
+          </p>
+          <p className="mt-2 text-sm text-[var(--text-secondary)]">
+            Your design is being created. This page will update automatically.
+          </p>
+        </div>
+      )}
+
+      {/* Completed status */}
+      {isComplete && hasPairs && (
+        <div
+          className="mx-auto max-w-[960px] rounded-xl p-4 text-center text-sm font-medium"
+          style={{
+            backgroundColor: "rgba(76,175,80,0.06)",
+            color: "var(--status-success)",
+            border: "1px solid rgba(76,175,80,0.12)",
+          }}
+        >
+          Generation complete
+        </div>
       )}
     </div>
   );

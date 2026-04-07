@@ -137,6 +137,9 @@ export interface Generation {
   pairs: PairCandidate[];
   source?: ApiSource;
   lastCheckedAt?: string;
+  projectSelectedDesignId?: string | null;
+  canSelect?: boolean;
+  designSelectionState?: SelectionState;
 }
 
 export interface RiskFlag {
@@ -205,6 +208,15 @@ export interface CadJobRecord {
   errorMessage?: string;
 }
 
+export interface DesignGenerationActivity {
+  generationId: string;
+  requestKind: SourceKind;
+  status: GenerationStatus;
+  createdAt: string;
+  completedAt?: string;
+  errorMessage?: string;
+}
+
 export interface Design {
   id: string;
   projectId: string;
@@ -218,6 +230,7 @@ export interface Design {
   latestPairId?: string;
   createdAt: string;
   selectedAt?: string;
+  updatedAt?: string;
   sketch: ArtifactRef;
   render: ArtifactRef;
   stages: DownstreamStages;
@@ -228,6 +241,7 @@ export interface Design {
   technicalSheetData: TechnicalSheetData;
   svgViews: SvgViewData[];
   cadJobs: CadJobRecord[];
+  recentGenerations?: DesignGenerationActivity[];
 }
 
 export interface GallerySearchResult {

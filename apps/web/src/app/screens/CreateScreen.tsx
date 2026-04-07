@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
-import { ArrowRight, Crown, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { useNavigate, useParams } from "react-router";
 
-import { Button, Card, CardContent } from "@skygems/ui";
+import { Button } from "@skygems/ui";
 
-import { fetchCreateDraft, fetchProject, postGenerateDesign } from "../contracts/api";
+import {
+  fetchCreateDraft,
+  fetchProject,
+  postGenerateDesign,
+} from "../contracts/api";
 import type { CreateDraftState, ProjectWorkspace } from "../contracts/types";
 import { ComplexityControl } from "../components/create-flow/ComplexityControl";
 import { GemstonePicker } from "../components/create-flow/GemstonePicker";
@@ -40,9 +44,7 @@ function CreateScreenComposer({
   } = useCreateDraftState(initialDraft);
 
   async function handleGenerate() {
-    if (!canGenerate) {
-      return;
-    }
+    if (!canGenerate) return;
 
     setIsGenerating(true);
     try {
@@ -51,117 +53,70 @@ function CreateScreenComposer({
         draft,
         latestPreviewSummary,
       });
-      navigate(appRoutes.generation(project.projectId, response.generationId));
+      navigate(
+        appRoutes.generation(project.projectId, response.generationId),
+      );
     } finally {
       setIsGenerating(false);
     }
   }
 
   return (
-    <div className="space-y-6">
-      <Card className="overflow-hidden border-[rgba(212,175,55,0.16)] bg-[linear-gradient(135deg,rgba(212,175,55,0.1)_0%,rgba(17,17,17,1)_28%,rgba(10,10,10,1)_100%)]">
-        <CardContent className="relative flex flex-wrap items-center justify-between gap-6 py-8">
-          <div
-            className="absolute -right-12 top-0 size-40 rounded-full blur-3xl"
-            style={{ backgroundColor: "rgba(212,175,55,0.12)" }}
+    <div className="animate-entrance space-y-8">
+      <div>
+        <h1
+          className="text-3xl font-semibold text-[var(--text-primary)]"
+          style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+        >
+          Design a new piece
+        </h1>
+        <p className="mt-2 text-sm text-[var(--text-secondary)]">
+          Choose the silhouette, materials, and style — then generate your
+          design pair.
+        </p>
+      </div>
+
+      <div className="grid gap-8 xl:grid-cols-[400px_1fr]">
+        {/* Left: Configuration */}
+        <div className="space-y-6">
+          <JewelryTypePicker
+            value={draft.inputs.jewelryType}
+            onChange={(jewelryType) => updateInput({ jewelryType })}
           />
-          <div>
-            <p className="eyebrow">Create</p>
-            <h1 className="mt-3 text-4xl font-semibold text-[var(--text-primary)]">
-              Shape the next signature pair
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
-              Define the silhouette, material stack, and stylistic direction, then
-              hand the refined prompt into preview and generation without leaving the
-              project lane.
-            </p>
-            <div className="mt-5 flex flex-wrap gap-2">
-              {[
-                project.name,
-                latestPreviewSource === "live" ? "Live preview path" : "Fallback preview guardrail",
-                draft.promptMode === "override" ? "Prompt override active" : "Prompt synced",
-              ].map((chip) => (
-                <span
-                  key={chip}
-                  className="rounded-full border px-3 py-1 text-xs font-medium"
-                  style={{
-                    borderColor: "rgba(212,175,55,0.18)",
-                    backgroundColor: "rgba(255,255,255,0.03)",
-                    color: "var(--text-primary)",
-                  }}
-                >
-                  {chip}
-                </span>
-              ))}
-            </div>
-          </div>
+          <MetalPicker
+            value={draft.inputs.metal}
+            onChange={(metal) => updateInput({ metal })}
+          />
+          <GemstonePicker
+            value={draft.inputs.gemstones}
+            onChange={(gemstones) => updateInput({ gemstones })}
+          />
+          <StylePicker
+            value={draft.inputs.style}
+            onChange={(style) => updateInput({ style })}
+          />
+          <ComplexityControl
+            value={draft.inputs.complexity}
+            onChange={(complexity) => updateInput({ complexity })}
+          />
+
+          {/* Generate CTA — the only gold button */}
           <Button
             onClick={handleGenerate}
             disabled={!canGenerate || isGenerating}
-            className="min-w-[220px] shadow-[0_18px_48px_rgba(212,175,55,0.22)]"
+            className="btn-gold w-full"
             style={{
-              background: "var(--sg-gradient)",
-              color: "var(--text-inverse)",
+              height: 48,
+              fontSize: 14,
+              borderRadius: 8,
             }}
           >
             <Sparkles className="size-4" />
-            {isGenerating ? "Queueing..." : "Generate Pair"}
+            {isGenerating ? "Generating..." : "Generate Designs"}
           </Button>
-        </CardContent>
-      </Card>
+        </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-        <Card className="border-white/6 bg-[var(--bg-secondary)] shadow-[0_30px_80px_rgba(0,0,0,0.24)]">
-          <CardContent className="space-y-6 pt-6">
-            <div className="grid gap-4 rounded-[28px] border border-[rgba(212,175,55,0.14)] bg-[linear-gradient(180deg,rgba(255,255,255,0.03)_0%,rgba(255,255,255,0.01)_100%)] p-5 md:grid-cols-[1fr_auto]">
-              <div>
-                <p className="text-xs uppercase tracking-[0.16em] text-[var(--text-muted)]">
-                  Active project
-                </p>
-                <p className="mt-2 text-xl font-semibold text-[var(--text-primary)]">
-                  {project.name}
-                </p>
-                <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
-                  {project.description ??
-                    "No project description yet. Use this lane to establish the next hero direction."}
-                </p>
-              </div>
-              <div className="flex items-start justify-end">
-                <div
-                  className="flex size-12 items-center justify-center rounded-2xl"
-                  style={{
-                    background: "var(--sg-gradient)",
-                    color: "var(--text-inverse)",
-                  }}
-                >
-                  <Crown className="size-5" />
-                </div>
-              </div>
-            </div>
-
-            <JewelryTypePicker
-              value={draft.inputs.jewelryType}
-              onChange={(jewelryType) => updateInput({ jewelryType })}
-            />
-            <MetalPicker
-              value={draft.inputs.metal}
-              onChange={(metal) => updateInput({ metal })}
-            />
-            <GemstonePicker
-              value={draft.inputs.gemstones}
-              onChange={(gemstones) => updateInput({ gemstones })}
-            />
-            <StylePicker
-              value={draft.inputs.style}
-              onChange={(style) => updateInput({ style })}
-            />
-            <ComplexityControl
-              value={draft.inputs.complexity}
-              onChange={(complexity) => updateInput({ complexity })}
-            />
-          </CardContent>
-        </Card>
-
+        {/* Right: Prompt Preview */}
         <PromptPreviewStatusCard
           draft={draft}
           latestPreviewPrompt={latestPreviewPrompt}
@@ -175,21 +130,6 @@ function CreateScreenComposer({
           onOverrideAcknowledged={setOverrideAcknowledged}
         />
       </div>
-
-      <div className="flex justify-end">
-        <Button
-          onClick={handleGenerate}
-          disabled={!canGenerate || isGenerating}
-          className="min-w-[240px]"
-          style={{
-            background: "var(--sg-gradient)",
-            color: "var(--text-inverse)",
-          }}
-        >
-          Continue to Generation
-          <ArrowRight className="size-4" />
-        </Button>
-      </div>
     </div>
   );
 }
@@ -200,23 +140,27 @@ export function CreateScreen() {
   const [project, setProject] = useState<ProjectWorkspace | null>(null);
 
   useEffect(() => {
-    if (!projectId) {
-      return;
-    }
-
+    if (!projectId) return;
     fetchProject(projectId).then(setProject);
     fetchCreateDraft(projectId).then(setDraft);
   }, [projectId]);
 
   if (!project || !draft) {
     return (
-      <Card className="border-white/6 bg-[var(--bg-secondary)]">
-        <CardContent className="py-12 text-center text-[var(--text-secondary)]">
-          Loading create workspace...
-        </CardContent>
-      </Card>
+      <div className="py-20 text-center">
+        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[var(--accent-gold)] border-t-transparent" />
+        <p className="mt-4 text-sm text-[var(--text-secondary)]">
+          Preparing your workspace...
+        </p>
+      </div>
     );
   }
 
-  return <CreateScreenComposer key={project.projectId} project={project} initialDraft={draft} />;
+  return (
+    <CreateScreenComposer
+      key={project.projectId}
+      project={project}
+      initialDraft={draft}
+    />
+  );
 }

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { ArrowRight, FolderOpen, Plus } from "lucide-react";
+import { ArrowRight, FolderOpen, Plus, Sparkles } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 
-import { Button, Card, CardContent, CardHeader, CardTitle } from "@skygems/ui";
+import { Button } from "@skygems/ui";
 
 import { bootstrapProject, fetchProjects } from "../contracts/api";
 import type { ProjectWorkspace } from "../contracts/types";
@@ -29,84 +29,103 @@ export function ProjectsIndex() {
   }
 
   return (
-    <div className="space-y-6">
-      <Card className="border-white/6 bg-[var(--bg-secondary)]">
-        <CardContent className="flex flex-wrap items-center justify-between gap-4 py-6">
+    <div className="mx-auto max-w-[1200px] px-6 py-8">
+      <div className="animate-entrance">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="eyebrow">Projects Index</p>
-            <h1 className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">
-              Active workspaces
+            <h1
+              className="text-3xl font-semibold text-[var(--text-primary)]"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+            >
+              Your Studio
             </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
-              Open a project, resume the current create lane, or start a fresh
-              direction with the same premium workspace shell.
+            <p className="mt-2 text-sm text-[var(--text-secondary)]">
+              Open a project or start a new collection.
             </p>
           </div>
-          <Button onClick={handleCreate} disabled={isCreating}>
+          <Button
+            onClick={handleCreate}
+            disabled={isCreating}
+            className="btn-gold"
+            style={{ height: 44 }}
+          >
             <Plus className="size-4" />
-            {isCreating ? "Creating..." : "Create Project"}
+            {isCreating ? "Creating..." : "New Project"}
           </Button>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        {projects.map((project) => (
-          <Card key={project.projectId} className="border-white/6 bg-[var(--bg-secondary)]">
-            <CardHeader className="space-y-3">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-3">
-                  <div className="flex size-12 items-center justify-center rounded-2xl bg-[rgba(212,175,55,0.12)] text-[var(--accent-gold)]">
-                    <FolderOpen className="size-5" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-xl text-[var(--text-primary)]">
-                      {project.name}
-                    </CardTitle>
-                    <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
-                      {project.description ?? "No project description yet."}
-                    </p>
-                  </div>
+      {projects.length === 0 ? (
+        <div className="animate-entrance mt-20 text-center">
+          <div
+            className="mx-auto flex size-20 items-center justify-center rounded-2xl"
+            style={{
+              backgroundColor: "rgba(212,175,55,0.08)",
+              border: "1px solid rgba(212,175,55,0.12)",
+            }}
+          >
+            <Sparkles className="size-8 text-[var(--accent-gold)]" />
+          </div>
+          <h2 className="mt-6 text-xl font-semibold text-[var(--text-primary)]">
+            Start your first collection
+          </h2>
+          <p className="mt-2 text-sm text-[var(--text-secondary)]">
+            Create a project to begin designing jewelry.
+          </p>
+          <Button
+            onClick={handleCreate}
+            disabled={isCreating}
+            className="btn-gold mt-6"
+            style={{ height: 44 }}
+          >
+            <Plus className="size-4" />
+            Create Project
+          </Button>
+        </div>
+      ) : (
+        <div className="stagger-children mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {projects.map((project) => (
+            <Link
+              key={project.projectId}
+              to={appRoutes.project(project.projectId)}
+              className="group rounded-2xl border p-6 card-hover"
+              style={{
+                borderColor: "var(--border-default)",
+                backgroundColor: "var(--bg-tertiary)",
+              }}
+            >
+              <div className="flex items-start gap-4">
+                <div
+                  className="flex size-12 shrink-0 items-center justify-center rounded-xl"
+                  style={{
+                    backgroundColor: "rgba(212,175,55,0.08)",
+                    border: "1px solid rgba(212,175,55,0.12)",
+                    color: "var(--accent-gold)",
+                  }}
+                >
+                  <FolderOpen className="size-5" />
                 </div>
-                <span className="rounded-full border border-white/6 px-3 py-1 text-xs text-[var(--text-secondary)]">
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-base font-semibold text-[var(--text-primary)]">
+                    {project.name}
+                  </h3>
+                  <p className="mt-1 text-sm text-[var(--text-secondary)] line-clamp-2">
+                    {project.description ?? "No description yet"}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-5 flex items-center justify-between">
+                <span className="text-xs text-[var(--text-muted)]">
                   {project.designCount} designs
                 </span>
+                <span className="flex items-center gap-1 text-xs font-medium text-[var(--accent-gold)] opacity-0 transition-opacity group-hover:opacity-100">
+                  Open <ArrowRight className="size-3" />
+                </span>
               </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl border border-white/6 bg-[rgba(255,255,255,0.02)] p-4">
-                  <p className="text-xs uppercase tracking-[0.12em] text-[var(--text-muted)]">
-                    Created
-                  </p>
-                  <p className="mt-2 text-sm text-[var(--text-primary)]">
-                    {project.createdAt}
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-white/6 bg-[rgba(255,255,255,0.02)] p-4">
-                  <p className="text-xs uppercase tracking-[0.12em] text-[var(--text-muted)]">
-                    Updated
-                  </p>
-                  <p className="mt-2 text-sm text-[var(--text-primary)]">
-                    {project.updatedAt}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-3">
-                <Button asChild>
-                  <Link to={appRoutes.project(project.projectId)}>
-                    Open Workspace
-                    <ArrowRight className="size-4" />
-                  </Link>
-                </Button>
-                <Button asChild variant="outline">
-                  <Link to={appRoutes.create(project.projectId)}>Go to Create</Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

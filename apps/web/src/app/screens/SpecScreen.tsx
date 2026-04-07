@@ -1,127 +1,276 @@
 import { useEffect, useState } from "react";
-import { ArrowRight } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  Info,
+  Sparkles,
+} from "lucide-react";
 import { Link, useParams } from "react-router";
 
-import { Button, Card, CardContent, CardHeader, CardTitle } from "@skygems/ui";
+import { Button } from "@skygems/ui";
 
 import { fetchDesign } from "../contracts/api";
-import type { Design } from "../contracts/types";
+import type { Design, RiskFlag } from "../contracts/types";
+import { StageStatusPill } from "../components/status/StageStatusPill";
 import { appRoutes } from "../lib/routes";
+
+function RiskFlagBadge({ flag }: { flag: RiskFlag }) {
+  const config = {
+    blocking: {
+      bg: "rgba(239,83,80,0.08)",
+      border: "rgba(239,83,80,0.16)",
+      color: "var(--status-error)",
+      Icon: AlertTriangle,
+    },
+    warning: {
+      bg: "rgba(255,152,0,0.08)",
+      border: "rgba(255,152,0,0.16)",
+      color: "var(--status-warning)",
+      Icon: AlertTriangle,
+    },
+    informational: {
+      bg: "rgba(100,181,246,0.08)",
+      border: "rgba(100,181,246,0.16)",
+      color: "var(--status-info)",
+      Icon: Info,
+    },
+  }[flag.severity];
+  const Icon = config.Icon;
+
+  return (
+    <div
+      className="flex items-start gap-2.5 rounded-xl p-3.5 text-sm"
+      style={{ backgroundColor: config.bg, border: `1px solid ${config.border}` }}
+    >
+      <Icon
+        className="mt-0.5 size-4 shrink-0"
+        style={{ color: config.color }}
+      />
+      <div>
+        <span style={{ color: config.color }}>{flag.message}</span>
+        {flag.field && (
+          <span className="ml-1 text-[var(--text-muted)]">({flag.field})</span>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export function SpecScreen() {
   const { designId, projectId } = useParams();
   const [design, setDesign] = useState<Design | null>(null);
 
   useEffect(() => {
-    if (!designId) {
-      return;
-    }
-
+    if (!designId) return;
     fetchDesign(designId).then(setDesign);
   }, [designId]);
 
   if (!projectId || !design) {
     return (
-      <Card className="border-white/6 bg-[var(--bg-secondary)]">
-        <CardContent className="py-12 text-center text-[var(--text-secondary)]">
-          Loading spec workspace...
-        </CardContent>
-      </Card>
+      <div className="py-20 text-center">
+        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[var(--accent-gold)] border-t-transparent" />
+        <p className="mt-4 text-sm text-[var(--text-secondary)]">
+          Loading specification...
+        </p>
+      </div>
     );
   }
 
+  const spec = design.specData;
+  const isNotGenerated = spec.versionLabel === "Not generated";
   const sections = [
-    ["Geometry", design.specData.geometry],
-    ["Materials", design.specData.materials],
-    ["Gemstones", design.specData.gemstones],
-  ] as const;
+    { label: "Geometry", fields: spec.geometry },
+    { label: "Materials", fields: spec.materials },
+    { label: "Gemstones", fields: spec.gemstones },
+  ];
 
   return (
-    <div className="space-y-6">
-      <Card className="border-white/6 bg-[var(--bg-secondary)]">
-        <CardContent className="flex flex-wrap items-center justify-between gap-4 py-6">
-          <div>
-            <p className="eyebrow">Spec</p>
-            <h1 className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">
-              Structured production intent
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
-              Review the structured spec package and resolve any missing or risky fields before technical-sheet generation.
-            </p>
+    <div className="animate-entrance space-y-8">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <div className="mb-2 flex items-center gap-2">
+            <p className="eyebrow">Specification</p>
+            <StageStatusPill status={design.stages.spec.status} />
           </div>
-          <Button asChild>
-            <Link to={appRoutes.technicalSheet(projectId, design.id)}>
-              Continue to Technical Sheet
-              <ArrowRight className="size-4" />
+          <h1
+            className="text-3xl font-semibold text-[var(--text-primary)]"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+          >
+            Design Specification
+          </h1>
+          <p className="mt-2 text-sm text-[var(--text-secondary)]">
+            Review dimensions, materials, and gemstone parameters before
+            technical sheet generation.
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <Button
+            asChild
+            variant="outline"
+            className="border-[var(--border-default)]"
+          >
+            <Link to={appRoutes.design(projectId, design.id)}>
+              <ArrowLeft className="size-4" />
+              Back to Design
             </Link>
           </Button>
-        </CardContent>
-      </Card>
+          {!isNotGenerated && (
+            <Button
+              asChild
+              className="btn-gold"
+            >
+              <Link to={appRoutes.technicalSheet(projectId, design.id)}>
+                Continue to Technical Sheet
+                <ArrowRight className="size-4" />
+              </Link>
+            </Button>
+          )}
+        </div>
+      </div>
 
-      <Card className="border-white/6 bg-[var(--bg-secondary)]">
-        <CardHeader>
-          <CardTitle className="text-xl text-[var(--text-primary)]">
-            {design.specData.versionLabel}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <p className="text-sm leading-6 text-[var(--text-secondary)]">
-            {design.specData.summary}
+      {/* Not generated state */}
+      {isNotGenerated ? (
+        <div
+          className="rounded-2xl border py-14 text-center"
+          style={{
+            borderColor: "var(--border-default)",
+            backgroundColor: "var(--bg-tertiary)",
+          }}
+        >
+          <Sparkles
+            className="mx-auto size-10 text-[var(--accent-gold)]"
+            style={{ opacity: 0.4 }}
+          />
+          <p className="mt-4 text-lg font-semibold text-[var(--text-primary)]">
+            Specification not generated yet
           </p>
+          <p className="mt-2 text-sm text-[var(--text-secondary)]">
+            Generate a specification to review design parameters and risk
+            assessment.
+          </p>
+          <Button className="btn-gold mt-5" style={{ height: 44 }}>
+            <Sparkles className="size-4" />
+            Generate Specification
+          </Button>
+        </div>
+      ) : (
+        <>
+          {/* Version info */}
+          <div
+            className="rounded-2xl border p-5"
+            style={{
+              borderColor: "var(--border-default)",
+              backgroundColor: "var(--bg-tertiary)",
+            }}
+          >
+            <p className="text-sm font-semibold text-[var(--text-primary)]">
+              {spec.versionLabel}
+            </p>
+            <p className="mt-2 text-sm text-[var(--text-secondary)]">
+              {spec.summary}
+            </p>
+          </div>
 
-          <div className="grid gap-4 lg:grid-cols-3">
-            {sections.map(([label, fields]) => (
+          {/* Risk flags */}
+          {spec.riskFlags.length > 0 && (
+            <div className="space-y-2">
+              <p className="eyebrow">Risk Flags</p>
+              {spec.riskFlags.map((flag, i) => (
+                <RiskFlagBadge key={i} flag={flag} />
+              ))}
+            </div>
+          )}
+
+          {/* Spec sections */}
+          <div className="stagger-children grid gap-5 lg:grid-cols-3">
+            {sections.map((section) => (
               <div
-                key={label}
-                className="rounded-3xl border border-white/6 bg-[rgba(255,255,255,0.02)] p-5"
+                key={section.label}
+                className="rounded-2xl border p-5"
+                style={{
+                  borderColor: "var(--border-default)",
+                  backgroundColor: "var(--bg-tertiary)",
+                }}
               >
-                <p className="text-xs uppercase tracking-[0.12em] text-[var(--text-muted)]">
-                  {label}
-                </p>
-                <div className="mt-4 space-y-3">
-                  {fields.length > 0 ? (
-                    fields.map((field) => (
-                      <div key={field.label} className="flex items-start justify-between gap-3 text-sm">
-                        <span className="text-[var(--text-secondary)]">{field.label}</span>
-                        <span className="text-right text-[var(--text-primary)]">{field.value}</span>
+                <p className="eyebrow mb-4">{section.label}</p>
+                {section.fields.length > 0 ? (
+                  <div className="space-y-3">
+                    {section.fields.map((field) => (
+                      <div
+                        key={field.label}
+                        className="flex items-start justify-between gap-3 text-sm"
+                      >
+                        <span className="text-[var(--text-secondary)]">
+                          {field.label}
+                        </span>
+                        <span className="text-right font-medium text-[var(--text-primary)]">
+                          {field.value}
+                        </span>
                       </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-[var(--text-secondary)]">No values captured yet.</p>
-                  )}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Awaiting generation
+                  </p>
+                )}
               </div>
             ))}
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="rounded-3xl border border-white/6 bg-[rgba(255,255,255,0.02)] p-5">
-              <p className="text-xs uppercase tracking-[0.12em] text-[var(--text-muted)]">
-                Construction Notes
-              </p>
-              <ul className="mt-4 space-y-2 text-sm text-[var(--text-secondary)]">
-                {design.specData.constructionNotes.length > 0 ? (
-                  design.specData.constructionNotes.map((note) => <li key={note}>{note}</li>)
-                ) : (
-                  <li>No notes yet.</li>
-                )}
-              </ul>
+          {/* Notes */}
+          <div className="grid gap-5 lg:grid-cols-2">
+            <div
+              className="rounded-2xl border p-5"
+              style={{
+                borderColor: "var(--border-default)",
+                backgroundColor: "var(--bg-tertiary)",
+              }}
+            >
+              <p className="eyebrow mb-3">Construction Notes</p>
+              {spec.constructionNotes.length > 0 ? (
+                <ul className="space-y-2 text-sm text-[var(--text-secondary)]">
+                  {spec.constructionNotes.map((note) => (
+                    <li key={note} className="flex items-start gap-2">
+                      <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-[var(--status-success)]" />
+                      {note}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-[var(--text-muted)]">
+                  No construction notes yet.
+                </p>
+              )}
             </div>
-            <div className="rounded-3xl border border-white/6 bg-[rgba(255,255,255,0.02)] p-5">
-              <p className="text-xs uppercase tracking-[0.12em] text-[var(--text-muted)]">
-                Missing Information
-              </p>
-              <ul className="mt-4 space-y-2 text-sm text-[var(--text-secondary)]">
-                {design.specData.missingInformation.length > 0 ? (
-                  design.specData.missingInformation.map((item) => <li key={item}>{item}</li>)
-                ) : (
-                  <li>No missing inputs in the current spec snapshot.</li>
-                )}
-              </ul>
+            <div
+              className="rounded-2xl border p-5"
+              style={{
+                borderColor: "var(--border-default)",
+                backgroundColor: "var(--bg-tertiary)",
+              }}
+            >
+              <p className="eyebrow mb-3">Missing Information</p>
+              {spec.missingInformation.length > 0 ? (
+                <ul className="space-y-2 text-sm text-[var(--text-secondary)]">
+                  {spec.missingInformation.map((item) => (
+                    <li key={item} className="flex items-start gap-2">
+                      <Info className="mt-0.5 size-3.5 shrink-0 text-[var(--status-info)]" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-[var(--status-success)]">
+                  No missing information.
+                </p>
+              )}
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </>
+      )}
     </div>
   );
 }

@@ -1,12 +1,4 @@
-import {
-  ArrowRight,
-  Crown,
-  Download,
-  Gem,
-  Play,
-  Sparkles,
-  WandSparkles,
-} from "lucide-react";
+import { ArrowRight, Crown, Download, Sparkles, WandSparkles } from "lucide-react";
 import { Link } from "react-router";
 
 import { ImageWithFallback } from "@skygems/ui";
@@ -14,100 +6,70 @@ import { ImageWithFallback } from "@skygems/ui";
 import { stubDesigns } from "../contracts/stubs";
 import { appRoutes } from "../lib/routes";
 
-const featureCards = [
+const features = [
   {
     icon: Sparkles,
     title: "Prompt-to-pair generation",
     description:
-      "Structured create inputs compile into a polished sketch/render pair flow instead of a detached prompt box.",
+      "Structured inputs compile into a polished sketch and render pair in one step.",
   },
   {
     icon: WandSparkles,
-    title: "Selected design control room",
+    title: "Design workspace",
     description:
-      "Refine within the chosen design workspace and keep downstream stages aligned to the active hero direction.",
+      "Refine your chosen design and track it through specification to production.",
   },
   {
     icon: Download,
-    title: "Production surfaces",
+    title: "Production pipeline",
     description:
-      "Spec, technical sheet, SVG, and CAD handoff all stay in the same project-scoped pipeline.",
+      "Spec, technical sheet, SVG, and CAD export — all in one project lane.",
   },
 ];
 
-const workflowSteps = [
-  "Create",
-  "Prompt Preview",
-  "Generate",
-  "Select",
-  "Spec",
-  "CAD",
-];
+const steps = ["Create", "Preview", "Generate", "Select"];
 
 export function LandingPage() {
   const heroDesign =
-    Object.values(stubDesigns).find((design) => design.selectionState === "selected") ??
+    Object.values(stubDesigns).find((d) => d.selectionState === "selected") ??
     Object.values(stubDesigns)[0];
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">
+      {/* Decorative glow */}
       <div
-        className="pointer-events-none absolute inset-0"
+        className="pointer-events-none fixed inset-0"
         style={{
           background:
-            "radial-gradient(circle at top left, rgba(212,175,55,0.12), transparent 34%), radial-gradient(circle at 85% 18%, rgba(212,175,55,0.08), transparent 28%)",
+            "radial-gradient(circle at 20% 10%, rgba(212,175,55,0.06), transparent 40%)",
         }}
       />
 
-      <nav className="sticky top-0 z-50 border-b border-white/6 bg-[rgba(10,10,10,0.82)] backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4">
+      {/* Nav */}
+      <nav
+        className="fixed top-0 z-50 w-full border-b bg-[rgba(10,10,10,0.85)] backdrop-blur-xl"
+        style={{ borderColor: "var(--border-default)", height: 56 }}
+      >
+        <div className="mx-auto flex h-full max-w-[1200px] items-center justify-between px-6">
           <div className="flex items-center gap-3">
-            <div
-              className="flex size-10 items-center justify-center rounded-2xl"
-              style={{
-                background: "var(--sg-gradient)",
-                color: "var(--text-inverse)",
-              }}
-            >
-              <Crown className="size-5" />
+            <div className="flex size-9 items-center justify-center rounded-xl bg-[var(--accent-gold)] text-[var(--text-inverse)]">
+              <Crown className="size-4" />
             </div>
-            <div>
-              <p className="eyebrow">SkyGems</p>
-              <p className="text-sm font-semibold text-[var(--text-primary)]">
-                Luxury jewelry design studio
-              </p>
-            </div>
+            <span className="text-base font-semibold text-[var(--text-primary)]">
+              SkyGems
+            </span>
           </div>
-
-          <div className="hidden items-center gap-8 md:flex">
-            <a
-              href="#capabilities"
-              className="text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
-            >
-              Capabilities
-            </a>
-            <a
-              href="#workflow"
-              className="text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
-            >
-              Workflow
-            </a>
-          </div>
-
           <div className="flex items-center gap-3">
             <Link
               to={appRoutes.projects}
-              className="rounded-full border border-white/8 px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-colors hover:border-[rgba(212,175,55,0.24)] hover:text-[var(--accent-gold)]"
+              className="rounded-lg border px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-colors hover:border-[rgba(212,175,55,0.24)]"
+              style={{ borderColor: "var(--border-default)" }}
             >
               Open Studio
             </Link>
             <Link
               to={appRoutes.projects}
-              className="rounded-full px-4 py-2 text-sm font-semibold shadow-[0_18px_48px_rgba(212,175,55,0.2)]"
-              style={{
-                background: "var(--sg-gradient)",
-                color: "var(--text-inverse)",
-              }}
+              className="btn-gold rounded-lg px-4 py-2 text-sm"
             >
               Start Designing
             </Link>
@@ -115,216 +77,170 @@ export function LandingPage() {
         </div>
       </nav>
 
-      <main className="relative">
-        <section className="px-6 pb-20 pt-20">
-          <div className="mx-auto grid max-w-7xl gap-14 xl:grid-cols-[0.95fr_1.05fr] xl:items-center">
-            <div className="space-y-8">
+      <main className="relative pt-14">
+        {/* Hero */}
+        <section className="px-6 py-20">
+          <div className="mx-auto grid max-w-[1200px] items-center gap-16 xl:grid-cols-2">
+            <div className="animate-entrance space-y-8">
               <div className="space-y-4">
-                <div className="eyebrow">OpenArt-grade creative tooling for jewelry teams</div>
-                <h1 className="text-display max-w-3xl">
-                  Design jewelry with a
+                <p className="eyebrow">Premium jewelry design studio</p>
+                <h1 className="text-display max-w-lg">
+                  Design jewelry with
                   <span className="block text-[var(--accent-gold)]">
-                    dark-luxury creative workflow
+                    AI precision
                   </span>
                 </h1>
-                <p className="max-w-2xl text-lg leading-8 text-[var(--text-secondary)]">
-                  SkyGems keeps prompt preview, hero-pair review, and downstream
-                  production surfaces inside one premium project lane instead of
-                  scattering them across generic dashboards.
+                <p className="max-w-md text-lg leading-8 text-[var(--text-secondary)]">
+                  From concept sketch to manufacturing-ready CAD files, all in
+                  one premium creative workflow.
                 </p>
               </div>
 
               <div className="flex flex-wrap items-center gap-4">
                 <Link
                   to={appRoutes.projects}
-                  className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold shadow-[0_20px_54px_rgba(212,175,55,0.24)]"
-                  style={{
-                    background: "var(--sg-gradient)",
-                    color: "var(--text-inverse)",
-                  }}
+                  className="btn-gold inline-flex items-center gap-2 rounded-lg px-6 py-3 text-sm"
                 >
                   <Sparkles className="size-4" />
                   Enter the studio
                   <ArrowRight className="size-4" />
                 </Link>
-                <a
-                  href="#workflow"
-                  className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-[rgba(255,255,255,0.03)] px-6 py-3 text-sm font-semibold text-[var(--text-primary)] transition-colors hover:border-[rgba(212,175,55,0.24)] hover:text-[var(--accent-gold)]"
-                >
-                  <Play className="size-4" />
-                  See the workflow
-                </a>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-3">
-                {[
-                  ["Pair-first review", "Sketch and render stay side by side"],
-                  ["Project-scoped routes", "No detached preview route drift"],
-                  ["Gold-on-dark identity", "Premium visual system restored"],
-                ].map(([title, detail]) => (
-                  <div
-                    key={title}
-                    className="rounded-[28px] border border-white/6 bg-[rgba(255,255,255,0.03)] p-5"
-                  >
-                    <p className="text-sm font-semibold text-[var(--text-primary)]">
-                      {title}
-                    </p>
-                    <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
-                      {detail}
-                    </p>
+              {/* Workflow steps */}
+              <div className="flex gap-3">
+                {steps.map((step, i) => (
+                  <div key={step} className="flex items-center gap-3">
+                    <div
+                      className="rounded-lg border px-3 py-1.5 text-xs font-medium"
+                      style={{
+                        borderColor: "rgba(212,175,55,0.16)",
+                        backgroundColor: "rgba(212,175,55,0.06)",
+                        color: "var(--text-primary)",
+                      }}
+                    >
+                      {step}
+                    </div>
+                    {i < steps.length - 1 && (
+                      <ArrowRight className="size-3 text-[var(--text-muted)]" />
+                    )}
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="relative">
+            {/* Hero pair preview */}
+            {heroDesign && (
               <div
-                className="absolute -right-8 -top-10 size-44 rounded-full blur-3xl"
-                style={{ backgroundColor: "rgba(212,175,55,0.14)" }}
-              />
-              <div className="relative overflow-hidden rounded-[36px] border border-[rgba(212,175,55,0.16)] bg-[linear-gradient(180deg,rgba(212,175,55,0.12)_0%,rgba(17,17,17,1)_28%,rgba(10,10,10,1)_100%)] p-5 shadow-[0_40px_120px_rgba(0,0,0,0.32)]">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="eyebrow">Hero Pair Preview</p>
-                    <h2 className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">
-                      {heroDesign?.displayName ?? "Selected direction"}
-                    </h2>
-                    <p className="mt-2 max-w-xl text-sm leading-6 text-[var(--text-secondary)]">
-                      Review the chosen sketch and render as a single, premium surface
-                      before moving into specification and CAD work.
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="rounded-full border border-[rgba(212,175,55,0.2)] bg-[rgba(255,255,255,0.03)] px-3 py-1 text-xs font-medium text-[var(--text-primary)]">
-                      {heroDesign?.designDna.metal ?? "gold"}
-                    </span>
-                    <span className="rounded-full border border-[rgba(212,175,55,0.2)] bg-[rgba(255,255,255,0.03)] px-3 py-1 text-xs font-medium text-[var(--text-primary)]">
-                      {heroDesign?.designDna.style ?? "contemporary"}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-6 grid gap-4 md:grid-cols-2">
-                  {heroDesign ? (
-                    [
-                      {
-                        label: "Sketch plate",
-                        image: heroDesign.sketch.url,
-                        alt: heroDesign.sketch.alt,
-                      },
-                      {
-                        label: "Luxury render",
-                        image: heroDesign.render.url,
-                        alt: heroDesign.render.alt,
-                      },
-                    ].map((panel) => (
+                className="animate-entrance relative overflow-hidden rounded-2xl border p-5"
+                style={{
+                  borderColor: "rgba(212,175,55,0.12)",
+                  backgroundColor: "var(--bg-secondary)",
+                  animationDelay: "150ms",
+                }}
+              >
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {[
+                    { label: "Sketch", image: heroDesign.sketch },
+                    { label: "Render", image: heroDesign.render },
+                  ].map((panel) => (
+                    <div
+                      key={panel.label}
+                      className="overflow-hidden rounded-xl border"
+                      style={{ borderColor: "var(--border-default)" }}
+                    >
+                      <ImageWithFallback
+                        src={panel.image.url}
+                        alt={panel.image.alt}
+                        className="aspect-[4/5] w-full object-cover"
+                      />
                       <div
-                        key={panel.label}
-                        className="overflow-hidden rounded-[28px] border border-white/6 bg-[var(--bg-primary)]"
+                        className="px-3 py-2"
+                        style={{
+                          borderTop: "1px solid var(--border-default)",
+                        }}
                       >
-                        <ImageWithFallback
-                          src={panel.image}
-                          alt={panel.alt}
-                          className="aspect-[4/5] h-full w-full object-cover"
-                        />
-                        <div className="border-t border-white/6 px-4 py-3">
-                          <p className="text-xs uppercase tracking-[0.14em] text-[var(--accent-gold-light)]">
-                            {panel.label}
-                          </p>
-                        </div>
+                        <p className="eyebrow">{panel.label}</p>
                       </div>
-                    ))
-                  ) : (
-                    <div className="col-span-2 rounded-[28px] border border-white/6 bg-[rgba(255,255,255,0.03)] p-10 text-center text-[var(--text-secondary)]">
-                      Hero pair preview unavailable.
                     </div>
-                  )}
+                  ))}
+                </div>
+                <div className="mt-4 flex items-center justify-between">
+                  <p className="text-sm font-semibold text-[var(--text-primary)]">
+                    {heroDesign.displayName}
+                  </p>
+                  <div className="flex gap-2">
+                    <span
+                      className="rounded-full px-2.5 py-0.5 text-[11px] font-medium"
+                      style={{
+                        backgroundColor: "rgba(212,175,55,0.08)",
+                        color: "var(--accent-gold-light)",
+                      }}
+                    >
+                      {heroDesign.designDna.metal}
+                    </span>
+                    <span
+                      className="rounded-full px-2.5 py-0.5 text-[11px] font-medium"
+                      style={{
+                        backgroundColor: "rgba(212,175,55,0.08)",
+                        color: "var(--accent-gold-light)",
+                      }}
+                    >
+                      {heroDesign.designDna.style}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </section>
 
-        <section id="capabilities" className="border-t border-white/6 px-6 py-20">
-          <div className="mx-auto max-w-7xl">
+        {/* Features */}
+        <section
+          className="border-t px-6 py-20"
+          style={{ borderColor: "var(--border-default)" }}
+        >
+          <div className="mx-auto max-w-[1200px]">
             <div className="text-center">
               <p className="eyebrow">Capabilities</p>
               <h2 className="mt-3 text-display">
-                A premium jewelry studio,
+                A premium studio,
                 <span className="block text-[var(--accent-gold)]">
-                  not a generic admin dashboard
+                  not a dashboard
                 </span>
               </h2>
             </div>
 
-            <div className="mt-14 grid gap-5 lg:grid-cols-3">
-              {featureCards.map((feature) => {
-                const Icon = feature.icon;
+            <div className="stagger-children mt-14 grid gap-6 lg:grid-cols-3">
+              {features.map((f) => {
+                const Icon = f.icon;
                 return (
                   <div
-                    key={feature.title}
-                    className="rounded-[28px] border border-white/6 bg-[rgba(255,255,255,0.03)] p-6 shadow-[0_24px_60px_rgba(0,0,0,0.18)]"
+                    key={f.title}
+                    className="rounded-2xl border p-6 card-hover"
+                    style={{
+                      borderColor: "var(--border-default)",
+                      backgroundColor: "var(--bg-tertiary)",
+                    }}
                   >
                     <div
-                      className="flex size-12 items-center justify-center rounded-2xl"
+                      className="flex size-11 items-center justify-center rounded-xl"
                       style={{
-                        backgroundColor: "rgba(212,175,55,0.14)",
+                        backgroundColor: "rgba(212,175,55,0.1)",
                         color: "var(--accent-gold)",
                       }}
                     >
                       <Icon className="size-5" />
                     </div>
-                    <h3 className="mt-5 text-xl font-semibold text-[var(--text-primary)]">
-                      {feature.title}
+                    <h3 className="mt-5 text-lg font-semibold text-[var(--text-primary)]">
+                      {f.title}
                     </h3>
-                    <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">
-                      {feature.description}
+                    <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">
+                      {f.description}
                     </p>
                   </div>
                 );
               })}
-            </div>
-          </div>
-        </section>
-
-        <section id="workflow" className="border-t border-white/6 px-6 py-20">
-          <div className="mx-auto max-w-7xl">
-            <div className="flex flex-wrap items-end justify-between gap-6">
-              <div>
-                <p className="eyebrow">Workflow</p>
-                <h2 className="mt-3 text-display">
-                  A project lane that keeps
-                  <span className="block text-[var(--accent-gold)]">
-                    creative momentum intact
-                  </span>
-                </h2>
-              </div>
-              <Link
-                to={appRoutes.projects}
-                className="inline-flex items-center gap-2 rounded-full border border-white/8 px-5 py-3 text-sm font-semibold text-[var(--text-primary)] transition-colors hover:border-[rgba(212,175,55,0.24)] hover:text-[var(--accent-gold)]"
-              >
-                Open the live workspace
-                <ArrowRight className="size-4" />
-              </Link>
-            </div>
-
-            <div className="mt-12 grid gap-4 lg:grid-cols-6">
-              {workflowSteps.map((step, index) => (
-                <div
-                  key={step}
-                  className="rounded-[26px] border border-white/6 bg-[rgba(255,255,255,0.03)] p-5"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--accent-gold-light)]">
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
-                    <Gem className="size-4 text-[var(--accent-gold)]" />
-                  </div>
-                  <p className="mt-6 text-base font-semibold text-[var(--text-primary)]">
-                    {step}
-                  </p>
-                </div>
-              ))}
             </div>
           </div>
         </section>

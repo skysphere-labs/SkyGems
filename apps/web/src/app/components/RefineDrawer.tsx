@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ArrowRight, WandSparkles } from "lucide-react";
-import { Link } from "react-router";
+import { useNavigate } from "react-router";
 
 import {
   Button,
@@ -14,113 +14,112 @@ import {
   Textarea,
 } from "@skygems/ui";
 
+import { postRefineDesign } from "../contracts/api";
 import type { Design } from "../contracts/types";
 import { appRoutes } from "../lib/routes";
 
 export function RefineDrawer({ design }: { design: Design }) {
-  const [instruction, setInstruction] = useState(
-    "Tighten the silhouette while preserving the gemstone hierarchy.",
-  );
-  const [promptOverride, setPromptOverride] = useState("");
-  const [selectedPresets, setSelectedPresets] = useState<string[]>([
-    design.refinePresets[0] ?? "",
-  ]);
-
-  const targetGenerationId =
-    design.refineTargetGenerationId ?? design.sourceGenerationId;
+  const navigate = useNavigate();
+  const [instruction, setInstruction] = useState("");
+  const [selectedPresets, setSelectedPresets] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const togglePreset = (preset: string) => {
     setSelectedPresets((current) =>
       current.includes(preset)
-        ? current.filter((item) => item !== preset)
+        ? current.filter((p) => p !== preset)
         : [...current, preset],
     );
   };
 
+  async function handleRefine() {
+    setIsSubmitting(true);
+    try {
+      const result = await postRefineDesign(design.id);
+      if (result.generationId) {
+        navigate(
+          appRoutes.generation(design.projectId, result.generationId),
+        );
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="outline">
+        <Button variant="outline" className="border-[var(--border-default)]">
           <WandSparkles className="size-4" />
           Refine
         </Button>
       </SheetTrigger>
-      <SheetContent className="border-white/6 bg-[var(--bg-secondary)]">
+      <SheetContent
+        className="border-l bg-[var(--bg-secondary)]"
+        style={{ borderColor: "var(--border-default)" }}
+      >
         <SheetHeader>
-          <SheetTitle>Refine Selected Design</SheetTitle>
-          <SheetDescription>
-            Keep refinement anchored to the selected design and queue the next
-            generation pass from the same workspace.
+          <SheetTitle className="text-[var(--text-primary)]">
+            Refine Design
+          </SheetTitle>
+          <SheetDescription className="text-[var(--text-secondary)]">
+            Describe the changes you want and generate a new variation.
           </SheetDescription>
         </SheetHeader>
 
         <div className="space-y-6 px-4 pb-2">
-          <div className="space-y-3">
-            <p className="eyebrow">Preset refinements</p>
-            <div className="flex flex-wrap gap-2">
-              {design.refinePresets.map((preset) => (
-                <button
-                  key={preset}
-                  type="button"
-                  onClick={() => togglePreset(preset)}
-                  className="rounded-full border px-3 py-2 text-sm transition-colors"
-                  style={{
-                    borderColor: selectedPresets.includes(preset)
-                      ? "rgba(212,175,55,0.28)"
-                      : "rgba(255,255,255,0.06)",
-                    backgroundColor: selectedPresets.includes(preset)
-                      ? "rgba(212,175,55,0.08)"
-                      : "rgba(255,255,255,0.02)",
-                    color: selectedPresets.includes(preset)
-                      ? "var(--accent-gold)"
-                      : "var(--text-primary)",
-                  }}
-                >
-                  {preset}
-                </button>
-              ))}
+          {/* Presets */}
+          {design.refinePresets.length > 0 && (
+            <div className="space-y-3">
+              <p className="eyebrow">Quick refinements</p>
+              <div className="flex flex-wrap gap-2">
+                {design.refinePresets.map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => togglePreset(preset)}
+                    className="rounded-full border px-3 py-1.5 text-sm transition-colors"
+                    style={{
+                      borderColor: selectedPresets.includes(preset)
+                        ? "rgba(212,175,55,0.28)"
+                        : "var(--border-default)",
+                      backgroundColor: selectedPresets.includes(preset)
+                        ? "rgba(212,175,55,0.08)"
+                        : "transparent",
+                      color: selectedPresets.includes(preset)
+                        ? "var(--accent-gold)"
+                        : "var(--text-primary)",
+                    }}
+                  >
+                    {preset}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
+          {/* Instruction */}
           <div className="space-y-2">
-            <p className="eyebrow">Refine instruction</p>
+            <p className="eyebrow">Your instructions</p>
             <Textarea
               value={instruction}
               rows={5}
-              className="leading-6"
-              onChange={(event) => setInstruction(event.target.value)}
+              className="border-[var(--border-default)] bg-[var(--bg-elevated)] leading-relaxed text-[var(--text-primary)]"
+              placeholder="Describe the changes you'd like..."
+              onChange={(e) => setInstruction(e.target.value)}
             />
-          </div>
-
-          <div className="space-y-2">
-            <p className="eyebrow">Optional prompt override</p>
-            <Textarea
-              value={promptOverride}
-              rows={6}
-              className="leading-6"
-              placeholder="Optional edited prompt text for the next generation"
-              onChange={(event) => setPromptOverride(event.target.value)}
-            />
-          </div>
-
-          <div className="rounded-2xl border border-white/6 bg-[var(--bg-tertiary)] p-4 text-sm text-[var(--text-secondary)]">
-            Next refine submission target:
-            <code className="ml-1 text-[var(--text-primary)]">
-              POST /v1/designs/{design.id}/refine
-            </code>
-            <div className="mt-2">
-              Selected presets: {selectedPresets.join(", ") || "none"}
-            </div>
-            <div className="mt-1">Instruction: {instruction}</div>
           </div>
         </div>
 
         <SheetFooter>
-          <Button asChild>
-            <Link to={appRoutes.generation(design.projectId, targetGenerationId)}>
-              Queue Refine Generation
-              <ArrowRight className="size-4" />
-            </Link>
+          <Button
+            onClick={handleRefine}
+            disabled={isSubmitting}
+            className="btn-gold w-full"
+            style={{ height: 44 }}
+          >
+            {isSubmitting ? "Generating..." : "Generate Refinement"}
+            <ArrowRight className="size-4" />
           </Button>
         </SheetFooter>
       </SheetContent>
