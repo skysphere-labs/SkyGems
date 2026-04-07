@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft, RefreshCw, Sparkles } from "lucide-react";
-import { Link, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 
 import { Button, Card, CardContent } from "@skygems/ui";
 
-import { fetchGeneration } from "../contracts/api";
+import { fetchGeneration, postSelectDesign } from "../contracts/api";
 import type { Generation } from "../contracts/types";
 import { GenerationStatusBanner } from "../components/status/GenerationStatusBanner";
 import { PairCardV1 } from "../components/status/PairCardV1";
@@ -12,7 +12,9 @@ import { appRoutes } from "../lib/routes";
 
 export function GenerationScreen() {
   const { generationId, projectId } = useParams();
+  const navigate = useNavigate();
   const [generation, setGeneration] = useState<Generation | null>(null);
+  const [selectingDesignId, setSelectingDesignId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!generationId) {
@@ -139,7 +141,20 @@ export function GenerationScreen() {
               key={`${pair.designId}-${index}`}
               pair={pair}
               pairIndex={index}
-              isSelected={false}
+              isSelected={selectingDesignId === pair.designId}
+              onSelect={
+                pair.status === "ready"
+                  ? async () => {
+                      setSelectingDesignId(pair.designId);
+                      try {
+                        const design = await postSelectDesign(pair.designId);
+                        navigate(appRoutes.design(projectId, design.id));
+                      } finally {
+                        setSelectingDesignId(null);
+                      }
+                    }
+                  : undefined
+              }
               selectHref={
                 pair.status === "ready"
                   ? appRoutes.design(projectId, pair.designId)

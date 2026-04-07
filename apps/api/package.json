@@ -4,13 +4,14 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev --config ../../wrangler.toml",
+    "dev": "wrangler dev --port 8787 --config ../../wrangler.toml",
     "db:migrate:local": "wrangler d1 migrations apply skygems --local --config ../../wrangler.toml",
     "db:migrate:remote": "wrangler d1 migrations apply skygems --remote --config ../../wrangler.toml",
     "cf:typegen": "wrangler types --config ../../wrangler.toml",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@skygems/agent-runtime": "file:../../packages/agent-runtime",
     "@skygems/shared": "file:../../packages/shared"
   }
 }

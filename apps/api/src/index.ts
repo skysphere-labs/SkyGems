@@ -1,9 +1,7 @@
+import { createDefaultAgentExecutor } from "@skygems/agent-runtime";
 import {
   ArtifactPublicSchema,
   buildDesignDisplayName,
-  buildDesignDna,
-  buildPromptBundle,
-  buildPromptPreviewWithOptions,
   buildPromptSummary,
   buildSearchText,
   CadJobIdSchema,
@@ -11,6 +9,7 @@ import {
   DevBootstrapResponseSchema,
   DesignDetailResponseSchema,
   DesignDnaSchema,
+  DesignDnaPreviewSchema,
   DesignSelectResponseSchema,
   DesignSummarySchema,
   DesignIdSchema,
@@ -25,6 +24,7 @@ import {
   ProjectDesignsResponseSchema,
   ProjectResponseSchema,
   PromptAgentOutputSchema,
+  PromptBundleSchema,
   PromptPreviewRequestSchema,
   PromptPreviewResponseSchema,
   RefineRequestSchema,
@@ -37,6 +37,8 @@ import {
   type GallerySearchResponse,
   type GenerateDesignResponse,
   type GenerationStatusResponse,
+  type PromptAgentOutput,
+  type RefineResponse,
   type ProjectResponse,
   type StageStatuses,
 } from "@skygems/shared";
@@ -169,12 +171,44 @@ const projectRoleRank: Record<ProjectMembershipRow["role"], number> = {
   owner: 2,
 };
 
+const agentExecutor = createDefaultAgentExecutor();
+
 function defaultStageStatuses(): StageStatuses {
   return StageStatusesSchema.parse({
     spec: "not_requested",
     technicalSheet: "not_requested",
     svg: "not_requested",
     cad: "not_requested",
+  });
+}
+
+function buildPromptPreviewText(promptBundle: PromptAgentOutput["promptBundle"]): string {
+  return [
+    "Sketch prompt:",
+    promptBundle.sketchPrompt,
+    "",
+    "Render prompt:",
+    promptBundle.renderPrompt,
+    "",
+    "Negative prompt:",
+    promptBundle.negativePrompt,
+  ]
+    .join("\n")
+    .slice(0, 8000);
+}
+
+function buildDesignDnaPreview(designDna: PromptAgentOutput["designDna"]) {
+  return DesignDnaPreviewSchema.parse({
+    jewelryType: designDna.jewelryType,
+    metal: designDna.metal,
+    gemstones: designDna.gemstones,
+    style: designDna.style,
+    complexity: designDna.complexity,
+    bandStyle: designDna.bandStyle,
+    settingType: designDna.settingType,
+    stonePosition: designDna.stonePosition,
+    profile: designDna.profile,
+    motif: designDna.motif,
   });
 }
 
@@ -354,7 +388,11 @@ function buildArtifactPreviewDataUrl(artifact: Pick<ArtifactRow, "artifact_kind"
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 }
 
-async function loadArtifact(db: D1Database, artifactId: string | null): Promise<ArtifactPublic | null> {
+async function loadArtifact(
+  db: D1Database,
+  artifactId: string | null,
+  origin: string,
+): Promise<ArtifactPublic | null> {
   if (!artifactId) {
     return null;
   }
@@ -371,13 +409,19 @@ async function loadArtifact(db: D1Database, artifactId: string | null): Promise<
     return null;
   }
 
+  // For real images stored in R2 (image/png), serve via the artifact image endpoint.
+  // For placeholder SVGs (image/svg+xml), use the inline data URL fallback.
+  const signedUrl = artifact.content_type === "image/png"
+    ? new URL(`/v1/artifacts/${artifact.id}/image`, origin).toString()
+    : buildArtifactPreviewDataUrl(artifact);
+
   return ArtifactPublicSchema.parse({
     artifactId: artifact.id,
     kind: artifact.artifact_kind,
     contentType: artifact.content_type,
     byteSize: artifact.byte_size ?? 0,
     sha256: artifact.sha256,
-    signedUrl: buildArtifactPreviewDataUrl(artifact),
+    signedUrl,
   });
 }
 
@@ -385,6 +429,7 @@ async function loadPairById(
   db: D1Database,
   pairId: string | null,
   selectionState: DesignRow["selection_state"],
+  origin: string,
 ) {
   if (!pairId) {
     return null;
@@ -402,8 +447,8 @@ async function loadPairById(
     return null;
   }
 
-  const sketch = await loadArtifact(db, pair.sketch_artifact_id);
-  const render = await loadArtifact(db, pair.render_artifact_id);
+  const sketch = await loadArtifact(db, pair.sketch_artifact_id, origin);
+  const render = await loadArtifact(db, pair.render_artifact_id, origin);
 
   if (!sketch || !render || sketch.kind !== "pair_sketch_png" || render.kind !== "pair_render_png") {
     return null;
@@ -417,7 +462,12 @@ async function loadPairById(
   };
 }
 
-async function buildDesignSummary(db: D1Database, design: DesignRow, workflow: WorkflowRow | null) {
+async function buildDesignSummary(
+  db: D1Database,
+  design: DesignRow,
+  workflow: WorkflowRow | null,
+  origin: string,
+) {
   const sourceGenerationId = await loadSourceGenerationId(db, design.id);
 
   return DesignSummarySchema.parse({
@@ -431,7 +481,7 @@ async function buildDesignSummary(db: D1Database, design: DesignRow, workflow: W
     designDna: DesignDnaSchema.parse(JSON.parse(design.design_dna_json)),
     selectionState: design.selection_state,
     latestPairId: design.latest_pair_id,
-    pair: await loadPairById(db, design.latest_pair_id, design.selection_state),
+    pair: await loadPairById(db, design.latest_pair_id, design.selection_state, origin),
     latestSpecId: design.latest_spec_id,
     latestTechnicalSheetId: design.latest_technical_sheet_id,
     latestSvgAssetId: design.latest_svg_asset_id,
@@ -477,7 +527,11 @@ async function loadRecentDesignGenerations(
   return generations.map((generation) => buildDesignGenerationSummary(generation));
 }
 
-async function loadCoverImageForDesign(db: D1Database, design: DesignRow): Promise<ArtifactPublic | null> {
+async function loadCoverImageForDesign(
+  db: D1Database,
+  design: DesignRow,
+  origin: string,
+): Promise<ArtifactPublic | null> {
   if (!design.latest_pair_id) {
     return null;
   }
@@ -494,10 +548,14 @@ async function loadCoverImageForDesign(db: D1Database, design: DesignRow): Promi
     return null;
   }
 
-  return loadArtifact(db, pair.render_artifact_id);
+  return loadArtifact(db, pair.render_artifact_id, origin);
 }
 
-async function buildProjectResponse(db: D1Database, project: ProjectRow): Promise<ProjectResponse> {
+async function buildProjectResponse(
+  db: D1Database,
+  project: ProjectRow,
+  origin: string,
+): Promise<ProjectResponse> {
   const [{ count }] = await queryAll<CountRow>(
     db,
     `SELECT COUNT(*) AS count
@@ -545,7 +603,9 @@ async function buildProjectResponse(db: D1Database, project: ProjectRow): Promis
       createdAt: project.created_at,
       updatedAt: project.updated_at,
     },
-    selectedDesign: selectedDesign ? await buildDesignSummary(db, selectedDesign, selectedWorkflow) : null,
+    selectedDesign: selectedDesign
+      ? await buildDesignSummary(db, selectedDesign, selectedWorkflow, origin)
+      : null,
     recentDesigns: recentDesigns.map((design) => ({
       designId: DesignIdSchema.parse(design.id),
       displayName: design.display_name,
@@ -561,7 +621,11 @@ async function buildProjectResponse(db: D1Database, project: ProjectRow): Promis
   });
 }
 
-async function buildProjectDesignsResponse(db: D1Database, project: ProjectRow) {
+async function buildProjectDesignsResponse(
+  db: D1Database,
+  project: ProjectRow,
+  origin: string,
+) {
   const designs = await queryAll<DesignRow>(
     db,
     `SELECT *
@@ -577,7 +641,7 @@ async function buildProjectDesignsResponse(db: D1Database, project: ProjectRow) 
   const items = await Promise.all(
     designs.map(async (design) => {
       const workflow = await loadWorkflow(db, design.latest_workflow_run_id);
-      return buildDesignSummary(db, design, workflow);
+      return buildDesignSummary(db, design, workflow, origin);
     }),
   );
 
@@ -589,14 +653,19 @@ async function buildProjectDesignsResponse(db: D1Database, project: ProjectRow) 
   });
 }
 
-async function buildDesignDetailResponse(db: D1Database, project: ProjectRow, design: DesignRow) {
+async function buildDesignDetailResponse(
+  db: D1Database,
+  project: ProjectRow,
+  design: DesignRow,
+  origin: string,
+) {
   const workflow = await loadWorkflow(db, design.latest_workflow_run_id);
 
   return DesignDetailResponseSchema.parse({
     projectId: project.id,
     selectedDesignId: project.selected_design_id,
     canSelect: canSelectDesign(design),
-    design: await buildDesignSummary(db, design, workflow),
+    design: await buildDesignSummary(db, design, workflow, origin),
     recentGenerations: await loadRecentDesignGenerations(db, design),
   });
 }
@@ -605,8 +674,11 @@ async function handlePromptPreview(request: Request, env: ApiEnv, auth: AuthCont
   const payload = await parseJsonBody(request, PromptPreviewRequestSchema);
   await requireProjectAccess(env.SKYGEMS_DB, auth, payload.projectId);
   const promptProvider = resolvePromptProviderSelection(env);
-
-  const preview = await buildPromptPreviewWithOptions(payload, {
+  const promptAgentRun = await agentExecutor.run<PromptAgentOutput>("prompt-agent", {
+    mode: "generate",
+    projectId: payload.projectId,
+    designId: generatePrefixedId("dsn"),
+    input: payload,
     provider: promptProvider.active,
   });
 
@@ -614,12 +686,15 @@ async function handlePromptPreview(request: Request, env: ApiEnv, auth: AuthCont
     PromptPreviewResponseSchema.parse({
       projectId: payload.projectId,
       promptPreviewVersion: "prompt_preview.v1",
-      pairStandardVersion: "pair_v1",
-      ...preview,
+      pairStandardVersion: promptAgentRun.output.pairStandardVersion,
+      normalizedInput: promptAgentRun.output.normalizedInput,
+      designDnaPreview: buildDesignDnaPreview(promptAgentRun.output.designDna),
+      promptSummary: buildPromptSummary(payload),
+      promptText: buildPromptPreviewText(promptAgentRun.output.promptBundle),
     }),
     200,
     {
-      "x-skygems-prompt-pack-version": promptProvider.promptPackVersion,
+      "x-skygems-prompt-pack-version": promptAgentRun.promptPackVersion,
       "x-skygems-prompt-provider": promptProvider.active,
       "x-skygems-prompt-provider-source": promptProvider.source,
     },
@@ -650,35 +725,17 @@ async function handleGenerateDesign(
       const designId = generatePrefixedId("dsn");
       const generationId = generatePrefixedId("gen");
       const createdAt = nowIso();
-      const designDna = await buildDesignDna(payload);
-      const promptBundle = buildPromptBundle(designDna, payload.userNotes, {
-        provider: promptProvider.active,
-      });
-      const promptSummary = buildPromptSummary(payload);
-      const promptAgentOutput = PromptAgentOutputSchema.parse({
-        schemaVersion: "prompt_agent.v1",
+      const promptAgentRun = await agentExecutor.run<PromptAgentOutput>("prompt-agent", {
         mode: "generate",
         projectId: payload.projectId,
         designId,
-        pairStandardVersion: "pair_v1",
-        normalizedInput: GenerateDesignRequestSchema.omit({
-          projectId: true,
-          promptTextOverride: true,
-        }).parse({
-          jewelryType: payload.jewelryType,
-          metal: payload.metal,
-          gemstones: payload.gemstones,
-          style: payload.style,
-          complexity: payload.complexity,
-          variationOverrides: payload.variationOverrides,
-          userNotes: payload.userNotes,
-          pairStandardVersion: payload.pairStandardVersion,
-        }),
-        designDna,
-        promptBundle,
-        blocked: false,
-        blockReasons: [],
+        input: payload,
+        provider: promptProvider.active,
       });
+      const promptAgentOutput = PromptAgentOutputSchema.parse(promptAgentRun.output);
+      const designDna = DesignDnaSchema.parse(promptAgentOutput.designDna);
+      const promptBundle = PromptBundleSchema.parse(promptAgentOutput.promptBundle);
+      const promptSummary = buildPromptSummary(payload);
 
       await executeStatement(
         env.SKYGEMS_DB,
@@ -790,12 +847,175 @@ async function handleGenerateDesign(
   return jsonResponse(idempotentResult.body, idempotentResult.status);
 }
 
+async function handleRefineDesign(
+  request: Request,
+  env: ApiEnv,
+  auth: AuthContext,
+  designId: string,
+  ctx: ExecutionContext | undefined,
+): Promise<Response> {
+  const sourceDesign = await requireDesign(env.SKYGEMS_DB, auth.tenantId, designId);
+  await requireProjectWriteAccess(env.SKYGEMS_DB, auth, sourceDesign.project_id);
+
+  if (!sourceDesign.latest_pair_id) {
+    throw new HttpError(409, "conflict", "The source design must have a completed pair before refine.");
+  }
+
+  const payload = await parseJsonBody(request, RefineRequestSchema);
+  const idempotencyKey = requireIdempotencyKey(request);
+  const requestHash = await computeRequestHash(payload, { designId }, auth.tenantId);
+  const promptProvider = resolvePromptProviderSelection(env);
+  const initialExecution = resolveGenerateExecutionMode(request, env);
+  const createdAt = nowIso();
+
+  const storedInput = GenerateDesignRequestSchema.parse(JSON.parse(sourceDesign.prompt_input_json));
+  const createInput = PromptPreviewRequestSchema.parse({
+    projectId: sourceDesign.project_id,
+    jewelryType: storedInput.jewelryType,
+    metal: storedInput.metal,
+    gemstones: storedInput.gemstones,
+    style: storedInput.style,
+    complexity: storedInput.complexity,
+    variationOverrides: storedInput.variationOverrides,
+    userNotes: storedInput.userNotes,
+    pairStandardVersion: storedInput.pairStandardVersion,
+  });
+
+  const idempotentResult = await withIdempotency<RefineResponse>(
+    env.SKYGEMS_DB,
+    auth.tenantId,
+    "refine_design",
+    idempotencyKey,
+    requestHash,
+    async () => {
+      const refinedDesignId = generatePrefixedId("dsn");
+      const generationId = generatePrefixedId("gen");
+      const promptAgentRun = await agentExecutor.run<PromptAgentOutput>("prompt-agent", {
+        mode: "refine",
+        projectId: sourceDesign.project_id,
+        designId: refinedDesignId,
+        input: createInput,
+        sourceDesignId: sourceDesign.id,
+        provider: promptProvider.active,
+        refinementInstruction: payload.instruction,
+      });
+      const promptAgentOutput = PromptAgentOutputSchema.parse(promptAgentRun.output);
+      const designDna = DesignDnaSchema.parse(promptAgentOutput.designDna);
+      const promptSummary = `${buildPromptSummary(createInput)} refined`;
+      const displayName = `${sourceDesign.display_name} Refined`;
+
+      await executeStatement(
+        env.SKYGEMS_DB,
+        `INSERT INTO designs (
+           id, tenant_id, project_id, created_by_user_id, parent_design_id, source_kind, selection_state,
+           display_name, prompt_summary, prompt_input_json, design_dna_json,
+           latest_pair_id, latest_spec_id, latest_technical_sheet_id, latest_svg_asset_id, latest_cad_job_id,
+           latest_workflow_run_id, search_text, created_at, selected_at, updated_at, archived_at
+         ) VALUES (?, ?, ?, ?, ?, 'refine', 'candidate', ?, ?, ?, ?, NULL, NULL, NULL, NULL, NULL, NULL, ?, ?, NULL, ?, NULL)`,
+        [
+          refinedDesignId,
+          auth.tenantId,
+          sourceDesign.project_id,
+          auth.userId,
+          sourceDesign.id,
+          displayName,
+          promptSummary,
+          asJsonText(createInput),
+          asJsonText(designDna),
+          buildSearchText(designDna, promptSummary, promptAgentOutput.normalizedInput.userNotes),
+          createdAt,
+          createdAt,
+        ],
+      );
+
+      await executeStatement(
+        env.SKYGEMS_DB,
+        `INSERT INTO generations (
+           id, tenant_id, project_id, design_id, requested_by_user_id, base_design_id, request_kind, status,
+           pair_standard_version, request_json, request_hash, idempotency_key, prompt_agent_output_json,
+           execution_mode, execution_source,
+           error_code, error_message, created_at, started_at, completed_at, updated_at
+         ) VALUES (?, ?, ?, ?, ?, ?, 'refine', 'queued', 'pair_v1', ?, ?, ?, ?, ?, ?, NULL, NULL, ?, NULL, NULL, ?)`,
+        [
+          generationId,
+          auth.tenantId,
+          sourceDesign.project_id,
+          refinedDesignId,
+          auth.userId,
+          sourceDesign.id,
+          asJsonText(payload),
+          requestHash,
+          idempotencyKey,
+          asJsonText(promptAgentOutput),
+          initialExecution.mode,
+          initialExecution.source,
+          createdAt,
+          createdAt,
+        ],
+      );
+
+      await executeStatement(
+        env.SKYGEMS_DB,
+        `UPDATE projects
+         SET updated_at = ?
+         WHERE id = ?`,
+        [createdAt, sourceDesign.project_id],
+      );
+
+      const queuePayload = GenerateQueuePayloadSchema.parse({
+        schemaVersion: "generate_queue.v1",
+        generationId,
+        designId: refinedDesignId,
+        projectId: sourceDesign.project_id,
+        tenantId: auth.tenantId,
+        requestedByUserId: auth.userId,
+        idempotencyKey,
+        requestHash,
+        queuedAt: createdAt,
+        input: {
+          jewelryType: createInput.jewelryType,
+          metal: createInput.metal,
+          gemstones: createInput.gemstones,
+          style: createInput.style,
+          complexity: createInput.complexity,
+          variationOverrides: createInput.variationOverrides,
+          userNotes: createInput.userNotes,
+          pairStandardVersion: createInput.pairStandardVersion,
+        },
+      });
+
+      const dispatch = await dispatchGenerateExecution({
+        request,
+        env,
+        ctx,
+        payload: queuePayload,
+      });
+
+      return {
+        status: dispatch.executionMode === "local" ? 202 : 202,
+        body: RefineResponseSchema.parse({
+          generationId,
+          sourceDesignId: sourceDesign.id,
+          refinedDesignId,
+          status: "queued",
+          createdAt,
+        }),
+        primaryResourceType: "generation",
+        primaryResourceId: generationId,
+      };
+    },
+  );
+
+  return jsonResponse(idempotentResult.body, idempotentResult.status);
+}
+
 async function handleGenerationStatus(
-  _request: Request,
+  request: Request,
   env: ApiEnv,
   auth: AuthContext,
   generationId: string,
 ) {
+  const origin = new URL(request.url).origin;
   const generation = await queryFirst<GenerationRow>(
     env.SKYGEMS_DB,
     `SELECT *
@@ -811,7 +1031,12 @@ async function handleGenerationStatus(
   const project = await requireProjectAccess(env.SKYGEMS_DB, auth, generation.project_id);
   const design = await requireDesign(env.SKYGEMS_DB, auth.tenantId, generation.design_id);
   const workflow = await loadWorkflow(env.SKYGEMS_DB, design.latest_workflow_run_id);
-  const pair = await loadPairById(env.SKYGEMS_DB, design.latest_pair_id, design.selection_state);
+  const pair = await loadPairById(
+    env.SKYGEMS_DB,
+    design.latest_pair_id,
+    design.selection_state,
+    origin,
+  );
 
   const response = GenerationStatusResponseSchema.parse({
     generationId: generation.id,
@@ -829,7 +1054,7 @@ async function handleGenerationStatus(
     pair,
     projectSelectedDesignId: project.selected_design_id,
     canSelect: canSelectDesign(design),
-    design: await buildDesignSummary(env.SKYGEMS_DB, design, workflow),
+    design: await buildDesignSummary(env.SKYGEMS_DB, design, workflow, origin),
   });
 
   return jsonResponse(response);
@@ -937,7 +1162,7 @@ async function handleGallerySearch(request: Request, env: Env, auth: AuthContext
       promptSummary: design.prompt_summary,
       selectionState: design.selection_state,
       latestPairId: design.latest_pair_id,
-      coverImage: await loadCoverImageForDesign(env.SKYGEMS_DB, design),
+      coverImage: await loadCoverImageForDesign(env.SKYGEMS_DB, design, new URL(request.url).origin),
       stageStatuses: stageStatusesFromDesign(design, workflow),
       updatedAt: design.updated_at,
     });
@@ -953,34 +1178,51 @@ async function handleGallerySearch(request: Request, env: Env, auth: AuthContext
   );
 }
 
-async function handleProject(env: ApiEnv, auth: AuthContext, projectId: string): Promise<Response> {
-  const project = await requireProjectAccess(env.SKYGEMS_DB, auth, projectId);
-  const response = await buildProjectResponse(env.SKYGEMS_DB, project);
-  return jsonResponse(ProjectResponseSchema.parse(response));
-}
-
-async function handleProjectDesigns(
+async function handleProject(
+  request: Request,
   env: ApiEnv,
   auth: AuthContext,
   projectId: string,
 ): Promise<Response> {
   const project = await requireProjectAccess(env.SKYGEMS_DB, auth, projectId);
-  const response = await buildProjectDesignsResponse(env.SKYGEMS_DB, project);
+  const response = await buildProjectResponse(env.SKYGEMS_DB, project, new URL(request.url).origin);
+  return jsonResponse(ProjectResponseSchema.parse(response));
+}
+
+async function handleProjectDesigns(
+  request: Request,
+  env: ApiEnv,
+  auth: AuthContext,
+  projectId: string,
+): Promise<Response> {
+  const project = await requireProjectAccess(env.SKYGEMS_DB, auth, projectId);
+  const response = await buildProjectDesignsResponse(
+    env.SKYGEMS_DB,
+    project,
+    new URL(request.url).origin,
+  );
   return jsonResponse(ProjectDesignsResponseSchema.parse(response));
 }
 
 async function handleDesignDetail(
+  request: Request,
   env: ApiEnv,
   auth: AuthContext,
   designId: string,
 ): Promise<Response> {
   const design = await requireDesign(env.SKYGEMS_DB, auth.tenantId, designId);
   const project = await requireProjectAccess(env.SKYGEMS_DB, auth, design.project_id);
-  const response = await buildDesignDetailResponse(env.SKYGEMS_DB, project, design);
+  const response = await buildDesignDetailResponse(
+    env.SKYGEMS_DB,
+    project,
+    design,
+    new URL(request.url).origin,
+  );
   return jsonResponse(DesignDetailResponseSchema.parse(response));
 }
 
 async function handleSelectDesign(
+  request: Request,
   env: ApiEnv,
   auth: AuthContext,
   designId: string,
@@ -995,7 +1237,12 @@ async function handleSelectDesign(
   });
   const refreshedProject = await requireProject(env.SKYGEMS_DB, auth.tenantId, project.id);
   const refreshedDesign = await requireDesign(env.SKYGEMS_DB, auth.tenantId, design.id);
-  const detail = await buildDesignDetailResponse(env.SKYGEMS_DB, refreshedProject, refreshedDesign);
+  const detail = await buildDesignDetailResponse(
+    env.SKYGEMS_DB,
+    refreshedProject,
+    refreshedDesign,
+    new URL(request.url).origin,
+  );
 
   return jsonResponse(
     DesignSelectResponseSchema.parse({
@@ -1072,14 +1319,14 @@ async function routeRequest(
 
   const projectMatch = url.pathname.match(/^\/v1\/projects\/(prj_[0-9A-HJKMNP-TV-Z]{26})$/);
   if (request.method === "GET" && projectMatch) {
-    return handleProject(env, auth, ProjectIdSchema.parse(projectMatch[1]));
+    return handleProject(request, env, auth, ProjectIdSchema.parse(projectMatch[1]));
   }
 
   const projectDesignsMatch = url.pathname.match(
     /^\/v1\/projects\/(prj_[0-9A-HJKMNP-TV-Z]{26})\/designs$/,
   );
   if (request.method === "GET" && projectDesignsMatch) {
-    return handleProjectDesigns(env, auth, ProjectIdSchema.parse(projectDesignsMatch[1]));
+    return handleProjectDesigns(request, env, auth, ProjectIdSchema.parse(projectDesignsMatch[1]));
   }
 
   if (request.method === "POST" && url.pathname === "/v1/gallery/search") {
@@ -1088,23 +1335,25 @@ async function routeRequest(
 
   const designMatch = url.pathname.match(/^\/v1\/designs\/(dsn_[0-9A-HJKMNP-TV-Z]{26})$/);
   if (request.method === "GET" && designMatch) {
-    return handleDesignDetail(env, auth, DesignIdSchema.parse(designMatch[1]));
+    return handleDesignDetail(request, env, auth, DesignIdSchema.parse(designMatch[1]));
   }
 
   const designSelectMatch = url.pathname.match(
     /^\/v1\/designs\/(dsn_[0-9A-HJKMNP-TV-Z]{26})\/select$/,
   );
   if (request.method === "POST" && designSelectMatch) {
-    return handleSelectDesign(env, auth, DesignIdSchema.parse(designSelectMatch[1]));
+    return handleSelectDesign(request, env, auth, DesignIdSchema.parse(designSelectMatch[1]));
   }
 
   const refineMatch = url.pathname.match(/^\/v1\/designs\/(dsn_[0-9A-HJKMNP-TV-Z]{26})\/refine$/);
   if (request.method === "POST" && refineMatch) {
-    const design = await requireDesign(env.SKYGEMS_DB, auth.tenantId, DesignIdSchema.parse(refineMatch[1]));
-    await requireProjectWriteAccess(env.SKYGEMS_DB, auth, design.project_id);
-    const payload = await parseJsonBody(request, RefineRequestSchema);
-    void payload;
-    return stubbedRoute("Refine execution is intentionally stubbed in Phase 2A foundation.");
+    return handleRefineDesign(
+      request,
+      env,
+      auth,
+      DesignIdSchema.parse(refineMatch[1]),
+      ctx,
+    );
   }
 
   const downstreamMatch = url.pathname.match(
@@ -1120,6 +1369,44 @@ async function routeRequest(
     return stubbedRoute(
       "Downstream workflow execution is intentionally stubbed in Phase 2A foundation.",
     );
+  }
+
+  // ── Serve artifact images from R2 ──
+  const artifactImageMatch = url.pathname.match(
+    /^\/v1\/artifacts\/(art_[0-9A-HJKMNP-TV-Z]{26})\/image$/,
+  );
+  if (request.method === "GET" && artifactImageMatch) {
+    const artifactId = artifactImageMatch[1];
+    const artifact = await queryFirst<{
+      project_id: string;
+      tenant_id: string;
+      r2_key: string;
+      content_type: string;
+    }>(
+      env.SKYGEMS_DB,
+      `SELECT project_id, tenant_id, r2_key, content_type
+       FROM artifacts
+       WHERE id = ? AND tenant_id = ?`,
+      [artifactId, auth.tenantId],
+    );
+
+    if (!artifact || !artifact.r2_key) {
+      return errorResponse(404, "not_found", "Artifact not found.");
+    }
+
+    await requireProjectAccess(env.SKYGEMS_DB, auth, artifact.project_id);
+
+    const object = await env.SKYGEMS_ARTIFACTS.get(artifact.r2_key);
+    if (!object) {
+      return errorResponse(404, "not_found", "Artifact image not found in storage.");
+    }
+
+    return new Response(object.body, {
+      headers: {
+        "Content-Type": artifact.content_type || "image/png",
+        "Cache-Control": "public, max-age=31536000, immutable",
+      },
+    });
   }
 
   return errorResponse(404, "not_found", "No matching v1 route was found.");
@@ -1141,8 +1428,81 @@ export class DesignPipelineWorkflow extends WorkflowEntrypoint<Env, DesignPipeli
   }
 }
 
+async function handleQuickGenerate(request: Request, env: ApiEnv): Promise<Response> {
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+  };
+
+  if (request.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  if (!isDevBootstrapEnabled(request, env)) {
+    return Response.json(
+      { error: "Quick generate is available only in local/dev bootstrap environments." },
+      { status: 404, headers: corsHeaders },
+    );
+  }
+
+  const body = await request.json() as { prompt?: string };
+  if (!body.prompt) {
+    return Response.json({ error: "prompt is required" }, { status: 400, headers: corsHeaders });
+  }
+
+  const apiKey = env.XAI_API_KEY?.trim();
+  if (!apiKey) {
+    return Response.json({ error: "XAI_API_KEY not configured" }, { status: 500, headers: corsHeaders });
+  }
+
+  const xaiResponse = await fetch("https://api.x.ai/v1/images/generations", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "grok-imagine-image",
+      prompt: body.prompt,
+      n: 1,
+      response_format: "url",
+    }),
+  });
+
+  if (!xaiResponse.ok) {
+    const errText = await xaiResponse.text().catch(() => "");
+    return Response.json(
+      { error: `xAI API error (${xaiResponse.status}): ${errText.slice(0, 200)}` },
+      { status: 502, headers: corsHeaders },
+    );
+  }
+
+  const result = await xaiResponse.json() as {
+    data?: Array<{ url?: string; b64_json?: string }>;
+  };
+
+  const imageData = result.data?.[0];
+  if (!imageData) {
+    return Response.json({ error: "xAI returned no image" }, { status: 502, headers: corsHeaders });
+  }
+
+  const imageUrl = imageData.url ?? (imageData.b64_json ? `data:image/png;base64,${imageData.b64_json}` : null);
+  if (!imageUrl) {
+    return Response.json({ error: "No image URL in response" }, { status: 502, headers: corsHeaders });
+  }
+
+  return Response.json({ imageUrl }, { headers: corsHeaders });
+}
+
 export default {
   async fetch(request: Request, env: ApiEnv, ctx: ExecutionContext): Promise<Response> {
+    // Simple quick-generate endpoint for the prototype UI (no auth needed)
+    const url = new URL(request.url);
+    if (url.pathname === "/api/quick-generate") {
+      return handleQuickGenerate(request, env);
+    }
+
     try {
       return await routeRequest(request, env, ctx);
     } catch (error) {

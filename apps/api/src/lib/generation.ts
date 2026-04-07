@@ -1,5 +1,8 @@
 import {
   buildArtifactR2Key,
+  buildPromptBundle,
+  DesignDnaSchema,
+  PromptAgentOutputSchema,
   GenerateQueuePayloadSchema,
   generatePrefixedId,
   sha256Hex,
@@ -17,12 +20,80 @@ import {
   type ApiEnv,
 } from "./runtime.ts";
 
+// ── xAI Grok image generation ──
+
+async function generateImageWithXai(
+  env: ApiEnv,
+  prompt: string,
+): Promise<{ bytes: Uint8Array; contentType: "image/png" } | null> {
+  const apiKey = env.XAI_API_KEY;
+  if (!apiKey) {
+    console.warn("XAI_API_KEY not set, falling back to placeholder.");
+    return null;
+  }
+
+  try {
+    const response = await fetch("https://api.x.ai/v1/images/generations", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "grok-imagine-image",
+        prompt,
+        n: 1,
+        response_format: "b64_json",
+      }),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text().catch(() => "");
+      console.error(`xAI image generation failed (${response.status}):`, errText);
+      return null;
+    }
+
+    const result = await response.json() as {
+      data?: Array<{ b64_json?: string; url?: string }>;
+    };
+
+    const imageData = result.data?.[0];
+    if (!imageData) {
+      console.error("xAI returned no image data.");
+      return null;
+    }
+
+    // Prefer base64, fall back to URL fetch
+    if (imageData.b64_json) {
+      const binaryStr = atob(imageData.b64_json);
+      const bytes = new Uint8Array(binaryStr.length);
+      for (let i = 0; i < binaryStr.length; i++) {
+        bytes[i] = binaryStr.charCodeAt(i);
+      }
+      return { bytes, contentType: "image/png" };
+    }
+
+    if (imageData.url) {
+      const imgResponse = await fetch(imageData.url);
+      const buffer = await imgResponse.arrayBuffer();
+      return { bytes: new Uint8Array(buffer), contentType: "image/png" };
+    }
+
+    console.error("xAI returned neither b64_json nor url.");
+    return null;
+  } catch (error) {
+    console.error("xAI image generation failed, falling back to placeholder:", error);
+    return null;
+  }
+}
+
 interface GenerationRow {
   id: string;
   tenant_id: string;
   project_id: string;
   design_id: string;
   status: "queued" | "running" | "succeeded" | "failed" | "canceled";
+  prompt_agent_output_json: string | null;
   started_at: string | null;
   completed_at: string | null;
 }
@@ -122,7 +193,7 @@ function buildFailureMessage(error: unknown): {
 async function loadGeneration(db: D1Database, payload: GenerateQueuePayload): Promise<GenerationRow> {
   const generation = await queryFirst<GenerationRow>(
     db,
-    `SELECT id, tenant_id, project_id, design_id, status, started_at, completed_at
+    `SELECT id, tenant_id, project_id, design_id, status, prompt_agent_output_json, started_at, completed_at
      FROM generations
      WHERE id = ? AND tenant_id = ? AND project_id = ? AND design_id = ?`,
     [payload.generationId, payload.tenantId, payload.projectId, payload.designId],
@@ -181,8 +252,9 @@ async function loadExistingPair(
 }
 
 async function insertPairArtifacts(
-  db: D1Database,
+  env: ApiEnv,
   payload: GenerateQueuePayload,
+  generation: GenerationRow,
   design: DesignRow,
   pairId: string,
   completedAt: string,
@@ -190,34 +262,89 @@ async function insertPairArtifacts(
   sketchArtifactId: string;
   renderArtifactId: string;
 }> {
+  const db = env.SKYGEMS_DB;
   const sketchArtifactId = generatePrefixedId("art");
   const renderArtifactId = generatePrefixedId("art");
   const fileStem = slugifyFileName(design.display_name || payload.designId);
-  const sketchFileName = `${fileStem}-sketch.svg`;
-  const renderFileName = `${fileStem}-render.svg`;
-  const sketchDataUrl = buildArtifactPreviewDataUrl("pair_sketch_png", sketchFileName, sketchArtifactId);
-  const renderDataUrl = buildArtifactPreviewDataUrl("pair_render_png", renderFileName, renderArtifactId);
-  const sketchBytes = new TextEncoder().encode(sketchDataUrl);
-  const renderBytes = new TextEncoder().encode(renderDataUrl);
+
+  // Build prompts from design DNA for AI generation
+  let renderImage: { bytes: Uint8Array; contentType: "image/png" } | null = null;
+  let sketchImage: { bytes: Uint8Array; contentType: "image/png" } | null = null;
+
+  try {
+    const promptBundle = generation.prompt_agent_output_json
+      ? PromptAgentOutputSchema.parse(JSON.parse(generation.prompt_agent_output_json)).promptBundle
+      : buildPromptBundle(DesignDnaSchema.parse(JSON.parse(design.design_dna_json)));
+    // Generate render image (primary output)
+    renderImage = await generateImageWithXai(env, promptBundle.renderPrompt);
+    // Generate sketch image
+    sketchImage = await generateImageWithXai(env, promptBundle.sketchPrompt);
+  } catch (error) {
+    console.error("Failed to build prompts or generate images:", error);
+  }
+
+  // R2 keys for both artifacts
+  const sketchR2Key = buildArtifactR2Key("pair_sketch_png", {
+    tenantId: payload.tenantId,
+    projectId: payload.projectId,
+    designId: payload.designId,
+    pairId,
+  });
+  const renderR2Key = buildArtifactR2Key("pair_render_png", {
+    tenantId: payload.tenantId,
+    projectId: payload.projectId,
+    designId: payload.designId,
+    pairId,
+  });
+
+  // Resolve final bytes — real AI image or placeholder SVG fallback
+  const sketchFileName = sketchImage ? `${fileStem}-sketch.png` : `${fileStem}-sketch.svg`;
+  const renderFileName = renderImage ? `${fileStem}-render.png` : `${fileStem}-render.svg`;
+
+  let sketchBytes: Uint8Array;
+  let sketchContentType: string;
+  if (sketchImage) {
+    sketchBytes = sketchImage.bytes;
+    sketchContentType = "image/png";
+    await env.SKYGEMS_ARTIFACTS.put(sketchR2Key, sketchBytes, {
+      httpMetadata: { contentType: "image/png" },
+      customMetadata: { designId: payload.designId, artifactId: sketchArtifactId },
+    });
+  } else {
+    const svgDataUrl = buildArtifactPreviewDataUrl("pair_sketch_png", sketchFileName, sketchArtifactId);
+    sketchBytes = new TextEncoder().encode(svgDataUrl);
+    sketchContentType = "image/svg+xml";
+  }
+
+  let renderBytes: Uint8Array;
+  let renderContentType: string;
+  if (renderImage) {
+    renderBytes = renderImage.bytes;
+    renderContentType = "image/png";
+    await env.SKYGEMS_ARTIFACTS.put(renderR2Key, renderBytes, {
+      httpMetadata: { contentType: "image/png" },
+      customMetadata: { designId: payload.designId, artifactId: renderArtifactId },
+    });
+  } else {
+    const svgDataUrl = buildArtifactPreviewDataUrl("pair_render_png", renderFileName, renderArtifactId);
+    renderBytes = new TextEncoder().encode(svgDataUrl);
+    renderContentType = "image/svg+xml";
+  }
 
   await executeStatement(
     db,
     `INSERT INTO artifacts (
        id, tenant_id, project_id, design_id, producer_type, artifact_kind, r2_key,
        file_name, content_type, byte_size, sha256, created_at
-     ) VALUES (?, ?, ?, ?, 'generation_pair', 'pair_sketch_png', ?, ?, 'image/svg+xml', ?, ?, ?)`,
+     ) VALUES (?, ?, ?, ?, 'generation_pair', 'pair_sketch_png', ?, ?, ?, ?, ?, ?)`,
     [
       sketchArtifactId,
       payload.tenantId,
       payload.projectId,
       payload.designId,
-      buildArtifactR2Key("pair_sketch_png", {
-        tenantId: payload.tenantId,
-        projectId: payload.projectId,
-        designId: payload.designId,
-        pairId,
-      }),
+      sketchR2Key,
       sketchFileName,
+      sketchContentType,
       sketchBytes.byteLength,
       await sha256Hex(sketchBytes),
       completedAt,
@@ -229,19 +356,15 @@ async function insertPairArtifacts(
     `INSERT INTO artifacts (
        id, tenant_id, project_id, design_id, producer_type, artifact_kind, r2_key,
        file_name, content_type, byte_size, sha256, created_at
-     ) VALUES (?, ?, ?, ?, 'generation_pair', 'pair_render_png', ?, ?, 'image/svg+xml', ?, ?, ?)`,
+     ) VALUES (?, ?, ?, ?, 'generation_pair', 'pair_render_png', ?, ?, ?, ?, ?, ?)`,
     [
       renderArtifactId,
       payload.tenantId,
       payload.projectId,
       payload.designId,
-      buildArtifactR2Key("pair_render_png", {
-        tenantId: payload.tenantId,
-        projectId: payload.projectId,
-        designId: payload.designId,
-        pairId,
-      }),
+      renderR2Key,
       renderFileName,
+      renderContentType,
       renderBytes.byteLength,
       await sha256Hex(renderBytes),
       completedAt,
@@ -255,9 +378,10 @@ async function insertPairArtifacts(
 }
 
 async function persistSuccessfulGeneration(
-  db: D1Database,
+  env: ApiEnv,
   payload: GenerateQueuePayload,
 ): Promise<void> {
+  const db = env.SKYGEMS_DB;
   const generation = await loadGeneration(db, payload);
   const design = await loadDesign(db, payload);
   const project = await loadProject(db, payload);
@@ -287,7 +411,7 @@ async function persistSuccessfulGeneration(
 
   let pair = existingPair;
   if (!pair) {
-    const artifacts = await insertPairArtifacts(db, payload, design, pairId, completedAt);
+    const artifacts = await insertPairArtifacts(env, payload, generation, design, pairId, completedAt);
     await executeStatement(
       db,
       `INSERT INTO generation_pairs (
@@ -396,7 +520,7 @@ export async function runGenerateExecution(
   const payload = GenerateQueuePayloadSchema.parse(payloadInput);
 
   try {
-    await persistSuccessfulGeneration(env.SKYGEMS_DB, payload);
+    await persistSuccessfulGeneration(env, payload);
     return { ok: true };
   } catch (error) {
     await markGenerateExecutionFailed(env, payload, error);

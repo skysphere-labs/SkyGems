@@ -60,12 +60,14 @@ export function PairCardV1({
   pair,
   pairIndex,
   isSelected = false,
+  onSelect,
   selectHref,
   openHref,
 }: {
   pair: PairCandidate;
   pairIndex: number;
   isSelected?: boolean;
+  onSelect?: () => void | Promise<void>;
   selectHref?: string;
   openHref?: string;
 }) {
@@ -148,19 +150,29 @@ export function PairCardV1({
       </CardContent>
       <CardFooter className="flex flex-wrap gap-3">
         {pair.status === "ready" && selectHref ? (
-          <Button asChild={!isSelected} disabled={isSelected}>
-            {isSelected ? (
-              <span>
-                <Sparkles className="size-4" />
-                Selected Pair
-              </span>
-            ) : (
+          isSelected ? (
+            <Button disabled>
+              <Sparkles className="size-4" />
+              Selected Pair
+            </Button>
+          ) : onSelect ? (
+            <Button
+              type="button"
+              onClick={() => {
+                void onSelect();
+              }}
+            >
+              <Sparkles className="size-4" />
+              Select Pair
+            </Button>
+          ) : (
+            <Button asChild>
               <Link to={selectHref}>
                 <Sparkles className="size-4" />
                 Select Pair
               </Link>
-            )}
-          </Button>
+            </Button>
+          )
         ) : pair.status === "failed" ? (
           <Button variant="outline" disabled>
             <AlertCircle className="size-4" />

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ArrowRight, WandSparkles } from "lucide-react";
-import { Link } from "react-router";
+import { useNavigate } from "react-router";
 
 import {
   Button,
@@ -15,19 +15,19 @@ import {
 } from "@skygems/ui";
 
 import type { Design } from "../contracts/types";
+import { postRefineDesign } from "../contracts/api";
 import { appRoutes } from "../lib/routes";
 
 export function RefineDrawer({ design }: { design: Design }) {
+  const navigate = useNavigate();
   const [instruction, setInstruction] = useState(
     "Tighten the silhouette while preserving the gemstone hierarchy.",
   );
   const [promptOverride, setPromptOverride] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedPresets, setSelectedPresets] = useState<string[]>([
     design.refinePresets[0] ?? "",
   ]);
-
-  const targetGenerationId =
-    design.refineTargetGenerationId ?? design.sourceGenerationId;
 
   const togglePreset = (preset: string) => {
     setSelectedPresets((current) =>
@@ -35,6 +35,24 @@ export function RefineDrawer({ design }: { design: Design }) {
         ? current.filter((item) => item !== preset)
         : [...current, preset],
     );
+  };
+
+  const handleSubmit = async () => {
+    if (!instruction.trim()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response = await postRefineDesign({
+        designId: design.id,
+        instruction,
+        promptOverride,
+      });
+      navigate(appRoutes.generation(design.projectId, response.generationId));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -116,11 +134,9 @@ export function RefineDrawer({ design }: { design: Design }) {
         </div>
 
         <SheetFooter>
-          <Button asChild>
-            <Link to={appRoutes.generation(design.projectId, targetGenerationId)}>
-              Queue Refine Generation
-              <ArrowRight className="size-4" />
-            </Link>
+          <Button onClick={handleSubmit} disabled={isSubmitting || !instruction.trim()}>
+            {isSubmitting ? "Queueing Refine..." : "Queue Refine Generation"}
+            <ArrowRight className="size-4" />
           </Button>
         </SheetFooter>
       </SheetContent>

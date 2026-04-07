@@ -1,13 +1,17 @@
 import type {
+  DesignDetailResponse,
+  DesignSelectResponse,
   GallerySearchResponse,
   GenerateDesignResponse,
   GenerationStatusResponse,
+  ProjectDesignsResponse,
   ProjectResponse,
   PromptPreviewResponse,
 } from "@skygems/shared";
 
 import type {
   ApiSource,
+  ArtifactRef,
   CreateDraftState,
   CreateInput,
   Design,
@@ -44,15 +48,79 @@ const DEFAULT_INPUT: CreateInput = {
   complexity: 44,
 };
 
-const DEFAULT_AUTH_HEADERS = {
-  tenantId: "ten_01JQZZ90P4Q5R6S7T8V9W0X1YZ",
-  userId: "usr_01JQZZ91Q5R6S7T8V9W0X1Y2ZA",
-  authSubject: "auth0|skygems-dev-user",
-  email: "designer@skygems.local",
-  tenantName: "SkyGems Studio",
-  tenantSlug: "skygems-studio",
-  userName: "SkyGems Designer",
-} as const;
+// ── Dev bootstrap session management ──
+
+const DEV_SESSION_KEY = "skygems.dev-session.v1";
+
+interface DevSession {
+  token: string;
+  expiresAt: string;
+  projectId: string;
+}
+
+function getStoredSession(): DevSession | null {
+  try {
+    const raw = sessionStorage.getItem(DEV_SESSION_KEY);
+    if (!raw) return null;
+    const session = JSON.parse(raw) as DevSession;
+    if (new Date(session.expiresAt) <= new Date()) {
+      sessionStorage.removeItem(DEV_SESSION_KEY);
+      return null;
+    }
+    return session;
+  } catch {
+    return null;
+  }
+}
+
+function storeSession(session: DevSession) {
+  sessionStorage.setItem(DEV_SESSION_KEY, JSON.stringify(session));
+}
+
+async function ensureDevSession(): Promise<DevSession> {
+  const existing = getStoredSession();
+  if (existing) return existing;
+
+  const baseUrl = getApiBaseUrl();
+  const response = await fetch(`${baseUrl}/v1/dev/bootstrap`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({}),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Dev bootstrap failed: ${response.status}`);
+  }
+
+  const data = await response.json() as {
+    sessionToken: string;
+    sessionExpiresAt: string;
+    project: { id: string };
+  };
+
+  const session: DevSession = {
+    token: data.sessionToken,
+    expiresAt: data.sessionExpiresAt,
+    projectId: data.project.id,
+  };
+
+  storeSession(session);
+  return session;
+}
+
+let _bootstrapPromise: Promise<DevSession> | null = null;
+
+async function getDevSession(): Promise<DevSession> {
+  if (!_bootstrapPromise) {
+    _bootstrapPromise = ensureDevSession().catch((err) => {
+      _bootstrapPromise = null;
+      throw err;
+    });
+  }
+  return _bootstrapPromise;
+}
 
 const LIVE_GENERATION_CONTEXT_STORAGE_KEY = "skygems.live-generation-context.v1";
 
@@ -90,37 +158,12 @@ function buildApiUrl(pathname: string) {
   return baseUrl ? `${baseUrl}${pathname}` : pathname;
 }
 
-function buildAuthHeaders(): Record<string, string> {
-  return {
-    "x-skygems-tenant-id":
-      (import.meta.env.VITE_SKYGEMS_TENANT_ID as string | undefined) ??
-      DEFAULT_AUTH_HEADERS.tenantId,
-    "x-skygems-user-id":
-      (import.meta.env.VITE_SKYGEMS_USER_ID as string | undefined) ??
-      DEFAULT_AUTH_HEADERS.userId,
-    "x-skygems-auth-subject":
-      (import.meta.env.VITE_SKYGEMS_AUTH_SUBJECT as string | undefined) ??
-      DEFAULT_AUTH_HEADERS.authSubject,
-    "x-skygems-user-email":
-      (import.meta.env.VITE_SKYGEMS_USER_EMAIL as string | undefined) ??
-      DEFAULT_AUTH_HEADERS.email,
-    "x-skygems-tenant-name":
-      (import.meta.env.VITE_SKYGEMS_TENANT_NAME as string | undefined) ??
-      DEFAULT_AUTH_HEADERS.tenantName,
-    "x-skygems-tenant-slug":
-      (import.meta.env.VITE_SKYGEMS_TENANT_SLUG as string | undefined) ??
-      DEFAULT_AUTH_HEADERS.tenantSlug,
-    "x-skygems-user-name":
-      (import.meta.env.VITE_SKYGEMS_USER_NAME as string | undefined) ??
-      DEFAULT_AUTH_HEADERS.userName,
-  };
-}
-
-function buildRequestHeaders(initHeaders?: HeadersInit) {
+async function buildRequestHeaders(initHeaders?: HeadersInit) {
+  const session = await getDevSession();
   return {
     Accept: "application/json",
     "Content-Type": "application/json",
-    ...buildAuthHeaders(),
+    Authorization: `Bearer ${session.token}`,
     ...(initHeaders ?? {}),
   };
 }
@@ -158,9 +201,10 @@ async function getErrorMessage(response: Response) {
 }
 
 async function requestJson<T>(pathname: string, init?: RequestInit): Promise<T> {
+  const headers = await buildRequestHeaders(init?.headers);
   const response = await fetch(buildApiUrl(pathname), {
     ...init,
-    headers: buildRequestHeaders(init?.headers),
+    headers,
   });
 
   if (!response.ok) {
@@ -215,6 +259,194 @@ function buildFallbackPreview(input: CreateInput, errorMessage?: string): Prompt
     promptSummary: preview.summary,
     source: "fallback",
     errorMessage,
+  };
+}
+
+function buildPlaceholderImageDataUrl(label: string) {
+  const safeLabel = label.replace(/[<&>]/g, "");
+  const svg = `
+    <svg width="800" height="1000" viewBox="0 0 800 1000" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="800" height="1000" rx="40" fill="#111111" />
+      <rect x="32" y="32" width="736" height="936" rx="28" stroke="rgba(212,175,55,0.22)" stroke-width="2" />
+      <circle cx="400" cy="430" r="150" stroke="#D4AF37" stroke-width="5" fill="none" />
+      <path d="M250 620 C320 400, 480 400, 550 620" stroke="#F5DEB3" stroke-width="8" fill="none" stroke-linecap="round" />
+      <text x="400" y="840" text-anchor="middle" fill="#E5E5E5" font-size="32" font-family="Inter, Arial, sans-serif">${safeLabel}</text>
+    </svg>
+  `.trim();
+
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
+function buildPlaceholderArtifactRef(label: string, alt: string): ArtifactRef {
+  return {
+    artifactId: `placeholder-${label.toLowerCase().replace(/\s+/g, "-")}`,
+    label,
+    alt,
+    url: buildPlaceholderImageDataUrl(label),
+    kind: "image",
+  };
+}
+
+function mapArtifactRef(
+  artifact: { artifactId: string; contentType: string; signedUrl: string } | null | undefined,
+  label: string,
+  alt: string,
+): ArtifactRef {
+  if (!artifact) {
+    return buildPlaceholderArtifactRef(label, alt);
+  }
+
+  return {
+    artifactId: artifact.artifactId,
+    label,
+    alt,
+    url: artifact.signedUrl,
+    kind: artifact.contentType.includes("svg") ? "vector" : "image",
+  };
+}
+
+function buildStageSnapshot(
+  status: Design["stages"]["spec"]["status"],
+  summary: string,
+  versionLabel?: string,
+): Design["stages"]["spec"] {
+  return {
+    status,
+    summary,
+    versionLabel,
+  };
+}
+
+function summarizeStage(
+  label: string,
+  status: Design["stages"]["spec"]["status"],
+  hasArtifact: boolean,
+): string {
+  switch (status) {
+    case "ready":
+    case "succeeded":
+      return `${label} is available for review.`;
+    case "running":
+    case "processing":
+      return `${label} is currently processing.`;
+    case "queued":
+      return `${label} has been queued.`;
+    case "failed":
+      return `${label} failed and needs another run.`;
+    case "stale":
+      return `${label} is stale and should be regenerated.`;
+    case "skipped":
+      return `${label} was skipped in the latest run.`;
+    case "not_requested":
+    case "absent":
+    default:
+      return hasArtifact
+        ? `${label} has partial data available.`
+        : `${label} has not been requested yet.`;
+  }
+}
+
+type DesignSummaryPayload =
+  | NonNullable<ProjectResponse["selectedDesign"]>
+  | ProjectDesignsResponse["items"][number]
+  | DesignDetailResponse["design"];
+
+function mapDesignSummaryToDesign(
+  summary: DesignSummaryPayload,
+  options?: {
+    recentGenerationId?: string | null;
+  },
+): Design {
+  const sourceGenerationId =
+    summary.sourceGenerationId ?? options?.recentGenerationId ?? "";
+
+  const specStatus = summary.stageStatuses.spec === "succeeded" ? "ready" : summary.stageStatuses.spec;
+  const technicalSheetStatus =
+    summary.stageStatuses.technicalSheet === "succeeded"
+      ? "ready"
+      : summary.stageStatuses.technicalSheet;
+  const svgStatus = summary.stageStatuses.svg === "succeeded" ? "ready" : summary.stageStatuses.svg;
+  const cadStatus = summary.stageStatuses.cad === "succeeded" ? "ready" : summary.stageStatuses.cad;
+
+  return {
+    id: summary.designId,
+    projectId: summary.projectId,
+    parentDesignId: summary.parentDesignId,
+    sourceKind: summary.sourceKind,
+    sourceGenerationId,
+    selectionState: summary.selectionState,
+    displayName: summary.displayName,
+    promptSummary: summary.promptSummary,
+    designDna: summary.designDna,
+    latestPairId: summary.latestPairId ?? undefined,
+    createdAt: formatDisplayTimestamp(summary.createdAt),
+    selectedAt: summary.selectedAt ? formatDisplayTimestamp(summary.selectedAt) : undefined,
+    sketch: mapArtifactRef(summary.pair?.sketch, "Pair Sketch", "Generated design sketch"),
+    render: mapArtifactRef(summary.pair?.render, "Pair Render", "Generated design render"),
+    stages: {
+      spec: buildStageSnapshot(
+        specStatus,
+        summarizeStage("Specification", specStatus, Boolean(summary.latestSpecId)),
+        summary.latestSpecId ? "Latest spec" : "Not generated",
+      ),
+      technicalSheet: buildStageSnapshot(
+        technicalSheetStatus,
+        summarizeStage(
+          "Technical sheet",
+          technicalSheetStatus,
+          Boolean(summary.latestTechnicalSheetId),
+        ),
+        summary.latestTechnicalSheetId ? "Latest technical sheet" : "Not generated",
+      ),
+      svg: buildStageSnapshot(
+        svgStatus,
+        summarizeStage("SVG package", svgStatus, Boolean(summary.latestSvgAssetId)),
+        summary.latestSvgAssetId ? "Latest SVG package" : "Not generated",
+      ),
+      cad: buildStageSnapshot(
+        cadStatus,
+        summarizeStage("CAD package", cadStatus, Boolean(summary.latestCadJobId)),
+        summary.latestCadJobId ? "Latest CAD package" : "Not generated",
+      ),
+    },
+    refinePresets: [
+      "Tighten silhouette",
+      "Push gemstone hierarchy",
+      "Reduce crown height",
+      "Introduce temple detail",
+    ],
+    refineTargetGenerationId: options?.recentGenerationId ?? summary.sourceGenerationId ?? undefined,
+    lineageNotes: [
+      summary.parentDesignId
+        ? "This design was created as a refinement of an earlier concept."
+        : "This design originated from a create-generation request.",
+      summary.selectionState === "selected"
+        ? "This design is the active project selection."
+        : "This design remains available as a candidate within the project.",
+    ],
+    specData: {
+      versionLabel: summary.latestSpecId ? "Latest generated spec" : "Not generated",
+      summary: summarizeStage("Specification", specStatus, Boolean(summary.latestSpecId)),
+      geometry: [],
+      materials: [],
+      gemstones: [],
+      constructionNotes: [],
+      riskFlags: [],
+      missingInformation: [],
+    },
+    technicalSheetData: {
+      versionLabel: summary.latestTechnicalSheetId ? "Latest technical sheet" : "Not generated",
+      generatedAt: formatDisplayTimestamp(summary.updatedAt),
+      geometryAndDimensions: [],
+      materialsAndMetalDetails: [],
+      gemstoneSchedule: [],
+      constructionAndAssemblyNotes: [],
+      tolerancesAndConstraints: [],
+      riskFlags: [],
+      missingInformation: [],
+    },
+    svgViews: [],
+    cadJobs: [],
   };
 }
 
@@ -436,8 +668,15 @@ function buildIdempotencyKey() {
 }
 
 export async function fetchProjects(): Promise<ProjectWorkspace[]> {
-  await delay(180);
-  return stubProjects;
+  // Ensure session exists so we have a real project
+  const session = await getDevSession();
+  try {
+    const project = await requestJson<ProjectResponse>(`/v1/projects/${session.projectId}`);
+    return [mapProjectResponse(project)];
+  } catch {
+    await delay(180);
+    return stubProjects;
+  }
 }
 
 export async function fetchProject(projectId: string): Promise<ProjectWorkspace> {
@@ -459,23 +698,44 @@ export async function fetchProject(projectId: string): Promise<ProjectWorkspace>
 }
 
 export async function fetchLastActiveProjectId() {
-  await delay(40);
-  return getLastActiveProjectId();
+  const session = await getDevSession();
+  return session.projectId;
 }
 
 export async function fetchCreateDraft(projectId: string): Promise<CreateDraftState> {
   await delay(120);
   const draft = getCreateDraftByProjectId(projectId);
-  if (!draft) throw new Error(`Create draft for ${projectId} not found`);
+  if (draft) {
+    rememberLastActiveProject(projectId);
+    return draft;
+  }
+
+  // Create a fresh draft for real projects that don't have stubs
   rememberLastActiveProject(projectId);
-  return draft;
+  const preview = generatePromptPreview(DEFAULT_INPUT);
+  return {
+    projectId,
+    inputs: { ...DEFAULT_INPUT },
+    promptMode: "synced",
+    promptValue: preview.prompt,
+    inputRevision: 0,
+    previewRevision: 0,
+    previewStatus: "ready",
+  };
 }
 
 export async function bootstrapProject(name?: string): Promise<ProjectWorkspace> {
-  await delay(160);
-  const project = bootstrapProjectWorkspace(name);
-  rememberLastActiveProject(project.projectId);
-  return project;
+  try {
+    const session = await getDevSession();
+    const project = await fetchProject(session.projectId);
+    rememberLastActiveProject(project.projectId);
+    return project;
+  } catch {
+    await delay(160);
+    const project = bootstrapProjectWorkspace(name);
+    rememberLastActiveProject(project.projectId);
+    return project;
+  }
 }
 
 export async function postPromptPreview(input: {
@@ -605,42 +865,161 @@ export async function fetchGeneration(generationId: string): Promise<Generation>
 }
 
 export async function fetchProjectGenerations(projectId: string): Promise<Generation[]> {
-  await delay(160);
-  return listGenerationsForProject(projectId).map((generation) => ({
-    ...generation,
-    source: generation.source ?? "fallback",
-  }));
+  try {
+    const payload = await requestJson<ProjectResponse>(`/v1/projects/${projectId}`);
+    return payload.recentGenerations.map((generation) => ({
+      id: generation.generationId,
+      projectId,
+      requestKind: "create",
+      status: mapGenerationStatus(generation.status),
+      pairStandardVersion: "pair_v1",
+      createdAt: formatDisplayTimestamp(generation.createdAt),
+      message:
+        generation.status === "succeeded"
+          ? "Generation completed."
+          : generation.status === "running"
+            ? "Generation is in progress."
+            : generation.status === "queued"
+              ? "Generation is queued."
+              : "Generation needs attention.",
+      readyPairs: 0,
+      totalPairs: 1,
+      reconnecting: false,
+      pairs: [],
+      source: "live",
+    }));
+  } catch {
+    await delay(160);
+    return listGenerationsForProject(projectId).map((generation) => ({
+      ...generation,
+      source: generation.source ?? "fallback",
+    }));
+  }
 }
 
 export async function fetchDesign(designId: string): Promise<Design> {
-  await delay(160);
-  const design = getDesignById(designId);
-  if (!design) throw new Error(`Design ${designId} not found`);
-  return design;
+  try {
+    const payload = await requestJson<DesignDetailResponse>(`/v1/designs/${designId}`);
+    const mapped = mapDesignSummaryToDesign(payload.design, {
+      recentGenerationId:
+        payload.recentGenerations[0]?.generationId ?? payload.design.sourceGenerationId,
+    });
+    stubDesigns[designId] = mapped;
+    return mapped;
+  } catch {
+    await delay(160);
+    const design = getDesignById(designId);
+    if (!design) throw new Error(`Design ${designId} not found`);
+    return design;
+  }
 }
 
 export async function fetchSelectedDesign(projectId: string): Promise<Design | null> {
-  await delay(180);
-  const project = getProjectById(projectId);
-  if (!project?.selectedDesignId) return null;
-  return getDesignById(project.selectedDesignId);
+  try {
+    const payload = await requestJson<ProjectResponse>(`/v1/projects/${projectId}`);
+    if (!payload.selectedDesign) {
+      return null;
+    }
+
+    const mapped = mapDesignSummaryToDesign(payload.selectedDesign, {
+      recentGenerationId: payload.recentGenerations[0]?.generationId ?? null,
+    });
+    stubDesigns[mapped.id] = mapped;
+    return mapped;
+  } catch {
+    await delay(180);
+    const project = getProjectById(projectId);
+    if (!project?.selectedDesignId) return null;
+    return getDesignById(project.selectedDesignId);
+  }
 }
 
 export async function fetchProjectDesigns(projectId: string): Promise<Design[]> {
-  await delay(160);
-  return listDesignsForProject(projectId);
+  try {
+    const payload = await requestJson<ProjectDesignsResponse>(
+      `/v1/projects/${projectId}/designs`,
+    );
+    const mapped = payload.items.map((item) => mapDesignSummaryToDesign(item));
+    for (const design of mapped) {
+      stubDesigns[design.id] = design;
+    }
+    return mapped;
+  } catch {
+    await delay(160);
+    return listDesignsForProject(projectId);
+  }
 }
 
-export async function postRefineDesign(designId: string) {
-  await delay(220);
-  const design = getDesignById(designId);
-  if (!design) {
-    return { generationId: "" };
+export async function postSelectDesign(designId: string): Promise<Design> {
+  try {
+    const payload = await requestJson<DesignSelectResponse>(
+      `/v1/designs/${designId}/select`,
+      {
+        method: "POST",
+      },
+    );
+    const mapped = mapDesignSummaryToDesign(payload.design, {
+      recentGenerationId: payload.recentGenerations[0]?.generationId ?? payload.design.sourceGenerationId,
+    });
+    stubDesigns[designId] = mapped;
+    return mapped;
+  } catch {
+    const design = getDesignById(designId);
+    if (!design) {
+      throw new Error(`Design ${designId} not found`);
+    }
+    return design;
   }
+}
 
-  const generation = enqueueStubGeneration(design.projectId, "refine");
-  design.refineTargetGenerationId = generation.id;
-  return { generationId: generation.id };
+export async function postRefineDesign(input: {
+  designId: string;
+  instruction: string;
+  promptOverride?: string;
+}) {
+  try {
+    const instruction = input.promptOverride?.trim()
+      ? `${input.instruction.trim()}\n\nPrompt override to respect: ${input.promptOverride.trim()}`
+      : input.instruction.trim();
+
+    const payload = await requestJson<{
+      generationId: string;
+      sourceDesignId: string;
+      refinedDesignId: string;
+      status: "queued" | "running";
+      createdAt: string;
+    }>(`/v1/designs/${input.designId}/refine`, {
+      method: "POST",
+      headers: {
+        "Idempotency-Key": buildIdempotencyKey(),
+      },
+      body: JSON.stringify({
+        instruction,
+        preserve: [],
+        pairStandardVersion: "pair_v1",
+      }),
+    });
+
+    return {
+      generationId: payload.generationId,
+      refinedDesignId: payload.refinedDesignId,
+      source: "live" as const,
+    };
+  } catch {
+    await delay(220);
+    const design = getDesignById(input.designId);
+    if (!design) {
+      return { generationId: "", refinedDesignId: "", source: "fallback" as const };
+    }
+
+    const generation = enqueueStubGeneration(design.projectId, "refine");
+    design.refineTargetGenerationId = generation.id;
+    return {
+      generationId: generation.id,
+      refinedDesignId: design.id,
+      source: "fallback" as const,
+    };
+  }
 }
 
 export async function postGallerySearch(input: {
