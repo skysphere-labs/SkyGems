@@ -304,6 +304,7 @@ export const GallerySearchResponseSchema = z.object({
       promptSummary: z.string(),
       selectionState: SelectionStateEnum,
       latestPairId: PairIdSchema.nullable(),
+      sketchImage: ArtifactPublicSchema.nullable(),
       coverImage: ArtifactPublicSchema.nullable(),
       stageStatuses: StageStatusesSchema,
       updatedAt: IsoTimestampSchema,

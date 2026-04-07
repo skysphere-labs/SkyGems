@@ -1,4 +1,4 @@
-import { createDefaultAgentExecutor } from "@skygems/agent-runtime";
+import { createDefaultAgentExecutor, type CopilotAgentOutput } from "@skygems/agent-runtime";
 import {
   ArtifactPublicSchema,
   buildDesignDisplayName,
@@ -33,11 +33,16 @@ import {
   SpecRequestSchema,
   SpecQueuePayloadSchema,
   StageStatusesSchema,
+  SvgAgentOutputSchema,
+  SvgRequestSchema,
+  CadPrepAgentOutputSchema,
+  CadRequestSchema,
   TechSheetAgentOutputSchema,
   TechnicalSheetRequestSchema,
   WorkflowStageResponseSchema,
   generatePrefixedId,
   type ArtifactPublic,
+  type CadPrepAgentOutput,
   type GallerySearchResponse,
   type GenerateDesignResponse,
   type GenerationStatusResponse,
@@ -46,6 +51,7 @@ import {
   type ProjectResponse,
   type SpecAgentOutput,
   type StageStatuses,
+  type SvgAgentOutput,
   type TechSheetAgentOutput,
 } from "@skygems/shared";
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from "cloudflare:workers";
@@ -674,6 +680,35 @@ async function loadCoverImageForDesign(
   }
 
   return loadArtifact(db, pair.render_artifact_id, origin);
+}
+
+async function loadGalleryPairImages(
+  db: D1Database,
+  design: DesignRow,
+  origin: string,
+): Promise<{ sketch: ArtifactPublic | null; render: ArtifactPublic | null }> {
+  if (!design.latest_pair_id) {
+    return { sketch: null, render: null };
+  }
+
+  const pair = await queryFirst<GenerationPairRow>(
+    db,
+    `SELECT id, generation_id, sketch_artifact_id, render_artifact_id
+     FROM generation_pairs
+     WHERE id = ?`,
+    [design.latest_pair_id],
+  );
+
+  if (!pair) {
+    return { sketch: null, render: null };
+  }
+
+  const [sketch, render] = await Promise.all([
+    loadArtifact(db, pair.sketch_artifact_id, origin),
+    loadArtifact(db, pair.render_artifact_id, origin),
+  ]);
+
+  return { sketch, render };
 }
 
 async function buildProjectResponse(
@@ -1493,6 +1528,311 @@ async function handleTechSheetStage(
   );
 }
 
+async function handleSvgStage(
+  request: Request,
+  env: ApiEnv,
+  auth: AuthContext,
+  designId: string,
+): Promise<Response> {
+  const design = await requireDesign(env.SKYGEMS_DB, auth.tenantId, designId);
+  const project = await requireProjectWriteAccess(env.SKYGEMS_DB, auth, design.project_id);
+  const payload = await parseJsonBody(request, SvgRequestSchema);
+
+  if (!design.latest_technical_sheet_id) {
+    throw new HttpError(409, "conflict", "A completed technical sheet is required before SVG generation.");
+  }
+
+  if (!design.latest_spec_id) {
+    throw new HttpError(409, "conflict", "A completed spec is required before SVG generation.");
+  }
+
+  if (design.latest_svg_asset_id && !payload.forceRegenerate) {
+    const workflow = await loadWorkflow(env.SKYGEMS_DB, design.latest_workflow_run_id);
+    return jsonResponse(
+      WorkflowStageResponseSchema.parse({
+        workflowRunId: design.latest_workflow_run_id,
+        designId: design.id,
+        projectId: project.id,
+        selectionState: design.selection_state,
+        requestedTargetStage: "svg",
+        currentStage: workflow?.current_stage ?? "svg",
+        workflowStatus: workflow?.workflow_status ?? "succeeded",
+        stageStatuses: stageStatusesFromDesign(design, workflow),
+        latestSpecId: design.latest_spec_id,
+        latestTechnicalSheetId: design.latest_technical_sheet_id,
+        latestSvgAssetId: design.latest_svg_asset_id,
+        latestCadJobId: design.latest_cad_job_id,
+        updatedAt: workflow?.updated_at ?? design.updated_at,
+      }),
+    );
+  }
+
+  const techSheetOutput = await loadLatestTechSheet(env.SKYGEMS_DB, design.latest_technical_sheet_id);
+  if (!techSheetOutput) {
+    throw new HttpError(409, "conflict", "Tech sheet agent output is required before SVG generation.");
+  }
+
+  const designDna = DesignDnaSchema.parse(JSON.parse(design.design_dna_json));
+
+  const workflowRunId = generatePrefixedId("wfr");
+  const svgAssetId = generatePrefixedId("svg");
+  const now = nowIso();
+  const versionRow = await queryFirst<{ version: number }>(
+    env.SKYGEMS_DB,
+    `SELECT COALESCE(MAX(svg_version), 0) AS version
+     FROM svg_assets
+     WHERE design_id = ? AND tenant_id = ?`,
+    [design.id, auth.tenantId],
+  );
+  const svgVersion = (versionRow?.version ?? 0) + 1;
+
+  await executeStatement(
+    env.SKYGEMS_DB,
+    `INSERT INTO design_workflow_runs (
+       id, tenant_id, project_id, design_id, requested_by_user_id, requested_target_stage, current_stage,
+       workflow_status, spec_status, technical_sheet_status, svg_status, cad_status,
+       latest_spec_id, latest_technical_sheet_id, latest_svg_asset_id, latest_cad_job_id,
+       force_regenerate, last_error_code, last_error_message, created_at, started_at, completed_at, updated_at
+     ) VALUES (?, ?, ?, ?, ?, 'svg', 'svg', 'running', 'succeeded', 'succeeded', 'running', 'not_requested', ?, ?, NULL, NULL, ?, NULL, NULL, ?, ?, NULL, ?)`,
+    [
+      workflowRunId, auth.tenantId, project.id, design.id, auth.userId,
+      design.latest_spec_id, design.latest_technical_sheet_id,
+      payload.forceRegenerate ? 1 : 0, now, now, now,
+    ],
+  );
+
+  await executeStatement(
+    env.SKYGEMS_DB,
+    `INSERT INTO svg_assets (
+       id, tenant_id, project_id, design_id, workflow_run_id, source_technical_sheet_id, svg_version,
+       status, svg_standard_version, agent_output_json, manifest_json, views_json, created_at, completed_at, updated_at
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, 'running', 'svg_v1', NULL, NULL, NULL, ?, NULL, ?)`,
+    [
+      svgAssetId, auth.tenantId, project.id, design.id, workflowRunId,
+      design.latest_technical_sheet_id, svgVersion, now, now,
+    ],
+  );
+
+  const svgAgentRun = await agentExecutor.run<SvgAgentOutput>("svg-agent", {
+    techSheetOutput, designDna,
+    specId: design.latest_spec_id,
+    techSheetId: design.latest_technical_sheet_id,
+  });
+  const svgOutput = SvgAgentOutputSchema.parse(svgAgentRun.output);
+  const completedAt = nowIso();
+
+  await executeStatement(
+    env.SKYGEMS_DB,
+    `UPDATE svg_assets
+     SET status = 'succeeded', agent_output_json = ?, manifest_json = ?, views_json = ?,
+         completed_at = ?, updated_at = ?
+     WHERE id = ?`,
+    [asJsonText(svgOutput), asJsonText(svgOutput.manifestJson), asJsonText(svgOutput.views), completedAt, completedAt, svgAssetId],
+  );
+
+  await executeStatement(
+    env.SKYGEMS_DB,
+    `UPDATE design_workflow_runs
+     SET current_stage = 'complete', workflow_status = 'succeeded', svg_status = 'succeeded',
+         latest_svg_asset_id = ?, completed_at = ?, updated_at = ?
+     WHERE id = ?`,
+    [svgAssetId, completedAt, completedAt, workflowRunId],
+  );
+
+  await executeStatement(
+    env.SKYGEMS_DB,
+    `UPDATE designs SET latest_svg_asset_id = ?, latest_workflow_run_id = ?, updated_at = ? WHERE id = ?`,
+    [svgAssetId, workflowRunId, completedAt, design.id],
+  );
+
+  return jsonResponse(
+    WorkflowStageResponseSchema.parse({
+      workflowRunId, designId: design.id, projectId: project.id,
+      selectionState: design.selection_state,
+      requestedTargetStage: "svg", currentStage: "complete", workflowStatus: "succeeded",
+      stageStatuses: { spec: "succeeded", technicalSheet: "succeeded", svg: "succeeded", cad: "not_requested" },
+      latestSpecId: design.latest_spec_id, latestTechnicalSheetId: design.latest_technical_sheet_id,
+      latestSvgAssetId: svgAssetId, latestCadJobId: null, updatedAt: completedAt,
+    }),
+  );
+}
+
+async function handleCadStage(
+  request: Request,
+  env: ApiEnv,
+  auth: AuthContext,
+  designId: string,
+): Promise<Response> {
+  const design = await requireDesign(env.SKYGEMS_DB, auth.tenantId, designId);
+  const project = await requireProjectWriteAccess(env.SKYGEMS_DB, auth, design.project_id);
+  const payload = await parseJsonBody(request, CadRequestSchema);
+
+  if (!design.latest_svg_asset_id) {
+    throw new HttpError(409, "conflict", "A completed SVG asset is required before CAD generation.");
+  }
+  if (!design.latest_spec_id) {
+    throw new HttpError(409, "conflict", "A completed spec is required before CAD generation.");
+  }
+  if (!design.latest_technical_sheet_id) {
+    throw new HttpError(409, "conflict", "A completed technical sheet is required before CAD generation.");
+  }
+
+  if (design.latest_cad_job_id && !payload.forceRegenerate) {
+    const workflow = await loadWorkflow(env.SKYGEMS_DB, design.latest_workflow_run_id);
+    return jsonResponse(
+      WorkflowStageResponseSchema.parse({
+        workflowRunId: design.latest_workflow_run_id,
+        designId: design.id, projectId: project.id,
+        selectionState: design.selection_state,
+        requestedTargetStage: "cad",
+        currentStage: workflow?.current_stage ?? "cad",
+        workflowStatus: workflow?.workflow_status ?? "succeeded",
+        stageStatuses: stageStatusesFromDesign(design, workflow),
+        latestSpecId: design.latest_spec_id,
+        latestTechnicalSheetId: design.latest_technical_sheet_id,
+        latestSvgAssetId: design.latest_svg_asset_id,
+        latestCadJobId: design.latest_cad_job_id,
+        updatedAt: workflow?.updated_at ?? design.updated_at,
+      }),
+    );
+  }
+
+  const svgAssetRow = await queryFirst<{ agent_output_json: string | null }>(
+    env.SKYGEMS_DB,
+    `SELECT agent_output_json FROM svg_assets WHERE id = ?`,
+    [design.latest_svg_asset_id],
+  );
+  if (!svgAssetRow?.agent_output_json) {
+    throw new HttpError(409, "conflict", "SVG agent output is required before CAD generation.");
+  }
+  const svgAgentOutput = SvgAgentOutputSchema.parse(JSON.parse(svgAssetRow.agent_output_json));
+
+  const specOutput = await loadLatestSpec(env.SKYGEMS_DB, design.latest_spec_id);
+  if (!specOutput) {
+    throw new HttpError(409, "conflict", "Spec agent output is required before CAD generation.");
+  }
+
+  const designDna = DesignDnaSchema.parse(JSON.parse(design.design_dna_json));
+
+  const workflowRunId = generatePrefixedId("wfr");
+  const cadJobId = generatePrefixedId("cad");
+  const now = nowIso();
+  const versionRow = await queryFirst<{ version: number }>(
+    env.SKYGEMS_DB,
+    `SELECT COALESCE(MAX(cad_version), 0) AS version
+     FROM cad_jobs
+     WHERE design_id = ? AND tenant_id = ?`,
+    [design.id, auth.tenantId],
+  );
+  const cadVersion = (versionRow?.version ?? 0) + 1;
+
+  await executeStatement(
+    env.SKYGEMS_DB,
+    `INSERT INTO design_workflow_runs (
+       id, tenant_id, project_id, design_id, requested_by_user_id, requested_target_stage, current_stage,
+       workflow_status, spec_status, technical_sheet_status, svg_status, cad_status,
+       latest_spec_id, latest_technical_sheet_id, latest_svg_asset_id, latest_cad_job_id,
+       force_regenerate, last_error_code, last_error_message, created_at, started_at, completed_at, updated_at
+     ) VALUES (?, ?, ?, ?, ?, 'cad', 'cad', 'running', 'succeeded', 'succeeded', 'succeeded', 'running', ?, ?, ?, NULL, ?, NULL, NULL, ?, ?, NULL, ?)`,
+    [
+      workflowRunId, auth.tenantId, project.id, design.id, auth.userId,
+      design.latest_spec_id, design.latest_technical_sheet_id, design.latest_svg_asset_id,
+      payload.forceRegenerate ? 1 : 0, now, now, now,
+    ],
+  );
+
+  await executeStatement(
+    env.SKYGEMS_DB,
+    `INSERT INTO cad_jobs (
+       id, tenant_id, project_id, design_id, workflow_run_id, source_svg_asset_id, cad_version,
+       status, requested_formats_json, agent_output_json, blockers_json, created_at, completed_at, updated_at
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, 'running', ?, NULL, '[]', ?, NULL, ?)`,
+    [
+      cadJobId, auth.tenantId, project.id, design.id, workflowRunId,
+      design.latest_svg_asset_id, cadVersion, asJsonText(payload.formats), now, now,
+    ],
+  );
+
+  const cadPrepRun = await agentExecutor.run<CadPrepAgentOutput>("cad-prep-agent", {
+    svgAgentOutput, specOutput, designDna,
+    specId: design.latest_spec_id,
+    techSheetId: design.latest_technical_sheet_id,
+    svgAssetId: design.latest_svg_asset_id,
+    requestedFormats: payload.formats,
+  });
+  const cadOutput = CadPrepAgentOutputSchema.parse(cadPrepRun.output);
+  const completedAt = nowIso();
+
+  await executeStatement(
+    env.SKYGEMS_DB,
+    `UPDATE cad_jobs
+     SET status = 'succeeded', agent_output_json = ?, blockers_json = ?,
+         completed_at = ?, updated_at = ?
+     WHERE id = ?`,
+    [asJsonText(cadOutput), asJsonText(cadOutput.blockers), completedAt, completedAt, cadJobId],
+  );
+
+  await executeStatement(
+    env.SKYGEMS_DB,
+    `UPDATE design_workflow_runs
+     SET current_stage = 'complete', workflow_status = 'succeeded', cad_status = 'succeeded',
+         latest_cad_job_id = ?, completed_at = ?, updated_at = ?
+     WHERE id = ?`,
+    [cadJobId, completedAt, completedAt, workflowRunId],
+  );
+
+  await executeStatement(
+    env.SKYGEMS_DB,
+    `UPDATE designs SET latest_cad_job_id = ?, latest_workflow_run_id = ?, updated_at = ? WHERE id = ?`,
+    [cadJobId, workflowRunId, completedAt, design.id],
+  );
+
+  return jsonResponse(
+    WorkflowStageResponseSchema.parse({
+      workflowRunId, designId: design.id, projectId: project.id,
+      selectionState: design.selection_state,
+      requestedTargetStage: "cad", currentStage: "complete", workflowStatus: "succeeded",
+      stageStatuses: { spec: "succeeded", technicalSheet: "succeeded", svg: "succeeded", cad: "succeeded" },
+      latestSpecId: design.latest_spec_id, latestTechnicalSheetId: design.latest_technical_sheet_id,
+      latestSvgAssetId: design.latest_svg_asset_id, latestCadJobId: cadJobId, updatedAt: completedAt,
+    }),
+  );
+}
+
+async function handleCopilot(
+  request: Request,
+  env: ApiEnv,
+  auth: AuthContext,
+  designId: string,
+): Promise<Response> {
+  const design = await requireDesign(env.SKYGEMS_DB, auth.tenantId, designId);
+  await requireProjectAccess(env.SKYGEMS_DB, auth, design.project_id);
+
+  const body = await request.json() as { message?: string };
+  if (!body.message || typeof body.message !== "string" || body.message.trim().length === 0) {
+    throw new HttpError(400, "invalid_request", "Request body must include a non-empty 'message' string.");
+  }
+
+  const designDna = DesignDnaSchema.parse(JSON.parse(design.design_dna_json));
+
+  const copilotResult = await agentExecutor.run<CopilotAgentOutput>("copilot-agent", {
+    message: body.message.trim(),
+    designContext: {
+      designId: design.id,
+      displayName: design.display_name,
+      jewelryType: designDna.jewelryType,
+      metal: designDna.metal,
+      gemstones: designDna.gemstones,
+      style: designDna.style,
+      selectionState: design.selection_state,
+      hasSpec: Boolean(design.latest_spec_id),
+      hasTechnicalSheet: Boolean(design.latest_technical_sheet_id),
+    },
+  });
+
+  return jsonResponse(copilotResult.output);
+}
+
 async function handleGenerationStatus(
   request: Request,
   env: ApiEnv,
@@ -1637,8 +1977,10 @@ async function handleGallerySearch(request: Request, env: Env, auth: AuthContext
   );
 
   const items: GallerySearchResponse["items"] = [];
+  const origin = new URL(request.url).origin;
   for (const design of designs) {
     const workflow = await loadWorkflow(env.SKYGEMS_DB, design.latest_workflow_run_id);
+    const pairImages = await loadGalleryPairImages(env.SKYGEMS_DB, design, origin);
     items.push({
       designId: design.id,
       projectId: design.project_id,
@@ -1646,7 +1988,8 @@ async function handleGallerySearch(request: Request, env: Env, auth: AuthContext
       promptSummary: design.prompt_summary,
       selectionState: design.selection_state,
       latestPairId: design.latest_pair_id,
-      coverImage: await loadCoverImageForDesign(env.SKYGEMS_DB, design, new URL(request.url).origin),
+      sketchImage: pairImages.sketch,
+      coverImage: pairImages.render,
       stageStatuses: stageStatusesFromDesign(design, workflow),
       updatedAt: design.updated_at,
     });
@@ -1856,9 +2199,23 @@ async function routeRequest(
     if (downstreamMatch[2] === "technical-sheet") {
       return handleTechSheetStage(request, env, auth, design.id);
     }
+    if (downstreamMatch[2] === "svg") {
+      return handleSvgStage(request, env, auth, design.id);
+    }
+    if (downstreamMatch[2] === "cad") {
+      return handleCadStage(request, env, auth, design.id);
+    }
     return stubbedRoute(
-      "Downstream workflow execution is intentionally stubbed for svg and cad stages.",
+      "Unknown downstream workflow stage.",
     );
+  }
+
+  // ── AI Copilot ──
+  const copilotMatch = url.pathname.match(
+    /^\/v1\/designs\/(dsn_[0-9A-HJKMNP-TV-Z]{26})\/copilot$/,
+  );
+  if (request.method === "POST" && copilotMatch) {
+    return handleCopilot(request, env, auth, DesignIdSchema.parse(copilotMatch[1]));
   }
 
   // ── Serve artifact images from R2 ──

@@ -1,4 +1,7 @@
+import { cadPrepAgentDefinition } from "./agents/cad-prep-agent.ts";
+import { copilotAgentDefinition } from "./agents/copilot-agent.ts";
 import { specAgentDefinition } from "./agents/spec-agent.ts";
+import { svgAgentDefinition } from "./agents/svg-agent.ts";
 import { techSheetAgentDefinition } from "./agents/tech-sheet-agent.ts";
 import { promptAgentDefinition } from "./agents/prompt-agent.ts";
 import { AgentExecutor } from "./executor.ts";
@@ -9,8 +12,11 @@ import { viewPlanSkill } from "./skills/view-plan.ts";
 import { jewelryRulesSkill } from "./skills/jewelry-rules.ts";
 import { SkillRegistry } from "./skills/registry.ts";
 
+export * from "./agents/cad-prep-agent.ts";
+export * from "./agents/copilot-agent.ts";
 export * from "./agents/prompt-agent.ts";
 export * from "./agents/spec-agent.ts";
+export * from "./agents/svg-agent.ts";
 export * from "./agents/tech-sheet-agent.ts";
 export * from "./executor.ts";
 export * from "./packs/prompt-pack-v1.ts";
@@ -32,8 +38,11 @@ export * from "./validation.ts";
 
 export function createDefaultAgentRegistry(): AgentRegistry {
   const registry = new AgentRegistry();
+  registry.register(cadPrepAgentDefinition);
+  registry.register(copilotAgentDefinition);
   registry.register(promptAgentDefinition);
   registry.register(specAgentDefinition);
+  registry.register(svgAgentDefinition);
   registry.register(techSheetAgentDefinition);
   return registry;
 }

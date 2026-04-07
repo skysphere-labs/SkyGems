@@ -9,6 +9,7 @@ import type {
   PromptPreviewResponse,
   SpecAgentOutput,
   TechSheetAgentOutput,
+  WorkflowStageResponse,
 } from "@skygems/shared";
 
 import type {
@@ -778,7 +779,7 @@ function mapGalleryResponse(payload: GallerySearchResponse): GallerySearchResult
       summary: item.promptSummary,
       selectionState: item.selectionState,
       designDna: stubDesign?.designDna ?? buildDesignDna(draftInput),
-      sketchThumbnailUrl: stubDesign?.sketch.url,
+      sketchThumbnailUrl: item.sketchImage?.signedUrl ?? stubDesign?.sketch.url,
       renderThumbnailUrl: item.coverImage?.signedUrl ?? stubDesign?.render.url,
       createdAt: formatDisplayTimestamp(item.updatedAt),
     };
@@ -1201,6 +1202,90 @@ export async function fetchTechSheet(designId: string): Promise<TechSheetAgentOu
   } catch {
     return null;
   }
+}
+
+export async function postStartSvg(designId: string) {
+  return requestJson<WorkflowStageResponse>(`/v1/designs/${designId}/svg`, {
+    method: "POST",
+    headers: {
+      "Idempotency-Key": buildIdempotencyKey(),
+    },
+    body: JSON.stringify({
+      views: ["front", "side", "top"],
+      includeAnnotations: true,
+      forceRegenerate: false,
+    }),
+  });
+}
+
+export async function fetchSvg(designId: string): Promise<WorkflowStageResponse | null> {
+  try {
+    return await requestJson<WorkflowStageResponse>(`/v1/designs/${designId}/svg`, {
+      method: "POST",
+      headers: {
+        "Idempotency-Key": buildIdempotencyKey(),
+      },
+      body: JSON.stringify({
+        views: ["front", "side", "top"],
+        includeAnnotations: true,
+        forceRegenerate: false,
+      }),
+    });
+  } catch {
+    return null;
+  }
+}
+
+export async function postStartCad(designId: string, formats: string[] = ["step", "stl"]) {
+  return requestJson<WorkflowStageResponse>(`/v1/designs/${designId}/cad`, {
+    method: "POST",
+    headers: {
+      "Idempotency-Key": buildIdempotencyKey(),
+    },
+    body: JSON.stringify({
+      formats,
+      includeQaReport: true,
+      forceRegenerate: false,
+    }),
+  });
+}
+
+export async function fetchCad(designId: string): Promise<WorkflowStageResponse | null> {
+  try {
+    return await requestJson<WorkflowStageResponse>(`/v1/designs/${designId}/cad`, {
+      method: "POST",
+      headers: {
+        "Idempotency-Key": buildIdempotencyKey(),
+      },
+      body: JSON.stringify({
+        formats: ["step", "stl"],
+        includeQaReport: true,
+        forceRegenerate: false,
+      }),
+    });
+  } catch {
+    return null;
+  }
+}
+
+export interface CopilotResponse {
+  intent: "refine" | "spec" | "explain" | "suggest" | "general";
+  response: string;
+  suggestedAction?: {
+    type: "refine" | "spec" | "technical-sheet";
+    instruction?: string;
+  };
+  designContext: string;
+}
+
+export async function postCopilotMessage(
+  designId: string,
+  message: string,
+): Promise<CopilotResponse> {
+  return requestJson<CopilotResponse>(`/v1/designs/${designId}/copilot`, {
+    method: "POST",
+    body: JSON.stringify({ message }),
+  });
 }
 
 export async function postGallerySearch(input: {

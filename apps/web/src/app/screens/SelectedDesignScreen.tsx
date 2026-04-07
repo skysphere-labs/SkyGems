@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { Link, useParams } from "react-router";
 
 import { Button, Card, CardContent } from "@skygems/ui";
 
-import { fetchDesign } from "../contracts/api";
+import { fetchDesign, postGenerateSpec } from "../contracts/api";
 import type { Design } from "../contracts/types";
+import { CopilotPanel } from "../components/CopilotPanel";
 import { RefineDrawer } from "../components/RefineDrawer";
 import { EditingToolbar } from "../components/editing/EditingToolbar";
 import type { EditingToolPreset } from "../components/editing/presets";
@@ -16,6 +17,7 @@ export function SelectedDesignScreen() {
   const { designId, projectId } = useParams();
   const [design, setDesign] = useState<Design | null>(null);
   const [refineOpen, setRefineOpen] = useState(false);
+  const [copilotOpen, setCopilotOpen] = useState(false);
   const [presetInstruction, setPresetInstruction] = useState<string | undefined>(undefined);
 
   const handlePresetSelect = useCallback((preset: EditingToolPreset) => {
@@ -29,6 +31,20 @@ export function SelectedDesignScreen() {
       setPresetInstruction(undefined);
     }
   }, []);
+
+  const handleCopilotRefine = useCallback((instruction: string) => {
+    setCopilotOpen(false);
+    setPresetInstruction(instruction);
+    setRefineOpen(true);
+  }, []);
+
+  const handleCopilotSpec = useCallback(() => {
+    if (!designId) return;
+    setCopilotOpen(false);
+    postGenerateSpec(designId).catch(() => {
+      // Spec generation failed silently; user can retry from the spec screen.
+    });
+  }, [designId]);
 
   useEffect(() => {
     if (!designId) {
@@ -71,6 +87,14 @@ export function SelectedDesignScreen() {
                 </Link>
               </Button>
             ) : null}
+            <Button
+              variant="outline"
+              onClick={() => setCopilotOpen(true)}
+              className="border-[rgba(212,175,55,0.25)] text-[var(--accent-gold)] hover:bg-[rgba(212,175,55,0.08)]"
+            >
+              <Sparkles className="size-4" />
+              AI Assistant
+            </Button>
             <RefineDrawer
               design={design}
               initialInstruction={presetInstruction}
@@ -88,6 +112,14 @@ export function SelectedDesignScreen() {
       </Card>
 
       <SelectionSummaryPanel design={design} />
+
+      <CopilotPanel
+        designId={design.id}
+        open={copilotOpen}
+        onOpenChange={setCopilotOpen}
+        onRefineRequest={handleCopilotRefine}
+        onSpecRequest={handleCopilotSpec}
+      />
     </div>
   );
 }

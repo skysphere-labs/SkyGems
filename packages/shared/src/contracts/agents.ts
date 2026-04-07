@@ -15,6 +15,7 @@ import {
   RiskFlagCodeEnum,
   RiskSeverityEnum,
   StyleEnum,
+  SvgViewEnum,
 } from "./enums.ts";
 import {
   DesignIdSchema,
@@ -103,6 +104,32 @@ export const SpecAgentOutputSchema = z.object({
   humanReviewRequired: z.boolean(),
 });
 
+export const SvgAgentOutputSchema = z.object({
+  schemaVersion: z.literal("svg_agent.v1"),
+  designId: DesignIdSchema,
+  specId: SpecIdSchema,
+  technicalSheetId: TechSheetIdSchema,
+  views: z.array(
+    z.object({
+      view: SvgViewEnum,
+      artifactId: z.string().min(1).max(120),
+      description: z.string().min(1).max(240),
+    }),
+  ),
+  annotationsArtifactId: z.string().nullable(),
+  manifestJson: z.object({
+    viewCount: z.number().int().nonnegative(),
+    views: z.array(
+      z.object({
+        view: SvgViewEnum,
+        widthMm: z.number().positive(),
+        heightMm: z.number().positive(),
+        strokeCount: z.number().int().nonnegative(),
+      }),
+    ),
+  }),
+});
+
 export const CadPrepAgentOutputSchema = z.object({
   schemaVersion: z.literal("cad_prep_agent.v1"),
   designId: DesignIdSchema,
@@ -177,6 +204,7 @@ export type MeasuredValue = z.infer<typeof MeasuredValueSchema>;
 export type PromptAgentOutput = z.infer<typeof PromptAgentOutputSchema>;
 export type RiskFlag = z.infer<typeof RiskFlagSchema>;
 export type SpecAgentOutput = z.infer<typeof SpecAgentOutputSchema>;
+export type SvgAgentOutput = z.infer<typeof SvgAgentOutputSchema>;
 export type TechSheetAgentOutput = z.infer<typeof TechSheetAgentOutputSchema>;
 export type BomLineItem = z.infer<typeof BomLineItemSchema>;
 export type EstimatedRetailPrice = z.infer<typeof EstimatedRetailPriceSchema>;
