@@ -63,20 +63,18 @@ End every prompt with: "Full piece visible, nothing cropped. Photorealistic, 8K,
 For sketch prompts: same tags but add "Hand-drawn jewelry design sheet, TWO orthographic views on white paper, fine pencil linework with graphite shading and subtle color washes."
 
 ## Rules
-- ONLY describe the jewelry. No velvet, no obsidian, no studio, no lens, no aperture.
+- ONLY describe the jewelry. No backgrounds, no surfaces, no studios, no cameras, no lighting.
 - Every word must describe the piece or its materials — zero filler
-- Use exact specs from the knowledge base (alloy composition, Mohs hardness, refractive behavior)
+- Use exact specs from the knowledge base for whatever metal/gem/style the user chose
 - Be specific about construction: prong count, band width in mm, stone diameter, setting depth
+- Do NOT default to any particular style — match exactly what the user asked for
+- Do NOT add gemstones, metals, or techniques the user didn't request
+- The knowledge base is reference material, not a suggestion list
 
-## Examples
+## Example Format (showing tag structure only — do NOT copy the specific design)
+renderPrompt: "[Type]: {exact type}. [Metal]: {exact alloy, karat, fineness from knowledge base, finish, reflection behavior}. [Gemstone]: {each stone — cut, carat, color, optical properties from knowledge base}. [Style]: {user's chosen style — visual signatures from knowledge base}. [Form]: {setting, band profile, proportions in mm, construction details}. [Finish]: {surface treatments, contrast between areas}. [Mood]: {one or two words}. [Detail]: {one unique construction or visual detail}. Full piece visible, nothing cropped. Photorealistic, 8K, hyper-detailed."
 
-### Ring: Art Deco Platinum + Emerald
-sketchPrompt: "[Type]: Ring. [Metal]: 950 platinum, cool blue-silver luster, crisp white specular highlights, naturally tarnish-resistant. [Gemstone]: 2ct rectangular emerald-cut emerald, vivid green, characteristic jardine inclusions, step-cut hall-of-mirrors depth; flanked by 8 channel-set baguette diamonds, 0.15ct each, clean transparent steps. [Style]: Art Deco — geometric precision, bold symmetry, stepped forms, milgrain edging. [Form]: Cathedral setting elevating the emerald, geometric stepped shoulders, channel-set diamond cascade, band tapering from 4mm at shoulders to 2.5mm at base, comfort-fit interior. [Finish]: Mirror polish on platinum surfaces, milgrain beading along every edge. [Mood]: Architectural, regal. [Detail]: Gallery openwork beneath the emerald allowing light through the pavilion. Hand-drawn jewelry design sheet, TWO orthographic views on white paper, fine pencil linework with graphite shading and subtle green and white color washes. Full piece visible, nothing cropped."
-renderPrompt: "[Type]: Ring. [Metal]: 950 platinum, dense cool-white metallic luster with subtle blue-grey undertone, crisp specular highlights on every faceted surface. [Gemstone]: 2ct rectangular emerald-cut emerald, vivid saturated green with natural jardine character, step-cut facets producing elongated flashes of light; 8 channel-set baguette diamonds cascading down each shoulder, clean colorless brilliance. [Style]: Art Deco — geometric symmetry, stepped architectural forms, 1920s machine-age elegance. [Form]: Cathedral setting with arching supports, geometric stepped shoulders, channel walls holding baguettes in perfect alignment, band 4mm at shoulders tapering to 2.5mm, comfort-fit profile. [Finish]: Mirror-polished platinum, milgrain beading on every border, hand-cut bright edges. [Mood]: Regal, precise. [Detail]: Visible gallery openwork beneath the emerald — light enters through the pavilion creating inner depth and glow. Full piece visible, nothing cropped. Photorealistic, 8K, hyper-detailed."
-
-### Necklace: Temple Gold + Ruby + Pearl
-sketchPrompt: "[Type]: Necklace. [Metal]: 22K yellow gold (916), heavy gauge, warm buttery deep yellow luster. [Gemstone]: Kundan-set uncut rubies with deep pigeon-blood red glow; Akoya pearl drops 8mm with pink-rosé orient and mirror nacre. [Style]: Indian Temple — dense ornamental surface, deity and peacock motifs, religious symbolism. [Form]: Matinee-length chain with graduated temple pendants, central pendant with bail and ruby cluster, jhumka-style drops, repousse relief throughout. [Finish]: High-polish gold surfaces, granulation borders (0.5mm beads), meenakari enamel accents on the reverse. [Mood]: Opulent, sacred. [Detail]: Each granulation bead individually fused in the Etruscan technique, visible under magnification. Hand-drawn jewelry design sheet, TWO orthographic views on white paper, fine pencil linework with warm gold and deep red color washes. Full piece visible, nothing cropped."
-renderPrompt: "[Type]: Necklace. [Metal]: 22K yellow gold (916), heavy gauge, warm buttery luster with rich deep yellow reflections that shift to bronze in recesses. [Gemstone]: Kundan-set uncut rubies, deep pigeon-blood red with warm inner fluorescent glow; 8mm Akoya pearl drops with luminous pink-rosé orient and mirror-like nacre surface. [Style]: Indian Temple — dense ornamental goldwork, kundan technique, peacock and lotus motifs, sacred geometry. [Form]: Matinee-length (22 inch), graduated temple pendants increasing toward center, central pendant with ornate bail, ruby cluster surrounded by pearl drops, repousse relief on every surface. [Finish]: Mirror-polish on raised elements, granulation borders with 0.5mm individually fused beads, meenakari enamel reverse. [Mood]: Opulent, regal. [Detail]: Visible hand-crafted granulation beads fused without solder in ancient Etruscan technique, each pearl drop connected by hand-formed gold wire bail. Full piece visible, nothing cropped. Photorealistic, 8K, hyper-detailed."
+sketchPrompt: Same tags + "Hand-drawn jewelry design sheet, TWO orthographic views on white paper, fine pencil linework with graphite shading and subtle color washes. Full piece visible, nothing cropped."
 
 ## Output
 Return ONLY valid JSON — no markdown:
@@ -179,19 +177,16 @@ Use ONLY these tags. Every word must describe the piece or its materials.
 End with: "Full piece visible, nothing cropped. Photorealistic, 8K, hyper-detailed."
 
 ## Rules
-- PRESERVE the user's core vision — only enrich it
-- ONLY describe the jewelry. No velvet, no studio, no lens, no aperture, no environment.
-- Upgrade vague terms: "gold" → "18K yellow gold (750), mirror-polished, warm honey-amber reflections"
-- Add implied details: "halo ring" → micro-pavé accents, gallery openwork, cathedral arch
-- Use exact specs from knowledge base
+- PRESERVE the user's core vision — only enrich it, never change it
+- ONLY describe the jewelry. No backgrounds, no surfaces, no cameras, no lighting.
+- Upgrade vague terms using the knowledge base: "gold" → exact karat/fineness/finish from the metals guide
+- Add implied construction details the user didn't mention but their design requires
+- Do NOT add gemstones, metals, styles, or techniques the user didn't ask for
+- Do NOT default to any style — match exactly what the user described
+- The knowledge base is reference material for accuracy, not a suggestion list
 
-## Examples
-
-User: "vintage rose gold ring with sapphire"
-Enhanced: "[Type]: Ring. [Metal]: 14K rose gold with warm pink-copper tones, romantic blush reflections, sunset-amber glow on polished surfaces. [Gemstone]: 1.5ct cushion-cut blue sapphire, deep cornflower saturation, velvety body color, strong brilliance; tiny seed pearl accents 2mm each along the split shank. [Style]: Vintage — milgrain edging, scrollwork filigree, cathedral architecture, antique warmth. [Form]: Cathedral setting elevating the sapphire, milgrain-edged shoulders, split shank tapering from 3.5mm to 2mm, scrollwork filigree gallery allowing light through pavilion. [Finish]: Mirror-polish on raised elements, satin-brushed recesses for dimensional contrast, milgrain beading on all borders. [Mood]: Romantic, elegant. [Detail]: Filigree gallery beneath the sapphire creates inner glow as light enters through the pavilion and reflects off the rose gold walls. Full piece visible, nothing cropped. Photorealistic, 8K, hyper-detailed."
-
-User: "modern diamond earrings, something different"
-Enhanced: "[Type]: Earrings (asymmetric drop pair). [Metal]: 18K white gold, cool platinum-like sheen, crisp specular reflections, rhodium-plated mirror finish. [Gemstone]: Left — single elongated marquise-cut diamond 0.8ct, excellent white, strong fire, suspended point-down; Right — three graduated round brilliant diamonds 0.3ct/0.2ct/0.15ct, pin-point scintillation, vertical cascade. [Style]: Contemporary — deliberate asymmetry, minimalist geometry, modern edge. [Form]: Left uses tension setting (stone appears to float), right uses vertical bar mount with three collet cups, both hang from simple French wire hooks. [Finish]: Mirror polish throughout, sharp geometric edges, no decorative textures — pure clean metal. [Mood]: Avant-garde, bold. [Detail]: The intentional mismatch between marquise and rounds creates visual tension — same metal, same stones, completely different personalities. Full piece visible, nothing cropped. Photorealistic, 8K, hyper-detailed."
+## Example Format (tag structure only — do NOT copy the specific design)
+"[Type]: {type}. [Metal]: {alloy, karat, fineness, finish, reflections}. [Gemstone]: {cut, carat, color, optical behavior}. [Style]: {era/aesthetic, visual signatures}. [Form]: {setting, profile, proportions in mm}. [Finish]: {treatments, contrasts}. [Mood]: {1-2 words}. [Detail]: {one unique thing}. Full piece visible, nothing cropped. Photorealistic, 8K, hyper-detailed."
 
 ## Output
 Return ONLY the enhanced prompt with tags. Nothing else.`;
