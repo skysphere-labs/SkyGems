@@ -1093,7 +1093,8 @@ async function handleGenerateDesign(
         promptBundle: persistedPromptBundle,
       });
       const designDna = DesignDnaSchema.parse(persistedPromptAgentOutput.designDna);
-      const promptSummary = buildPromptSummary(resolvedPayload);
+      // Use the actual LLM-crafted render prompt so the gallery shows real prompts
+      const promptSummary = persistedPromptBundle.renderPrompt || buildPromptSummary(resolvedPayload);
 
       await executeStatement(
         env.SKYGEMS_DB,

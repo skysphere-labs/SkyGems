@@ -189,37 +189,45 @@ function GenerationDetailModal({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: 12 }}
           transition={{ duration: 0.2 }}
-          className="flex h-full max-h-[calc(100vh-40px)] w-full max-w-6xl overflow-hidden rounded-[28px] border bg-white shadow-2xl"
+          className="relative w-full max-w-2xl max-h-[calc(100vh-40px)] overflow-y-auto rounded-[28px] border bg-white shadow-2xl"
           style={{ borderColor: 'rgba(124, 58, 237, 0.16)' }}
           onClick={(event) => event.stopPropagation()}
         >
-          <div
-            className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden p-6"
-            style={{ background: 'linear-gradient(135deg, #eef2ff 0%, #f8fafc 55%, #eff6ff 100%)' }}
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full border bg-white/85 transition-all hover:bg-white"
+            style={{ borderColor: 'rgba(124, 58, 237, 0.18)', color: '#374151' }}
           >
-            <button
-              type="button"
-              onClick={onClose}
-              className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border bg-white/85 transition-all hover:bg-white"
-              style={{ borderColor: 'rgba(124, 58, 237, 0.18)', color: '#374151' }}
-            >
-              <X className="h-4 w-4" />
-            </button>
+            <X className="h-4 w-4" />
+          </button>
 
+          {/* Image — full width at top */}
+          {design.imageUrl ? (
             <div
-              className="w-full max-w-3xl overflow-hidden rounded-[24px] border bg-white p-4 shadow-[0_32px_80px_rgba(15,23,42,0.12)]"
-              style={{ borderColor: 'rgba(124, 58, 237, 0.16)' }}
+              className="p-5 pb-3"
+              style={{ background: 'linear-gradient(135deg, #eef2ff 0%, #f8fafc 55%, #eff6ff 100%)' }}
             >
-              <ImageWithFallback
-                src={design.imageUrl}
-                alt={buildDesignTitle(design)}
-                className="max-h-[70vh] w-full rounded-[18px] object-contain"
-                style={{ backgroundColor: '#f8fafc' }}
-              />
+              <div className="overflow-hidden rounded-2xl border bg-white" style={{ borderColor: 'rgba(124, 58, 237, 0.12)' }}>
+                <ImageWithFallback
+                  src={design.imageUrl}
+                  alt={buildDesignTitle(design)}
+                  className="w-full rounded-2xl object-contain"
+                  style={{ backgroundColor: '#f8fafc', maxHeight: '50vh' }}
+                />
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex items-center justify-center py-16" style={{ background: 'linear-gradient(135deg, #eef2ff 0%, #f8fafc 55%, #eff6ff 100%)' }}>
+              <div className="text-center">
+                <Gem className="mx-auto h-12 w-12" style={{ color: '#c4b5fd' }} />
+                <p className="mt-3 text-sm text-slate-500">Image not available</p>
+              </div>
+            </div>
+          )}
 
-          <div className="w-full max-w-[380px] overflow-y-auto border-l p-6" style={{ borderColor: 'rgba(124, 58, 237, 0.12)' }}>
+          {/* Details — below image */}
+          <div className="p-6 pt-3">
             <div className="space-y-5">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.22em]" style={{ color: '#7c3aed' }}>

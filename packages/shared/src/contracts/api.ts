@@ -53,7 +53,7 @@ export const PromptPreviewResponseSchema = z.object({
   pairStandardVersion: z.literal(PairStandardVersion),
   normalizedInput: CreateDesignInputSchema.omit({ projectId: true }),
   designDnaPreview: DesignDnaPreviewSchema,
-  promptSummary: z.string().min(1).max(240),
+  promptSummary: z.string().min(1).max(4000),
   promptText: z.string().min(1).max(8000),
 });
 
