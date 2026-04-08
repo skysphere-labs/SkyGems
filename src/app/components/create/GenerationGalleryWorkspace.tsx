@@ -206,17 +206,29 @@ function GenerationDetailModal({
               <X className="h-4 w-4" />
             </button>
 
-            <div
-              className="w-full max-w-3xl overflow-hidden rounded-[24px] border bg-white p-4 shadow-[0_32px_80px_rgba(15,23,42,0.12)]"
-              style={{ borderColor: 'rgba(124, 58, 237, 0.16)' }}
-            >
-              <ImageWithFallback
-                src={design.imageUrl}
-                alt={buildDesignTitle(design)}
-                className="max-h-[70vh] w-full rounded-[18px] object-contain"
-                style={{ backgroundColor: '#f8fafc' }}
-              />
-            </div>
+            {design.imageUrl ? (
+              <div
+                className="w-full max-w-3xl overflow-hidden rounded-[24px] border bg-white p-4 shadow-[0_32px_80px_rgba(15,23,42,0.12)]"
+                style={{ borderColor: 'rgba(124, 58, 237, 0.16)' }}
+              >
+                <ImageWithFallback
+                  src={design.imageUrl}
+                  alt={buildDesignTitle(design)}
+                  className="max-h-[70vh] w-full rounded-[18px] object-contain"
+                  style={{ backgroundColor: '#f8fafc' }}
+                />
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-4 text-center">
+                <div className="flex h-20 w-20 items-center justify-center rounded-2xl" style={{ backgroundColor: 'rgba(124, 58, 237, 0.08)' }}>
+                  <Gem className="h-10 w-10" style={{ color: '#7c3aed' }} />
+                </div>
+                <div>
+                  <p className="text-base font-semibold text-slate-900">Image not available</p>
+                  <p className="mt-1 text-sm text-slate-500">The render may still be processing or the link has expired. Try opening the preview.</p>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="w-full max-w-[380px] overflow-y-auto border-l p-6" style={{ borderColor: 'rgba(124, 58, 237, 0.12)' }}>
