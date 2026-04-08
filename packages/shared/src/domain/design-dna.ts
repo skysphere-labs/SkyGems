@@ -149,6 +149,102 @@ export const TYPE_SPECIFIC_VARIATION_CONFIGS: Record<JewelryType, Partial<Variat
       "nature-inspired pendant",
     ],
   },
+  anklet: {
+    bandStyle: [
+      "chain anklet",
+      "charm anklet",
+      "beaded anklet",
+      "layered anklet",
+      "cuff anklet",
+      "barefoot sandal",
+      "link anklet",
+      "threader anklet",
+    ],
+  },
+  brooch: {
+    bandStyle: [
+      "cameo brooch",
+      "cluster brooch",
+      "bar brooch",
+      "floral brooch",
+      "figurative brooch",
+      "abstract brooch",
+      "vintage brooch",
+      "statement brooch",
+    ],
+  },
+  tiara: {
+    bandStyle: [
+      "classic tiara",
+      "headband tiara",
+      "crown tiara",
+      "vine tiara",
+      "floral tiara",
+      "minimalist tiara",
+      "statement tiara",
+      "bridal tiara",
+    ],
+  },
+  "body-chain": {
+    bandStyle: [
+      "shoulder chain",
+      "waist chain",
+      "back chain",
+      "hand chain",
+      "layered body chain",
+      "harness chain",
+      "draped chain",
+      "minimalist body chain",
+    ],
+  },
+  "hair-jewelry": {
+    bandStyle: [
+      "hair pin",
+      "hair comb",
+      "hair vine",
+      "hair clip",
+      "headpiece",
+      "hair chain",
+      "tiara clip",
+      "barrette",
+    ],
+  },
+  cufflinks: {
+    bandStyle: [
+      "toggle cufflink",
+      "chain link cufflink",
+      "fixed back cufflink",
+      "knot cufflink",
+      "button cufflink",
+      "novelty cufflink",
+      "engraved cufflink",
+      "gemstone cufflink",
+    ],
+  },
+  "nose-ring": {
+    bandStyle: [
+      "nose stud",
+      "nose hoop",
+      "septum ring",
+      "nose screw",
+      "L-shaped nose ring",
+      "nose chain",
+      "double nose ring",
+      "ornate nath",
+    ],
+  },
+  "toe-ring": {
+    bandStyle: [
+      "simple band",
+      "adjustable toe ring",
+      "gemstone toe ring",
+      "braided toe ring",
+      "filigree toe ring",
+      "stacking toe ring",
+      "wide band toe ring",
+      "minimalist toe ring",
+    ],
+  },
 };
 
 type VariationCategory = keyof VariationConfig;

@@ -1,4 +1,9 @@
-import { createDefaultAgentExecutor, enhanceFreeTextPrompt, getFullWikiContext, type CopilotAgentOutput } from "@skygems/agent-runtime";
+import {
+  createDefaultAgentExecutor,
+  enhanceFreeTextPrompt,
+  getFullWikiContext,
+  type CopilotAgentOutput,
+} from "@skygems/agent-runtime";
 import {
   ArtifactPublicSchema,
   AuthSessionResponseSchema,
@@ -78,6 +83,7 @@ import { asJsonText, executeStatement, nowIso, queryAll, queryFirst } from "./li
 import { dispatchGenerateExecution, runGenerateExecution } from "./lib/generation.ts";
 import { computeRequestHash, requireIdempotencyKey, withIdempotency } from "./lib/idempotency.ts";
 import { errorResponse, handleApiError, HttpError, jsonResponse, parseJsonBody } from "./lib/http.ts";
+import { resolvePromptWorkspace } from "./lib/projects.ts";
 import {
   isLocalDevelopmentRequest,
   isDevBootstrapEnabled,
@@ -246,11 +252,13 @@ async function buildAuthSessionResponse(
 ) {
   const memberships = await queryAll<{ project_id: string; role: ProjectMembershipRow["role"] }>(
     db,
-    `SELECT project_id, role
+    `SELECT project_memberships.project_id, project_memberships.role
      FROM project_memberships
-     WHERE user_id = ?
-     ORDER BY project_id ASC`,
-    [auth.userId],
+     INNER JOIN projects ON projects.id = project_memberships.project_id
+     WHERE project_memberships.user_id = ?
+       AND projects.tenant_id = ?
+     ORDER BY project_memberships.project_id ASC`,
+    [auth.userId, auth.tenantId],
   );
 
   const [accessibleProjectsRow] = await queryAll<CountRow>(
@@ -969,24 +977,28 @@ async function buildDesignDetailResponse(
 
 async function handlePromptPreview(request: Request, env: ApiEnv, auth: AuthContext): Promise<Response> {
   const payload = await parseJsonBody(request, PromptPreviewRequestSchema);
-  await requireProjectAccess(env.SKYGEMS_DB, auth, payload.projectId);
+  const resolvedWorkspace = await resolvePromptWorkspace(env.SKYGEMS_DB, auth, payload.projectId);
+  const resolvedPayload = PromptPreviewRequestSchema.parse({
+    ...payload,
+    projectId: resolvedWorkspace.project.id,
+  });
   const promptProvider = resolvePromptProviderSelection(env);
   const promptAgentRun = await agentExecutor.run<PromptAgentOutput>("prompt-agent", {
     mode: "generate",
-    projectId: payload.projectId,
+    projectId: resolvedPayload.projectId,
     designId: generatePrefixedId("dsn"),
-    input: payload,
+    input: resolvedPayload,
     provider: promptProvider.active,
   }, { env: { XAI_API_KEY: env.XAI_API_KEY } });
 
   return jsonResponse(
     PromptPreviewResponseSchema.parse({
-      projectId: payload.projectId,
+      projectId: resolvedPayload.projectId,
       promptPreviewVersion: "prompt_preview.v1",
       pairStandardVersion: promptAgentRun.output.pairStandardVersion,
       normalizedInput: promptAgentRun.output.normalizedInput,
       designDnaPreview: buildDesignDnaPreview(promptAgentRun.output.designDna),
-      promptSummary: buildPromptSummary(payload),
+      promptSummary: buildPromptSummary(resolvedPayload),
       promptText: formatPromptBundlePreviewText(promptAgentRun.output.promptBundle),
     }),
     200,
@@ -1000,17 +1012,21 @@ async function handlePromptPreview(request: Request, env: ApiEnv, auth: AuthCont
 
 async function handlePromptEnhance(request: Request, env: ApiEnv, auth: AuthContext): Promise<Response> {
   const payload = await parseJsonBody(request, PromptEnhanceRequestSchema);
-  await requireProjectAccess(env.SKYGEMS_DB, auth, payload.projectId);
+  const resolvedWorkspace = await resolvePromptWorkspace(env.SKYGEMS_DB, auth, payload.projectId);
+  const resolvedPayload = PromptEnhanceRequestSchema.parse({
+    ...payload,
+    projectId: resolvedWorkspace.project.id,
+  });
 
   const apiKey = env.XAI_API_KEY?.trim();
   if (apiKey) {
     const wikiContext = getFullWikiContext();
-    const result = await enhanceFreeTextPrompt(payload.freeText, wikiContext, apiKey);
+    const result = await enhanceFreeTextPrompt(resolvedPayload.freeText, wikiContext, apiKey);
     if (result) {
       return jsonResponse(
         PromptEnhanceResponseSchema.parse({
-          projectId: payload.projectId,
-          originalText: payload.freeText,
+          projectId: resolvedPayload.projectId,
+          originalText: resolvedPayload.freeText,
           enhancedText: result.enhancedText,
           source: "live",
         }),
@@ -1018,12 +1034,11 @@ async function handlePromptEnhance(request: Request, env: ApiEnv, auth: AuthCont
     }
   }
 
-  // Fallback: wrap user text with standard jewelry prompt framing
-  const fallbackEnhanced = `${payload.freeText}. Professional studio jewelry photography, soft overhead lighting with rim lights, clean neutral background, full piece visible, nothing cropped, hyper-detailed textures, 8k resolution, photorealistic.`;
+  const fallbackEnhanced = `${resolvedPayload.freeText}. Professional studio jewelry photography, soft overhead lighting with rim lights, clean neutral background, full piece visible, nothing cropped, hyper-detailed textures, 8k resolution, photorealistic.`;
   return jsonResponse(
     PromptEnhanceResponseSchema.parse({
-      projectId: payload.projectId,
-      originalText: payload.freeText,
+      projectId: resolvedPayload.projectId,
+      originalText: resolvedPayload.freeText,
       enhancedText: fallbackEnhanced,
       source: "fallback",
       errorMessage: apiKey ? "LLM enhancement failed" : "API key not configured",
@@ -1039,11 +1054,16 @@ async function handleGenerateDesign(
 ): Promise<Response> {
   const payload = await parseJsonBody(request, GenerateDesignRequestSchema);
   const idempotencyKey = requireIdempotencyKey(request);
-  const requestHash = await computeRequestHash(payload, {}, auth.tenantId);
+  const resolvedWorkspace = await resolvePromptWorkspace(env.SKYGEMS_DB, auth, payload.projectId, {
+    requireWriteAccess: true,
+  });
+  const resolvedPayload = GenerateDesignRequestSchema.parse({
+    ...payload,
+    projectId: resolvedWorkspace.project.id,
+  });
+  const requestHash = await computeRequestHash(resolvedPayload, {}, auth.tenantId);
   const promptProvider = resolvePromptProviderSelection(env);
   const initialExecution = resolveGenerateExecutionMode(request, env);
-
-  await requireProjectWriteAccess(env.SKYGEMS_DB, auth, payload.projectId);
 
   const idempotentResult = await withIdempotency<GenerateDesignResponse>(
     env.SKYGEMS_DB,
@@ -1057,14 +1077,14 @@ async function handleGenerateDesign(
       const createdAt = nowIso();
       const promptAgentRun = await agentExecutor.run<PromptAgentOutput>("prompt-agent", {
         mode: "generate",
-        projectId: payload.projectId,
+        projectId: resolvedPayload.projectId,
         designId,
-        input: payload,
+        input: resolvedPayload,
         provider: promptProvider.active,
       }, { env: { XAI_API_KEY: env.XAI_API_KEY } });
       const promptAgentOutput = PromptAgentOutputSchema.parse(promptAgentRun.output);
-      const persistedPromptBundle = payload.promptTextOverride
-        ? parsePromptBundleText(payload.promptTextOverride, {
+      const persistedPromptBundle = resolvedPayload.promptTextOverride
+        ? parsePromptBundleText(resolvedPayload.promptTextOverride, {
             fallbackNegativePrompt: promptAgentOutput.promptBundle.negativePrompt,
           })
         : PromptBundleSchema.parse(promptAgentOutput.promptBundle);
@@ -1073,7 +1093,7 @@ async function handleGenerateDesign(
         promptBundle: persistedPromptBundle,
       });
       const designDna = DesignDnaSchema.parse(persistedPromptAgentOutput.designDna);
-      const promptSummary = buildPromptSummary(payload);
+      const promptSummary = buildPromptSummary(resolvedPayload);
 
       await executeStatement(
         env.SKYGEMS_DB,
@@ -1086,13 +1106,13 @@ async function handleGenerateDesign(
         [
           designId,
           auth.tenantId,
-          payload.projectId,
+          resolvedPayload.projectId,
           auth.userId,
           buildDesignDisplayName(designDna),
           promptSummary,
-          asJsonText(payload),
+          asJsonText(resolvedPayload),
           asJsonText(designDna),
-          buildSearchText(designDna, promptSummary, payload.userNotes),
+          buildSearchText(designDna, promptSummary, resolvedPayload.userNotes),
           createdAt,
           createdAt,
         ],
@@ -1109,10 +1129,10 @@ async function handleGenerateDesign(
         [
           generationId,
           auth.tenantId,
-          payload.projectId,
+          resolvedPayload.projectId,
           designId,
           auth.userId,
-          asJsonText(payload),
+          asJsonText(resolvedPayload),
           requestHash,
           idempotencyKey,
           asJsonText(persistedPromptAgentOutput),
@@ -1128,14 +1148,14 @@ async function handleGenerateDesign(
         `UPDATE projects
          SET updated_at = ?
          WHERE id = ?`,
-        [createdAt, payload.projectId],
+        [createdAt, resolvedPayload.projectId],
       );
 
       const queuePayload = GenerateQueuePayloadSchema.parse({
         schemaVersion: "generate_queue.v1",
         generationId,
         designId,
-        projectId: payload.projectId,
+        projectId: resolvedPayload.projectId,
         tenantId: auth.tenantId,
         requestedByUserId: auth.userId,
         idempotencyKey,
@@ -1145,16 +1165,16 @@ async function handleGenerateDesign(
           projectId: true,
           promptTextOverride: true,
         }).parse({
-          jewelryType: payload.jewelryType,
-          metal: payload.metal,
-          gemstones: payload.gemstones,
-          style: payload.style,
-          complexity: payload.complexity,
-          variationOverrides: payload.variationOverrides,
-          userNotes: payload.userNotes,
-          pairStandardVersion: payload.pairStandardVersion,
+          jewelryType: resolvedPayload.jewelryType,
+          metal: resolvedPayload.metal,
+          gemstones: resolvedPayload.gemstones,
+          style: resolvedPayload.style,
+          complexity: resolvedPayload.complexity,
+          variationOverrides: resolvedPayload.variationOverrides,
+          userNotes: resolvedPayload.userNotes,
+          pairStandardVersion: resolvedPayload.pairStandardVersion,
         }),
-        promptTextOverride: payload.promptTextOverride,
+        promptTextOverride: resolvedPayload.promptTextOverride,
       });
 
       const dispatch = await dispatchGenerateExecution({
@@ -1169,7 +1189,7 @@ async function handleGenerateDesign(
         body: GenerateDesignResponseSchema.parse({
           generationId,
           designId,
-          projectId: payload.projectId,
+          projectId: resolvedPayload.projectId,
           status: "queued",
           executionMode: dispatch.executionMode,
           executionSource: dispatch.executionSource,
@@ -2160,21 +2180,7 @@ async function handleGallerySearch(request: Request, env: Env, auth: AuthContext
   const origin = resolvePublicOrigin(request);
   for (const design of designs) {
     const workflow = await loadWorkflow(env.SKYGEMS_DB, design.latest_workflow_run_id);
-    const pairImages = await loadGalleryPairImages(env, env.SKYGEMS_DB, design, origin);
-    items.push({
-      designId: design.id,
-      projectId: design.project_id,
-      createdByUserId: design.created_by_user_id,
-      ownedByCurrentUser: design.created_by_user_id === auth.userId,
-      displayName: design.display_name,
-      promptSummary: design.prompt_summary,
-      selectionState: design.selection_state,
-      latestPairId: design.latest_pair_id,
-      sketchImage: pairImages.sketch,
-      coverImage: pairImages.render,
-      stageStatuses: stageStatusesFromDesign(design, workflow),
-      updatedAt: design.updated_at,
-    });
+    items.push(await buildDesignSummary(env, env.SKYGEMS_DB, design, workflow, origin, auth.userId));
   }
 
   return jsonResponse(

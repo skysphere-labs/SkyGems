@@ -81,7 +81,6 @@ test("phase 2a migration preserves the locked public contract checks", () => {
   const artifactsSql = database
     .prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'artifacts'")
     .get() as { sql: string };
-
   assert.match(generationsSql.sql, /pair_standard_version TEXT NOT NULL CHECK\(pair_standard_version = 'pair_v1'\)/);
   assert.match(
     generationsSql.sql,

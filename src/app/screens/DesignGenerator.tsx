@@ -1,11 +1,18 @@
 import React from 'react';
-import { useState, useRef, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router';
+import { useState, useRef } from 'react';
 import { Sparkles, Copy, Check, Pencil, Wand2, Download, Share2, Eye, Undo, Redo, ZoomIn, ZoomOut, ChevronDown, Settings2, X, Crown, Gem, Palette, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { generateJewelryPrompt, RenderMode } from '../utils/promptGenerator';
-import { fetchPromptPreview, enhancePrompt } from '../services/skygemsApi';
-import { PipelineView } from '../components/pipeline/PipelineView';
+import {
+  enhancePrompt,
+  fetchPromptPreview,
+  generateConceptSetProgressively,
+} from '../services/skygemsApi';
+import {
+  GenerationGalleryWorkspace,
+  type GenerationActivitySummary,
+  type PendingGalleryItem,
+} from '../components/create/GenerationGalleryWorkspace';
 import { Slider } from '../components/ui/slider';
 import catalogData from '../../../jewelry-analysis-results.json';
 
@@ -219,13 +226,12 @@ export function DesignGenerator() {
 
   // UI state
   const [copied, setCopied] = useState(false);
-  const [pipelineRunCount, setPipelineRunCount] = useState(0);
   const [promptText, setPromptText] = useState('');
   const [promptEdited, setPromptEdited] = useState(false);
   const [activeTab, setActiveTab] = useState<'generate' | 'prompt' | 'elegant'>('generate');
   const [hasGenerated, setHasGenerated] = useState(false);
-
-  // Prompt enhance state
+  const [pendingGalleryItems, setPendingGalleryItems] = useState<PendingGalleryItem[]>([]);
+  const [generationActivity, setGenerationActivity] = useState<GenerationActivitySummary | null>(null);
   const [freeTextInput, setFreeTextInput] = useState('');
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [enhanceSource, setEnhanceSource] = useState<'live' | 'fallback' | null>(null);
@@ -250,27 +256,43 @@ export function DesignGenerator() {
 
   // ── Prompt state — only populated when user clicks Generate ──
   const [promptSource, setPromptSource] = useState<'agent' | 'fallback' | 'idle'>('idle');
+  const isGenerating = generationActivity?.status === 'running';
 
   const handlePromptChange = (v: string) => { setPromptText(v); setPromptEdited(true); };
   const handleResetPrompt = () => { setPromptEdited(false); };
 
   const handleGenerate = async () => {
-    designConfigRef.current = { type: selectedType, metal: selectedMetal, gemstones: selectedStones, style: selectedStyle, complexity, variations };
+    if (isGenerating) {
+      return;
+    }
+
+    designConfigRef.current = {
+      type: selectedType,
+      metal: selectedMetal,
+      gemstones: selectedStones,
+      style: selectedStyle,
+      complexity,
+      variations,
+    };
     // Save to history
     setConfigHistory(prev => [...prev.slice(0, historyIndex + 1), designConfigRef.current]);
     setHistoryIndex(prev => prev + 1);
 
-    // If user has enhanced or manually edited the prompt, use it as-is.
-    // Only call the prompt agent when the prompt hasn't been touched.
-    if (!promptEdited) {
+    const notesParts: string[] = [];
+    if (designForm) notesParts.push(`Design form: ${designForm}`);
+    if (inspiration.length) notesParts.push(`Inspired by: ${inspiration.join(', ')}`);
+    if (finish) notesParts.push(`Surface finish: ${finish}`);
+    if (stoneCut) notesParts.push(`Stone cut: ${stoneCut}`);
+    if (stoneSetting) notesParts.push(`Setting type: ${stoneSetting}`);
+    if (brandGuideEnabled) notesParts.push(BRAND_STYLE_GUIDE);
+    const requestedCount = Math.max(1, Math.min(variations, 8));
+
+    let resolvedPromptText = promptText.trim();
+    let nextPromptSource: 'agent' | 'fallback' = promptSource === 'fallback' ? 'fallback' : 'agent';
+
+    // Ask the prompt-agent to craft the prompt BEFORE starting generation unless the user is overriding it.
+    if (!promptEdited || resolvedPromptText.length === 0) {
       setPromptSource('idle');
-      const notesParts: string[] = [];
-      if (designForm) notesParts.push(`Design form: ${designForm}`);
-      if (inspiration.length) notesParts.push(`Inspired by: ${inspiration.join(', ')}`);
-      if (finish) notesParts.push(`Surface finish: ${finish}`);
-      if (stoneCut) notesParts.push(`Stone cut: ${stoneCut}`);
-      if (stoneSetting) notesParts.push(`Setting type: ${stoneSetting}`);
-      if (brandGuideEnabled) notesParts.push(BRAND_STYLE_GUIDE);
 
       try {
         const result = await fetchPromptPreview({
@@ -281,40 +303,164 @@ export function DesignGenerator() {
           complexity,
           userNotes: notesParts.length > 0 ? notesParts.join('. ') : undefined,
         });
+        resolvedPromptText = result.promptText;
+        nextPromptSource = result.source === 'live' ? 'agent' : 'fallback';
         setPromptText(result.promptText);
-        setPromptSource(result.source === 'live' ? 'agent' : 'fallback');
+        setPromptSource(nextPromptSource);
         if (result.source === 'fallback' && result.errorMessage) {
           console.warn('[SkyGems] Prompt agent fallback:', result.errorMessage);
         }
       } catch (err) {
         console.error('[SkyGems] Prompt preview failed:', err);
+        resolvedPromptText = generateJewelryPrompt({
+          type: selectedType,
+          metal: selectedMetal,
+          gemstones: selectedStones,
+          style: selectedStyle,
+          complexity,
+          renderMode,
+        });
+        nextPromptSource = 'fallback';
+        setPromptText(resolvedPromptText);
         setPromptSource('fallback');
       }
     } else {
-      // Enhanced/edited prompt — skip preview, use what's already in promptText
-      setPromptSource('agent');
+      setPromptSource(nextPromptSource);
     }
 
-    setPipelineRunCount(cnt => cnt + 1);
+    const runStartedAt = Date.now();
+    const queuedItems: PendingGalleryItem[] = Array.from(
+      { length: requestedCount },
+      (_, index) => ({
+        id: `pending-${runStartedAt}-${index}`,
+        order: index,
+        requestedAt: runStartedAt,
+        type: selectedType,
+        metal: selectedMetal,
+        gemstones: selectedStones,
+        style: selectedStyle,
+        message: `Image ${index + 1} of ${requestedCount} is spinning up now.`,
+      }),
+    );
+
+    setPendingGalleryItems(queuedItems);
+    setGenerationActivity({
+      status: 'running',
+      totalCount: requestedCount,
+      completedCount: 0,
+      pendingCount: requestedCount,
+      headline: 'Agent running',
+      detail: `Generating ${requestedCount} ${requestedCount === 1 ? 'image' : 'images'} and placing them directly into your profile gallery.`,
+    });
     setHasGenerated(true);
+
+    try {
+      const generatedResults = await generateConceptSetProgressively(
+        {
+          type: selectedType,
+          metal: selectedMetal,
+          gemstones: selectedStones,
+          style: selectedStyle,
+          complexity,
+          promptText: resolvedPromptText,
+          promptMode: promptEdited && resolvedPromptText.length > 0 ? 'override' : 'synced',
+          variations: requestedCount,
+        },
+        {
+          onItemComplete: (index) => {
+            setPendingGalleryItems(prev => prev.filter(item => item.order !== index));
+            setGenerationActivity(prev => {
+              if (!prev) {
+                return prev;
+              }
+
+              const nextCompleted = prev.completedCount + 1;
+              const nextPending = Math.max(0, prev.pendingCount - 1);
+              return {
+                ...prev,
+                completedCount: nextCompleted,
+                pendingCount: nextPending,
+                headline: nextPending > 0 ? 'Generating concepts' : 'Saving to profile gallery',
+                detail:
+                  nextPending > 0
+                    ? `${nextCompleted} of ${prev.totalCount} ready. ${nextPending} ${nextPending === 1 ? 'placeholder is' : 'placeholders are'} still spinning in the gallery.`
+                    : `All ${prev.totalCount} renders finished. Syncing them into your saved gallery now.`,
+                errorMessage: undefined,
+              };
+            });
+          },
+          onItemError: (index, error) => {
+            setPendingGalleryItems(prev => prev.filter(item => item.order !== index));
+            setGenerationActivity(prev => {
+              if (!prev) {
+                return prev;
+              }
+
+              const nextPending = Math.max(0, prev.pendingCount - 1);
+              return {
+                ...prev,
+                pendingCount: nextPending,
+                headline: 'Generating concepts',
+                detail: `${prev.completedCount} of ${prev.totalCount} ready so far. One render needs another pass.`,
+                errorMessage: error.message,
+              };
+            });
+          },
+        },
+      );
+
+      setPendingGalleryItems([]);
+      setGenerationActivity({
+        status: 'completed',
+        totalCount: requestedCount,
+        completedCount: generatedResults.length,
+        pendingCount: 0,
+        headline: generatedResults.length === requestedCount ? 'Gallery updated' : 'Gallery partially updated',
+        detail:
+          generatedResults.length === requestedCount
+            ? `${generatedResults.length} new ${generatedResults.length === 1 ? 'design is' : 'designs are'} saved under your profile and ready to open from the gallery.`
+            : `${generatedResults.length} new designs were saved. A few renders did not complete, but the finished work is already in your gallery.`,
+        errorMessage:
+          generatedResults.length === requestedCount
+            ? undefined
+            : 'Some renders did not complete in this pass.',
+      });
+    } catch (error) {
+      console.error('[SkyGems] Generation failed:', error);
+      setPendingGalleryItems([]);
+      setGenerationActivity({
+        status: 'error',
+        totalCount: requestedCount,
+        completedCount: 0,
+        pendingCount: 0,
+        headline: 'Generation interrupted',
+        detail: 'We could not finish this generation batch. Your saved profile gallery is still available below.',
+        errorMessage: error instanceof Error ? error.message : 'Unknown generation error',
+      });
+    }
   };
 
   const handleEnhancePrompt = async () => {
-    if (!freeTextInput.trim() || isEnhancing) return;
+    if (!freeTextInput.trim() || isEnhancing || isGenerating) {
+      return;
+    }
+
     setIsEnhancing(true);
     setEnhanceSource(null);
     setEnhanceError(null);
+
     try {
-      const result = await enhancePrompt(freeTextInput);
+      const result = await enhancePrompt(freeTextInput.trim());
       setPromptText(result.enhancedText);
       setPromptEdited(true);
+      setPromptSource(result.source === 'live' ? 'agent' : 'fallback');
       setEnhanceSource(result.source);
-      if (result.source === 'fallback' && result.errorMessage) {
+      if (result.errorMessage) {
         setEnhanceError(result.errorMessage);
       }
-    } catch (err) {
-      setEnhanceError(err instanceof Error ? err.message : 'Enhancement failed');
-      console.error('[SkyGems] Prompt enhance failed:', err);
+    } catch (error) {
+      setEnhanceSource('fallback');
+      setEnhanceError(error instanceof Error ? error.message : 'Enhancement failed');
     } finally {
       setIsEnhancing(false);
     }
@@ -559,7 +705,34 @@ export function DesignGenerator() {
         <div className="w-80 border-r flex flex-col h-full min-h-0" style={{ backgroundColor: c.bg, borderColor: c.border }}>
           {/* Header */}
           <div className="p-4 border-b" style={{ borderColor: c.border }}>
-            <h2 style={{ fontSize: 16, fontWeight: 600, color: c.fg }}>AI Design Generator</h2>
+            <h2 style={{ fontSize: 16, fontWeight: 600, color: c.fg, marginBottom: 12 }}>AI Design Generator</h2>
+            <motion.button onClick={handleGenerate} whileTap={{ scale: 0.98 }}
+              disabled={isGenerating || isEnhancing}
+              className="w-full py-2.5 rounded-md font-medium text-sm text-white flex items-center justify-center gap-2 disabled:opacity-70"
+              style={{ background: `linear-gradient(to right, ${c.gradFrom}, ${c.gradTo})` }}>
+              <Wand2 className={`w-4 h-4 ${isGenerating || isEnhancing ? 'animate-pulse' : ''}`} />
+              {isGenerating
+                ? `Generating ${Math.max(1, Math.min(variations, 8))} Images...`
+                : isEnhancing
+                  ? 'Enhancing Prompt...'
+                  : 'Generate with AI'}
+            </motion.button>
+          </div>
+
+          {/* Quick Start Presets */}
+          <div className="px-4 py-3 border-b" style={{ borderColor: c.border }}>
+            <label style={{ fontSize: 11, fontWeight: 600, color: c.fgMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Quick Start</label>
+            <div className="flex flex-wrap gap-1 mt-2">
+              {PRESETS.map(preset => (
+                <button key={preset.label} onClick={() => applyPreset(preset)}
+                  className="px-2 py-1 rounded text-[10px] font-medium border transition-all"
+                  style={{ borderColor: c.border, color: c.fg }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = c.gradFrom; e.currentTarget.style.backgroundColor = `${c.gradFrom}06`; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = c.border; e.currentTarget.style.backgroundColor = 'transparent'; }}>
+                  {preset.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Tabs */}
@@ -811,43 +984,42 @@ export function DesignGenerator() {
             ) : (
               /* Prompt tab */
               <div className="p-4 space-y-4">
-                {/* Describe Your Vision — free-text enhancement */}
                 <div className="space-y-1.5">
                   <label style={{ fontSize: 14, fontWeight: 500, color: c.fg }}>Describe Your Vision</label>
-                  <textarea value={freeTextInput} onChange={e => setFreeTextInput(e.target.value)}
-                    placeholder="Describe your jewelry idea... e.g., 'A vintage rose gold ring with a large cushion-cut sapphire surrounded by tiny diamonds'"
-                    className="w-full min-h-[80px] px-3 py-2 text-xs leading-relaxed rounded-md border resize-none focus:outline-none focus:ring-2"
-                    style={{ backgroundColor: c.bgInput, borderColor: c.border, color: c.fg, '--tw-ring-color': c.ring } as React.CSSProperties} />
+                  <textarea
+                    value={freeTextInput}
+                    onChange={e => setFreeTextInput(e.target.value)}
+                    placeholder="Describe your jewelry idea in plain language..."
+                    className="w-full min-h-[88px] px-3 py-2 text-xs leading-relaxed rounded-md border resize-none focus:outline-none focus:ring-2"
+                    style={{ backgroundColor: c.bgInput, borderColor: c.border, color: c.fg, '--tw-ring-color': c.ring } as React.CSSProperties}
+                  />
                   <div className="flex items-center gap-2">
-                    <button onClick={handleEnhancePrompt}
-                      disabled={isEnhancing || !freeTextInput.trim()}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-white transition-all"
-                      style={{
-                        background: isEnhancing || !freeTextInput.trim() ? '#a0a0b0' : `linear-gradient(135deg, ${c.gradFrom}, ${c.gradTo})`,
-                        opacity: isEnhancing || !freeTextInput.trim() ? 0.6 : 1,
-                        cursor: isEnhancing || !freeTextInput.trim() ? 'not-allowed' : 'pointer',
-                      }}>
-                      {isEnhancing ? (
-                        <><span className="block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> Enhancing...</>
-                      ) : (
-                        <><Wand2 className="w-3 h-3" /> Enhance Prompt</>
-                      )}
+                    <button
+                      onClick={handleEnhancePrompt}
+                      disabled={isEnhancing || isGenerating || !freeTextInput.trim()}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-white transition-all disabled:opacity-60"
+                      style={{ background: `linear-gradient(135deg, ${c.gradFrom}, ${c.gradTo})` }}
+                    >
+                      <Wand2 className={`w-3.5 h-3.5 ${isEnhancing ? 'animate-pulse' : ''}`} />
+                      {isEnhancing ? 'Enhancing...' : 'Enhance Prompt'}
                     </button>
                     {enhanceSource && (
-                      <span className="text-[10px] font-medium px-1.5 py-0.5 rounded" style={{
-                        backgroundColor: enhanceSource === 'live' ? '#dcfce7' : '#fef3c7',
-                        color: enhanceSource === 'live' ? '#166534' : '#92400e',
-                      }}>
+                      <span
+                        className="text-[10px] font-medium px-1.5 py-0.5 rounded"
+                        style={{
+                          backgroundColor: enhanceSource === 'live' ? '#dcfce7' : '#fef3c7',
+                          color: enhanceSource === 'live' ? '#166534' : '#92400e',
+                        }}
+                      >
                         {enhanceSource === 'live' ? 'AI-enhanced' : 'Fallback'}
                       </span>
                     )}
                   </div>
                   {enhanceError && (
-                    <p className="text-[10px] mt-1" style={{ color: '#dc2626' }}>{enhanceError}</p>
+                    <p className="text-[10px]" style={{ color: '#dc2626' }}>{enhanceError}</p>
                   )}
                 </div>
                 <div className="h-px" style={{ backgroundColor: c.border }} />
-                {/* Full Prompt */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <label style={{ fontSize: 14, fontWeight: 500, color: c.fg }}>Enhanced Prompt</label>
@@ -858,36 +1030,47 @@ export function DesignGenerator() {
                       </button>
                     </div>
                   </div>
-                  <textarea value={promptText} onChange={e => handlePromptChange(e.target.value)}
-                    placeholder="Click 'Enhance Prompt' above to generate an expert prompt from your vision, or type directly here..."
-                    className="w-full min-h-[200px] px-3 py-2 text-xs leading-relaxed rounded-md border resize-none focus:outline-none focus:ring-2 font-mono"
+                  <textarea
+                    value={promptText}
+                    onChange={e => handlePromptChange(e.target.value)}
+                    placeholder="Click 'Enhance Prompt' above or type your own production-ready prompt here..."
+                    className="w-full min-h-[220px] px-3 py-2 text-xs leading-relaxed rounded-md border resize-none focus:outline-none focus:ring-2 font-mono"
                     style={{ backgroundColor: c.bgInput, borderColor: c.border, color: c.fg, '--tw-ring-color': c.ring } as React.CSSProperties} />
                   {promptEdited && <p style={{ fontSize: 10, color: c.gradFrom }}>Manually edited — config changes won't overwrite</p>}
                 </div>
+                <div className="h-px" style={{ backgroundColor: c.border }} />
+                <div className="space-y-1.5">
+                  <label style={{ fontSize: 14, fontWeight: 500, color: c.fg }}>Current Config</label>
+                  <div className="rounded-md border p-3 space-y-1.5 text-xs" style={{ backgroundColor: c.bgInput, borderColor: c.border }}>
+                    {[
+                      ['Type', selectedType], ['Metal', selectedMetal],
+                      ['Stones', selectedStones.length > 0 ? selectedStones.join(', ') : 'None'],
+                      ['Style', selectedStyle], ['Render', renderMode],
+                      ['Complexity', `${complexity}%`], ['Variations', String(variations)],
+                      ...(designForm ? [['Form', designForm]] : []),
+                      ...(finish ? [['Finish', finish]] : []),
+                      ...(stoneCut ? [['Cut', stoneCut]] : []),
+                      ...(stoneSetting ? [['Setting', stoneSetting]] : []),
+                    ].map(([k, v]) => (
+                      <div key={k} className="flex justify-between">
+                        <span style={{ color: c.fgMuted }}>{k}</span>
+                        <span className="font-medium capitalize" style={{ color: c.fg }}>{v}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
-          </div>
-
-          {/* Generate button — pinned to bottom */}
-          <div className="p-4 border-t flex-shrink-0" style={{ borderColor: c.border }}>
-            <motion.button onClick={handleGenerate} whileTap={{ scale: 0.98 }}
-              disabled={isEnhancing}
-              className="w-full py-2.5 rounded-md font-medium text-sm text-white flex items-center justify-center gap-2"
-              style={{ background: `linear-gradient(to right, ${c.gradFrom}, ${c.gradTo})`, opacity: isEnhancing ? 0.6 : 1, cursor: isEnhancing ? 'not-allowed' : 'pointer' }}>
-              <Wand2 className="w-4 h-4" /> Generate with AI
-            </motion.button>
           </div>
         </div>
 
         {/* ═══ Canvas ═══ */}
         <div className="flex-1 flex flex-col overflow-hidden" style={{ background: 'linear-gradient(135deg, #f8f9fa, #f0f1f3)' }}>
           <div className="flex-1 overflow-hidden">
-            <PipelineView isRunning={pipelineRunCount > 0} runKey={pipelineRunCount}
-              designConfigs={designConfigRef.current}
-              promptText={promptText}
-              promptMode={promptEdited ? 'override' : 'synced'}
-              layoutMode="graph"
-              onComplete={results => console.log('Designs generated:', results)} />
+            <GenerationGalleryWorkspace
+              pendingItems={pendingGalleryItems}
+              activity={generationActivity}
+            />
           </div>
 
           {/* Agent Prompt Panel — shows after generation so user can see & tweak */}
@@ -925,6 +1108,7 @@ export function DesignGenerator() {
         <div className="flex gap-5" style={{ fontSize: 11, color: c.fgMuted }}>
           <span>Type: {selectedType}</span>
           <span>Size: 1024 × 1024</span>
+          {isGenerating && <span style={{ color: c.gradFrom }}>Agent running · {pendingGalleryItems.length} live</span>}
           {brandGuideEnabled && <span style={{ color: c.gradFrom }}>Brand Guide ON</span>}
           {selectedCatalogRef && <span style={{ color: c.gradFrom }}>Ref: {selectedCatalogRef}</span>}
         </div>

@@ -1,15 +1,24 @@
 import { z } from "zod";
 
-export const jewelryTypeValues = ["ring", "necklace", "earrings", "bracelet", "pendant"] as const;
-export const metalValues = ["gold", "silver", "platinum", "rose-gold"] as const;
-export const gemstoneValues = ["diamond", "ruby", "emerald", "sapphire", "pearl"] as const;
+export const jewelryTypeValues = [
+  "ring", "necklace", "earrings", "bracelet", "pendant",
+  "anklet", "brooch", "tiara", "body-chain", "hair-jewelry",
+  "cufflinks", "nose-ring", "toe-ring",
+] as const;
+export const metalValues = ["gold", "white-gold", "silver", "platinum", "rose-gold"] as const;
+export const gemstoneValues = [
+  "diamond", "ruby", "emerald", "sapphire", "pearl",
+  "amethyst", "topaz", "garnet", "aquamarine", "tourmaline",
+  "peridot", "citrine", "tanzanite", "coral", "turquoise",
+  "lapis-lazuli", "opal", "onyx", "moonstone", "labradorite",
+  "moissanite", "cubic-zirconia", "lab-diamond", "none",
+] as const;
 export const styleValues = [
-  "contemporary",
-  "minimalist",
-  "vintage",
-  "temple",
-  "floral",
-  "geometric",
+  "contemporary", "minimalist", "vintage", "temple", "floral", "geometric",
+  "fine", "art-deco", "art-nouveau", "futuristic",
+  "kundan", "middle-eastern", "east-asian", "african-tribal",
+  "bohemian", "gothic", "punk", "streetwear",
+  "steampunk", "cyberpunk", "cottagecore", "spiritual",
 ] as const;
 
 export const generationStatusValues = [

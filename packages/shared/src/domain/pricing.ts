@@ -14,6 +14,7 @@ import type { Gemstone, Metal } from "../contracts/enums.ts";
 
 export const metalPricePerGram: Record<Metal, number> = {
   gold: 65, // 18K gold
+  "white-gold": 68, // 18K white gold
   "rose-gold": 62, // 18K rose gold
   platinum: 32,
   silver: 0.8,
@@ -21,6 +22,7 @@ export const metalPricePerGram: Record<Metal, number> = {
 
 export const metalPurityLabels: Record<Metal, string> = {
   gold: "18K (75% Au)",
+  "white-gold": "18K (75% Au, Pd/Ni alloy)",
   "rose-gold": "18K (75% Au, Cu blend)",
   platinum: "950 Platinum",
   silver: "925 Sterling",
@@ -40,6 +42,25 @@ export const gemstonePricePerCarat: Record<Gemstone, GemstonePriceRange> = {
   emerald: { low: 1500, mid: 4000, high: 10000 },
   sapphire: { low: 1800, mid: 4500, high: 11000 },
   pearl: { low: 50, mid: 200, high: 800 },
+  amethyst: { low: 10, mid: 30, high: 80 },
+  topaz: { low: 15, mid: 50, high: 150 },
+  garnet: { low: 20, mid: 80, high: 300 },
+  aquamarine: { low: 100, mid: 400, high: 1200 },
+  tourmaline: { low: 200, mid: 600, high: 2000 },
+  peridot: { low: 30, mid: 100, high: 400 },
+  citrine: { low: 10, mid: 30, high: 100 },
+  tanzanite: { low: 300, mid: 800, high: 3000 },
+  coral: { low: 20, mid: 80, high: 250 },
+  turquoise: { low: 5, mid: 30, high: 100 },
+  "lapis-lazuli": { low: 5, mid: 20, high: 80 },
+  opal: { low: 50, mid: 300, high: 3000 },
+  onyx: { low: 3, mid: 10, high: 30 },
+  moonstone: { low: 10, mid: 40, high: 150 },
+  labradorite: { low: 5, mid: 20, high: 80 },
+  moissanite: { low: 200, mid: 500, high: 1200 },
+  "cubic-zirconia": { low: 1, mid: 3, high: 10 },
+  "lab-diamond": { low: 800, mid: 2000, high: 5000 },
+  none: { low: 0, mid: 0, high: 0 },
 };
 
 // ── Default weights by jewelry type (grams of metal) ──
@@ -59,7 +80,26 @@ const defaultPrimaryCaratWeight: Record<Gemstone, number> = {
   ruby: 1.2,
   emerald: 1.5,
   sapphire: 1.2,
-  pearl: 3.0, // in carat equivalent for pearl
+  pearl: 3.0,
+  amethyst: 2.0,
+  topaz: 2.0,
+  garnet: 1.5,
+  aquamarine: 1.5,
+  tourmaline: 1.5,
+  peridot: 1.5,
+  citrine: 2.0,
+  tanzanite: 1.2,
+  coral: 2.0,
+  turquoise: 3.0,
+  "lapis-lazuli": 3.0,
+  opal: 1.5,
+  onyx: 2.0,
+  moonstone: 2.0,
+  labradorite: 2.0,
+  moissanite: 1.0,
+  "cubic-zirconia": 1.0,
+  "lab-diamond": 1.0,
+  none: 0,
 };
 
 const defaultAccentCaratWeight = 0.15;

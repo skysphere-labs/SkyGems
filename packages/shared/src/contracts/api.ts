@@ -355,22 +355,7 @@ export const GallerySearchResponseSchema = z.object({
   page: z.number().int().min(1),
   pageSize: z.number().int().min(1),
   total: z.number().int().nonnegative(),
-  items: z.array(
-    z.object({
-      designId: DesignIdSchema,
-      projectId: ProjectIdSchema,
-      createdByUserId: UserIdSchema,
-      ownedByCurrentUser: z.boolean(),
-      displayName: z.string(),
-      promptSummary: z.string(),
-      selectionState: SelectionStateEnum,
-      latestPairId: PairIdSchema.nullable(),
-      sketchImage: ArtifactPublicSchema.nullable(),
-      coverImage: ArtifactPublicSchema.nullable(),
-      stageStatuses: StageStatusesSchema,
-      updatedAt: IsoTimestampSchema,
-    }),
-  ),
+  items: z.array(z.object(DesignSummarySchema.shape)),
 });
 
 export const ProjectResponseSchema = z.object({

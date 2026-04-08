@@ -39,6 +39,7 @@ interface TenantRow {
 
 interface UserRow {
   id: string;
+  tenant_id: string;
 }
 
 interface JwtHeader {
@@ -150,6 +151,10 @@ function titleizeSlug(value: string): string {
     .filter(Boolean)
     .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
     .join(" ");
+}
+
+export function toTenantScopedAuthSubject(tenantSlug: string, authSubject: string): string {
+  return `tenant:${tenantSlug.trim().toLowerCase()}:${authSubject.trim()}`;
 }
 
 function resolveDevBootstrapSecret(env: ApiEnv, allowLocalFallback: boolean): string {
@@ -300,14 +305,16 @@ async function verifyAuth0Token(token: string, env: ApiEnv): Promise<AuthIdentit
     throw new HttpError(401, "unauthorized", "Bearer token is missing the tenant_slug claim.");
   }
 
+  const normalizedTenantSlug = tenantSlug.trim();
+
   return {
     authMode: "auth0",
-    tenantSlug: tenantSlug.trim(),
+    tenantSlug: normalizedTenantSlug,
     tenantName:
       typeof tenantName === "string" && tenantName.trim()
         ? tenantName.trim()
-        : titleizeSlug(tenantSlug.trim()),
-    authSubject: payload.sub,
+        : titleizeSlug(normalizedTenantSlug),
+    authSubject: toTenantScopedAuthSubject(normalizedTenantSlug, payload.sub),
     email:
       typeof payload.email === "string" && payload.email.trim()
         ? payload.email.trim().toLowerCase()
@@ -400,9 +407,27 @@ export async function ensureTenantAndUser(
     [tenantId, identity.tenantSlug, identity.tenantName, timestamp, timestamp],
   );
 
+  const existingUserById = identity.userId
+    ? await queryFirst<UserRow>(db, `SELECT id, tenant_id FROM users WHERE id = ?`, [identity.userId])
+    : null;
+
+  if (existingUserById && existingUserById.tenant_id !== tenantId) {
+    throw new HttpError(
+      403,
+      "forbidden",
+      "Authenticated user identity does not belong to the requested tenant.",
+    );
+  }
+
   const existingUser = identity.userId
-    ? await queryFirst<UserRow>(db, `SELECT id FROM users WHERE id = ?`, [identity.userId])
-    : await queryFirst<UserRow>(db, `SELECT id FROM users WHERE auth_subject = ?`, [identity.authSubject]);
+    ? existingUserById
+    : await queryFirst<UserRow>(
+        db,
+        `SELECT id, tenant_id
+         FROM users
+         WHERE tenant_id = ? AND auth_subject = ?`,
+        [tenantId, identity.authSubject],
+      );
   const userId = existingUser?.id ?? identity.userId ?? generatePrefixedId("usr");
 
   await executeStatement(
@@ -410,7 +435,6 @@ export async function ensureTenantAndUser(
     `INSERT INTO users (id, tenant_id, auth_subject, email, display_name, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(id) DO UPDATE SET
-       tenant_id = excluded.tenant_id,
        auth_subject = excluded.auth_subject,
        email = excluded.email,
        display_name = excluded.display_name,

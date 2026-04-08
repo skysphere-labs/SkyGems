@@ -33,6 +33,8 @@ async function generateImageWithXai(
   }
 
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 25_000);
     const response = await fetch("https://api.x.ai/v1/images/generations", {
       method: "POST",
       headers: {
@@ -45,7 +47,9 @@ async function generateImageWithXai(
         n: 1,
         response_format: "b64_json",
       }),
+      signal: controller.signal,
     });
+    clearTimeout(timeout);
 
     if (!response.ok) {
       const errText = await response.text().catch(() => "");

@@ -37,6 +37,13 @@ export interface RootPromptPreviewResult {
   errorMessage?: string;
 }
 
+export interface RootPromptEnhanceResult {
+  originalText: string;
+  enhancedText: string;
+  source: 'live' | 'fallback';
+  errorMessage?: string;
+}
+
 export interface RootGeneratedDesign {
   generationId: string;
   designId: string;
@@ -50,6 +57,11 @@ export interface RootGeneratedDesign {
     complexity: number;
     variation: SelectedVariations;
   };
+}
+
+export interface GenerateConceptSetProgressCallbacks {
+  onItemComplete?: (index: number, result: RootGeneratedDesign) => void;
+  onItemError?: (index: number, error: Error) => void;
 }
 
 export type DesignOwnerScope = 'all' | 'mine';
@@ -157,6 +169,32 @@ function clearStoredSession() {
   localStorage.removeItem(DEV_SESSION_KEY);
 }
 
+function persistSession(session: DevSession) {
+  localStorage.setItem(DEV_SESSION_KEY, JSON.stringify(session));
+  sessionStorage.setItem(DEV_SESSION_KEY, JSON.stringify(session));
+}
+
+function syncStoredSessionProject(project: {
+  id: string;
+  name?: string | null;
+}) {
+  const session = getStoredSession();
+  if (!session) {
+    return;
+  }
+
+  const nextProjectName = project.name?.trim() ? project.name.trim() : session.projectName;
+  if (session.projectId === project.id && session.projectName === nextProjectName) {
+    return;
+  }
+
+  persistSession({
+    ...session,
+    projectId: project.id,
+    projectName: nextProjectName,
+  });
+}
+
 export function notifyDesignsUpdated() {
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent(DESIGNS_UPDATED_EVENT));
@@ -250,17 +288,26 @@ export async function signInWithDevBootstrap(input: {
     username,
   });
 
-  const response = await fetch('/v1/dev/login', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-    body: JSON.stringify({
-      username,
-      password: input.password,
-    }),
-  });
+  let response: Response;
+  try {
+    response = await fetch('/v1/dev/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        username,
+        password: input.password,
+      }),
+    });
+  } catch (error) {
+    throw new Error(
+      error instanceof Error && /fetch/i.test(error.message)
+        ? 'SkyGems API is unreachable. Start the local backend worker and try again.'
+        : 'Unable to reach the authentication service.',
+    );
+  }
 
   if (!response.ok) {
     const body = await response.text().catch(() => '');
@@ -289,8 +336,7 @@ export async function signInWithDevBootstrap(input: {
     bootstrapConfigKey: buildBootstrapConfigKey({ username }),
   };
 
-  localStorage.setItem(DEV_SESSION_KEY, JSON.stringify(session));
-  sessionStorage.setItem(DEV_SESSION_KEY, JSON.stringify(session));
+  persistSession(session);
   validatedSessionToken = session.token;
   return session;
 }
@@ -333,7 +379,7 @@ export async function fetchPromptPreview(
 ): Promise<RootPromptPreviewResult> {
   const session = await ensureSession();
   try {
-    const preview = await authedJson<{ promptText: string }>('/v1/prompt-preview', {
+    const preview = await authedJson<{ projectId: string; promptText: string }>('/v1/prompt-preview', {
       method: 'POST',
       body: JSON.stringify({
         projectId: session.projectId,
@@ -346,6 +392,7 @@ export async function fetchPromptPreview(
         ...(input.userNotes ? { userNotes: input.userNotes } : {}),
       }),
     });
+    syncStoredSessionProject({ id: preview.projectId });
     return { promptText: preview.promptText, source: 'live' };
   } catch (error) {
     return {
@@ -356,25 +403,23 @@ export async function fetchPromptPreview(
   }
 }
 
-// ── Prompt Enhancement ──
-
-export interface RootPromptEnhanceResult {
-  originalText: string;
-  enhancedText: string;
-  source: 'live' | 'fallback';
-  errorMessage?: string;
-}
-
 export async function enhancePrompt(freeText: string): Promise<RootPromptEnhanceResult> {
   const session = await ensureSession();
   try {
-    return await authedJson<RootPromptEnhanceResult>('/v1/prompt-enhance', {
+    const result = await authedJson<RootPromptEnhanceResult & { projectId: string }>('/v1/prompt-enhance', {
       method: 'POST',
       body: JSON.stringify({
         projectId: session.projectId,
         freeText,
       }),
     });
+    syncStoredSessionProject({ id: result.projectId });
+    return {
+      originalText: result.originalText,
+      enhancedText: result.enhancedText,
+      source: result.source,
+      errorMessage: result.errorMessage,
+    };
   } catch (error) {
     return {
       originalText: freeText,
@@ -397,6 +442,7 @@ async function generateSingleConcept(
   const gen = await authedJson<{
     generationId: string;
     designId: string;
+    projectId: string;
   }>('/v1/generate-design', {
     method: 'POST',
     headers: { 'Idempotency-Key': `gen-${index}-${Date.now()}` },
@@ -412,6 +458,7 @@ async function generateSingleConcept(
       ...(input.promptMode === 'override' ? { promptTextOverride: input.promptText } : {}),
     }),
   });
+  syncStoredSessionProject({ id: gen.projectId });
 
   for (let attempt = 0; attempt < 20; attempt++) {
     await new Promise((r) => setTimeout(r, 1500));
@@ -446,15 +493,41 @@ async function generateSingleConcept(
 }
 
 export async function generateConceptSet(input: RootCreateInput): Promise<RootGeneratedDesign[]> {
-  const count = Math.max(1, Math.min(input.variations || 4, 6));
+  return generateConceptSetProgressively(input);
+}
+
+export async function generateConceptSetProgressively(
+  input: RootCreateInput,
+  callbacks: GenerateConceptSetProgressCallbacks = {},
+): Promise<RootGeneratedDesign[]> {
+  const count = Math.max(1, Math.min(input.variations || 4, 8));
   const variations = generateMultipleVariations(input.type, count);
   const session = await ensureSession();
-  const results = await Promise.all(
-    variations.map((v, i) => generateSingleConcept(input, v, i)),
+  const successfulResults: RootGeneratedDesign[] = [];
+  const errors: Error[] = [];
+
+  await Promise.all(
+    variations.map(async (variation, index) => {
+      try {
+        const result = await generateSingleConcept(input, variation, index);
+        successfulResults.push(result);
+        mapGeneratedDesign(result, session.userId);
+        notifyDesignsUpdated();
+        callbacks.onItemComplete?.(index, result);
+      } catch (error) {
+        const normalized =
+          error instanceof Error ? error : new Error('Unknown generation error');
+        errors.push(normalized);
+        callbacks.onItemError?.(index, normalized);
+      }
+    }),
   );
-  results.forEach((result) => mapGeneratedDesign(result, session.userId));
-  notifyDesignsUpdated();
-  return results;
+
+  if (successfulResults.length > 0) {
+    return successfulResults;
+  }
+
+  throw errors[0] ?? new Error('Generation failed');
 }
 
 // ── Design Operations ──
@@ -494,29 +567,40 @@ export async function postCopilotMessage(designId: string, message: string) {
 
 function mapBackendDesign(design: any): DesignMetadata {
   const existing = getDesign(design.designId);
+  const imageUrl =
+    design.pair?.render?.signedUrl ??
+    design.coverImage?.signedUrl ??
+    existing?.imageUrl ??
+    '';
+  const createdAt = design.createdAt
+    ? new Date(design.createdAt).getTime()
+    : existing?.createdAt ?? Date.now();
+  const updatedAt = design.updatedAt
+    ? new Date(design.updatedAt).getTime()
+    : existing?.updatedAt ?? createdAt;
   const metadata: DesignMetadata = {
     id: design.designId,
-    prompt: design.promptSummary ?? '',
-    imageUrl: design.pair?.render?.signedUrl || existing?.imageUrl || '',
+    prompt: design.promptSummary ?? existing?.prompt ?? '',
+    imageUrl,
     createdByUserId: design.createdByUserId ?? existing?.createdByUserId,
     ownedByCurrentUser: design.ownedByCurrentUser ?? existing?.ownedByCurrentUser,
     features: {
-      type: design.designDna?.jewelryType ?? 'ring',
-      metal: design.designDna?.metal ?? 'gold',
-      gemstones: design.designDna?.gemstones ?? [],
-      style: design.designDna?.style ?? 'contemporary',
-      complexity: design.designDna?.complexity ?? 50,
+      type: design.designDna?.jewelryType ?? existing?.features.type ?? 'ring',
+      metal: design.designDna?.metal ?? existing?.features.metal ?? 'gold',
+      gemstones: design.designDna?.gemstones ?? existing?.features.gemstones ?? [],
+      style: design.designDna?.style ?? existing?.features.style ?? 'contemporary',
+      complexity: design.designDna?.complexity ?? existing?.features.complexity ?? 50,
       variation: {
-        bandStyle: design.designDna?.bandStyle ?? '',
-        settingType: design.designDna?.settingType ?? '',
-        stonePosition: design.designDna?.stonePosition ?? '',
-        profile: design.designDna?.profile ?? '',
-        motif: design.designDna?.motif ?? '',
+        bandStyle: design.designDna?.bandStyle ?? existing?.features.variation.bandStyle ?? '',
+        settingType: design.designDna?.settingType ?? existing?.features.variation.settingType ?? '',
+        stonePosition: design.designDna?.stonePosition ?? existing?.features.variation.stonePosition ?? '',
+        profile: design.designDna?.profile ?? existing?.features.variation.profile ?? '',
+        motif: design.designDna?.motif ?? existing?.features.variation.motif ?? '',
       },
     },
     liked: existing?.liked ?? false,
-    createdAt: new Date(design.createdAt).getTime(),
-    updatedAt: new Date(design.updatedAt).getTime(),
+    createdAt,
+    updatedAt,
     tags: existing?.tags ?? [],
     notes: existing?.notes ?? '',
   };
@@ -544,9 +628,10 @@ function mapGeneratedDesign(result: RootGeneratedDesign, userId?: string): Desig
 }
 
 export async function listBackendDesigns(ownerScope: DesignOwnerScope = 'mine'): Promise<DesignMetadata[]> {
-  const session = await ensureSession();
-  const params = new URLSearchParams({ ownerScope });
-  const payload = await authedJson<{ items: any[] }>(`/v1/projects/${session.projectId}/designs?${params.toString()}`);
+  const payload = await authedJson<{ items: any[] }>('/v1/gallery/search', {
+    method: 'POST',
+    body: JSON.stringify({ ownerScope, query: '', filters: {}, page: 1, pageSize: 50, sort: 'newest' }),
+  });
   return payload.items.map(mapBackendDesign);
 }
 
