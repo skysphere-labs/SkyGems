@@ -207,22 +207,20 @@ function GenerationDetailModal({
             <X className="h-5 w-5" />
           </button>
 
-          {/* LEFT — Image area (dark background, centered, full image visible) */}
+          {/* LEFT — Image fills the entire area, edge-to-edge like OpenArt */}
           <div
-            className="relative flex flex-1 items-center justify-center bg-slate-950"
+            className="relative flex-1 overflow-hidden bg-black"
             style={{ minWidth: 0 }}
           >
             {design.imageUrl ? (
               <ImageWithFallback
                 src={design.imageUrl}
                 alt={buildDesignTitle(design)}
-                className="max-h-full max-w-full object-contain"
-                style={{ padding: '24px' }}
+                className="h-full w-full object-cover"
               />
             ) : (
-              <div className="text-center">
-                <Gem className="mx-auto h-16 w-16 text-slate-700" />
-                <p className="mt-4 text-sm text-slate-500">Image not available</p>
+              <div className="flex h-full items-center justify-center">
+                <Gem className="h-16 w-16 text-slate-700" />
               </div>
             )}
           </div>
