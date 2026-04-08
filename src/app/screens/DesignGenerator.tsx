@@ -260,32 +260,39 @@ export function DesignGenerator() {
     setConfigHistory(prev => [...prev.slice(0, historyIndex + 1), designConfigRef.current]);
     setHistoryIndex(prev => prev + 1);
 
-    // Ask the prompt-agent to craft the prompt BEFORE running the pipeline
-    setPromptSource('idle');
-    const notesParts: string[] = [];
-    if (designForm) notesParts.push(`Design form: ${designForm}`);
-    if (inspiration.length) notesParts.push(`Inspired by: ${inspiration.join(', ')}`);
-    if (finish) notesParts.push(`Surface finish: ${finish}`);
-    if (stoneCut) notesParts.push(`Stone cut: ${stoneCut}`);
-    if (stoneSetting) notesParts.push(`Setting type: ${stoneSetting}`);
+    // If user has enhanced or manually edited the prompt, use it as-is.
+    // Only call the prompt agent when the prompt hasn't been touched.
+    if (!promptEdited) {
+      setPromptSource('idle');
+      const notesParts: string[] = [];
+      if (designForm) notesParts.push(`Design form: ${designForm}`);
+      if (inspiration.length) notesParts.push(`Inspired by: ${inspiration.join(', ')}`);
+      if (finish) notesParts.push(`Surface finish: ${finish}`);
+      if (stoneCut) notesParts.push(`Stone cut: ${stoneCut}`);
+      if (stoneSetting) notesParts.push(`Setting type: ${stoneSetting}`);
+      if (brandGuideEnabled) notesParts.push(BRAND_STYLE_GUIDE);
 
-    try {
-      const result = await fetchPromptPreview({
-        type: selectedType,
-        metal: selectedMetal,
-        gemstones: selectedStones,
-        style: selectedStyle,
-        complexity,
-        userNotes: notesParts.length > 0 ? notesParts.join('. ') : undefined,
-      });
-      setPromptText(result.promptText);
-      setPromptSource(result.source === 'live' ? 'agent' : 'fallback');
-      if (result.source === 'fallback' && result.errorMessage) {
-        console.warn('[SkyGems] Prompt agent fallback:', result.errorMessage);
+      try {
+        const result = await fetchPromptPreview({
+          type: selectedType,
+          metal: selectedMetal,
+          gemstones: selectedStones,
+          style: selectedStyle,
+          complexity,
+          userNotes: notesParts.length > 0 ? notesParts.join('. ') : undefined,
+        });
+        setPromptText(result.promptText);
+        setPromptSource(result.source === 'live' ? 'agent' : 'fallback');
+        if (result.source === 'fallback' && result.errorMessage) {
+          console.warn('[SkyGems] Prompt agent fallback:', result.errorMessage);
+        }
+      } catch (err) {
+        console.error('[SkyGems] Prompt preview failed:', err);
+        setPromptSource('fallback');
       }
-    } catch (err) {
-      console.error('[SkyGems] Prompt preview failed:', err);
-      setPromptSource('fallback');
+    } else {
+      // Enhanced/edited prompt — skip preview, use what's already in promptText
+      setPromptSource('agent');
     }
 
     setPipelineRunCount(cnt => cnt + 1);
