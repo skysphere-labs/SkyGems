@@ -46,11 +46,9 @@ export function DesignGallery() {
     };
 
     window.addEventListener(DESIGNS_UPDATED_EVENT, handleRefresh);
-    window.addEventListener('focus', handleRefresh);
 
     return () => {
       window.removeEventListener(DESIGNS_UPDATED_EVENT, handleRefresh);
-      window.removeEventListener('focus', handleRefresh);
     };
   }, [activeTab]);
 

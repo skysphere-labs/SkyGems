@@ -27,6 +27,7 @@ export const VariationOverrideSchema = z.object({
   stonePosition: z.string().trim().min(1).max(120).optional(),
   profile: z.string().trim().min(1).max(120).optional(),
   motif: z.string().trim().min(1).max(120).optional(),
+  viewId: z.string().trim().min(1).max(80).optional(),
 });
 
 export const CreateDesignInputSchema = z.object({

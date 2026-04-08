@@ -3,7 +3,9 @@ import {
   DesignIdSchema,
   ProjectIdSchema,
   PromptAgentOutputSchema,
+  resolveView,
   type DesignDna,
+  type JewelryType,
   type PromptAgentOutput,
   type PromptBundle,
 } from "@skygems/shared";
@@ -247,6 +249,11 @@ export const promptAgentDefinition: AgentDefinition<PromptAgentInput, PromptAgen
       .filter((value): value is string => Boolean(value?.trim()))
       .join(" ");
 
+    // Extract viewId from variationOverrides so each concept in a batch
+    // gets a different camera angle from the VIEW_CATALOG.
+    const viewId = normalizedInput.variationOverrides?.viewId;
+    const view = resolveView(designDna.jewelryType as JewelryType, viewId);
+
     // Try LLM-powered prompt generation first
     const apiKey = ctx.env?.XAI_API_KEY?.trim();
     let promptBundle: PromptBundle | null = null;
@@ -254,7 +261,9 @@ export const promptAgentDefinition: AgentDefinition<PromptAgentInput, PromptAgen
     if (apiKey) {
       promptBundle = await craftPromptWithLLM(
         designDna,
-        combinedUserNotes || undefined,
+        combinedUserNotes
+          ? `${combinedUserNotes}. RENDER VIEW: ${view.label} — ${view.compositionPrompt}`
+          : `RENDER VIEW: ${view.label} — ${view.compositionPrompt}`,
         input.refinementInstruction,
         apiKey,
       );
@@ -272,6 +281,7 @@ export const promptAgentDefinition: AgentDefinition<PromptAgentInput, PromptAgen
         provider: input.provider ?? ctx.provider,
         promptPack: ctx.promptPack,
         viewPlan,
+        viewId,
       });
     }
 

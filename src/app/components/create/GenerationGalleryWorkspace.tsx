@@ -3,7 +3,6 @@ import { Link } from 'react-router';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   CalendarDays,
-  Check,
   Download,
   ExternalLink,
   Gem,
@@ -22,6 +21,7 @@ import {
 } from '../../services/skygemsApi';
 import {
   type DesignMetadata,
+  getCachedDesigns,
   getAllDesigns,
   likeDesign,
   unlikeDesign,
@@ -189,46 +189,37 @@ function GenerationDetailModal({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: 12 }}
           transition={{ duration: 0.2 }}
-          className="relative w-full max-w-2xl max-h-[calc(100vh-40px)] overflow-y-auto rounded-[28px] border bg-white shadow-2xl"
+          className="flex h-full max-h-[calc(100vh-40px)] w-full max-w-6xl overflow-hidden rounded-[28px] border bg-white shadow-2xl"
           style={{ borderColor: 'rgba(124, 58, 237, 0.16)' }}
           onClick={(event) => event.stopPropagation()}
         >
-          <button
-            type="button"
-            onClick={onClose}
-            className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full border bg-white/85 transition-all hover:bg-white"
-            style={{ borderColor: 'rgba(124, 58, 237, 0.18)', color: '#374151' }}
-          >
-            <X className="h-4 w-4" />
-          </button>
-
-          {/* Image — full width at top */}
           <div
-            className="flex items-center justify-center p-6 pb-4"
+            className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden p-6"
             style={{ background: 'linear-gradient(135deg, #eef2ff 0%, #f8fafc 55%, #eff6ff 100%)' }}
           >
-            {design.imageUrl ? (
-              <div
-                className="w-full overflow-hidden rounded-[18px] border bg-white shadow-[0_16px_48px_rgba(15,23,42,0.08)]"
-                style={{ borderColor: 'rgba(124, 58, 237, 0.12)' }}
-              >
-                <ImageWithFallback
-                  src={design.imageUrl}
-                  alt={buildDesignTitle(design)}
-                  className="max-h-[50vh] w-full rounded-[18px] object-contain"
-                  style={{ backgroundColor: '#f8fafc' }}
-                />
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
-                <Gem className="h-12 w-12" style={{ color: '#c4b5fd' }} />
-                <p className="text-sm text-slate-500">Image not available — try Open Preview</p>
-              </div>
-            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border bg-white/85 transition-all hover:bg-white"
+              style={{ borderColor: 'rgba(124, 58, 237, 0.18)', color: '#374151' }}
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <div
+              className="w-full max-w-3xl overflow-hidden rounded-[24px] border bg-white p-4 shadow-[0_32px_80px_rgba(15,23,42,0.12)]"
+              style={{ borderColor: 'rgba(124, 58, 237, 0.16)' }}
+            >
+              <ImageWithFallback
+                src={design.imageUrl}
+                alt={buildDesignTitle(design)}
+                className="max-h-[70vh] w-full rounded-[18px] object-contain"
+                style={{ backgroundColor: '#f8fafc' }}
+              />
+            </div>
           </div>
 
-          {/* Details — below image */}
-          <div className="p-6 pt-2">
+          <div className="w-full max-w-[380px] overflow-y-auto border-l p-6" style={{ borderColor: 'rgba(124, 58, 237, 0.12)' }}>
             <div className="space-y-5">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.22em]" style={{ color: '#7c3aed' }}>
@@ -359,9 +350,9 @@ export function GenerationGalleryWorkspace({
   pendingItems: PendingGalleryItem[];
   activity: GenerationActivitySummary | null;
 }) {
-  const session = useMemo(() => readStoredSession(), []);
-  const [designs, setDesigns] = useState<DesignMetadata[]>([]);
-  const [loading, setLoading] = useState(true);
+  const session = readStoredSession();
+  const [designs, setDesigns] = useState<DesignMetadata[]>(() => getCachedDesigns('mine'));
+  const [loading, setLoading] = useState(() => getCachedDesigns('mine').length === 0);
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [granularity, setGranularity] = useState<DateGranularity>('all');
@@ -369,13 +360,20 @@ export function GenerationGalleryWorkspace({
   const [monthFilter, setMonthFilter] = useState('all');
   const [dayFilter, setDayFilter] = useState('all');
   const [selectedDesignId, setSelectedDesignId] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
 
-    const loadDesigns = async () => {
+    const loadDesigns = async (options: { silent?: boolean } = {}) => {
       try {
-        setLoading(true);
+        if (options.silent) {
+          if (!cancelled) {
+            setRefreshing(true);
+          }
+        } else if (!cancelled) {
+          setLoading(true);
+        }
         const loaded = await searchBackendGallery('', 'mine');
         if (!cancelled) {
           setDesigns(loaded);
@@ -388,22 +386,21 @@ export function GenerationGalleryWorkspace({
       } finally {
         if (!cancelled) {
           setLoading(false);
+          setRefreshing(false);
         }
       }
     };
 
     const handleRefresh = () => {
-      void loadDesigns();
+      void loadDesigns({ silent: true });
     };
 
     void loadDesigns();
     window.addEventListener(DESIGNS_UPDATED_EVENT, handleRefresh);
-    window.addEventListener('focus', handleRefresh);
 
     return () => {
       cancelled = true;
       window.removeEventListener(DESIGNS_UPDATED_EVENT, handleRefresh);
-      window.removeEventListener('focus', handleRefresh);
     };
   }, []);
 
@@ -487,57 +484,161 @@ export function GenerationGalleryWorkspace({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      {/* Compact activity bar — only shows during/after generation */}
-      {(activity && activity.status !== 'idle') || pendingItems.length > 0 ? (
-        <div
-          className="flex items-center gap-3 border-b px-5 py-2.5 flex-shrink-0"
-          style={{
-            borderColor: 'rgba(124, 58, 237, 0.12)',
-            background: activity?.status === 'error'
-              ? 'linear-gradient(135deg, rgba(254,242,242,0.95), rgba(255,255,255,0.96))'
-              : 'linear-gradient(135deg, rgba(124,58,237,0.04), rgba(255,255,255,0.98))',
-          }}
-        >
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            {activity?.status === 'running' ? (
-              <Loader2 className="h-4 w-4 animate-spin flex-shrink-0" style={{ color: '#6d28d9' }} />
-            ) : (
-              <Sparkles className="h-4 w-4 flex-shrink-0" style={{ color: activity?.status === 'error' ? '#dc2626' : '#6d28d9' }} />
-            )}
-            <span className="text-sm font-medium text-slate-900 truncate">
-              {activity?.headline || 'Preparing'}
-            </span>
-            {activity?.detail && (
-              <span className="text-xs text-slate-500 truncate hidden sm:inline">
-                — {activity.detail}
-              </span>
-            )}
-            {activity?.errorMessage && (
-              <span className="text-xs font-medium text-red-600 truncate">{activity.errorMessage}</span>
-            )}
+      <div
+        className="border-b px-5 py-4"
+        style={{ borderColor: 'rgba(124, 58, 237, 0.12)', backgroundColor: 'rgba(255, 255, 255, 0.9)' }}
+      >
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ borderColor: 'rgba(124, 58, 237, 0.16)', color: '#6d28d9', backgroundColor: 'rgba(124, 58, 237, 0.06)' }}>
+              <Sparkles className="h-3.5 w-3.5" />
+              Profile Gallery
+            </div>
+            <h2 className="mt-3 text-2xl font-semibold text-slate-950">
+              Every new concept stays visible while you create
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              {session?.userDisplayName || session?.userEmail || 'Your account'} can browse all saved designs here, filter by date or jewelry type, and open any design in a popup.
+            </p>
           </div>
-          <div className="flex items-center gap-3 flex-shrink-0 text-xs">
-            <span className="text-slate-500"><span className="font-semibold text-slate-900">{activity?.completedCount ?? 0}</span>/{activity?.totalCount ?? pendingItems.length} ready</span>
-            {activitySteps.map((step, index) => {
-              const isComplete = currentActivityStep > index || activity?.status === 'completed';
-              const isCurrent = currentActivityStep === index && activity?.status !== 'completed';
-              return (
-                <span
-                  key={step}
-                  className="hidden lg:inline-flex items-center gap-1"
-                  style={{ color: isComplete ? '#6d28d9' : isCurrent ? '#7c3aed' : '#94a3b8' }}
-                >
-                  {isCurrent ? <Loader2 className="h-3 w-3 animate-spin" /> : isComplete ? <Check className="h-3 w-3" /> : null}
-                  <span className="text-[11px]">{step}</span>
-                </span>
-              );
-            })}
+
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {[
+              ['Saved', resultCountLabel],
+              ['Pending', pendingCountLabel],
+              ['Scope', session?.tenantName ? `${session.tenantName} · My profile` : 'My profile'],
+            ].map(([label, value]) => (
+              <div
+                key={label}
+                className="rounded-2xl border px-4 py-3"
+                style={{ borderColor: 'rgba(124, 58, 237, 0.12)', backgroundColor: 'rgba(248, 250, 252, 0.92)' }}
+              >
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</p>
+                <p className="mt-1 text-sm font-semibold text-slate-900">{value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {(activity && activity.status !== 'idle') || pendingItems.length > 0 ? (
+        <div className="border-b px-5 py-4" style={{ borderColor: 'rgba(124, 58, 237, 0.12)' }}>
+          <div className="grid gap-4 xl:grid-cols-[1.25fr,0.95fr]">
+            <div
+              className="rounded-[28px] border p-5"
+              style={{
+                borderColor:
+                  activity?.status === 'error'
+                    ? 'rgba(239, 68, 68, 0.18)'
+                    : 'rgba(124, 58, 237, 0.12)',
+                background:
+                  activity?.status === 'error'
+                    ? 'linear-gradient(135deg, rgba(254,242,242,0.95), rgba(255,255,255,0.96))'
+                    : 'linear-gradient(135deg, rgba(124,58,237,0.08), rgba(37,99,235,0.06), rgba(255,255,255,0.98))',
+              }}
+            >
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-4">
+                  <div
+                    className="flex h-14 w-14 items-center justify-center rounded-2xl"
+                    style={{
+                      backgroundColor:
+                        activity?.status === 'error'
+                          ? 'rgba(239, 68, 68, 0.12)'
+                          : 'rgba(124, 58, 237, 0.12)',
+                      color: activity?.status === 'error' ? '#dc2626' : '#6d28d9',
+                    }}
+                  >
+                    {activity?.status === 'running' ? (
+                      <Loader2 className="h-7 w-7 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-7 w-7" />
+                    )}
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: activity?.status === 'error' ? '#dc2626' : '#7c3aed' }}>
+                      Generation Activity
+                    </p>
+                    <h3 className="mt-1 text-xl font-semibold text-slate-950">
+                      {activity?.headline || 'Preparing gallery'}
+                    </h3>
+                    <p className="mt-1 text-sm text-slate-600">
+                      {activity?.detail || 'Your live placeholders and saved designs appear here.'}
+                    </p>
+                    {activity?.errorMessage ? (
+                      <p className="mt-2 text-sm font-medium text-red-600">{activity.errorMessage}</p>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 sm:min-w-[240px]">
+                  {[
+                    ['Total', String(activity?.totalCount ?? pendingItems.length)],
+                    ['Ready', String(activity?.completedCount ?? 0)],
+                    ['Live', String(activity?.pendingCount ?? pendingItems.length)],
+                  ].map(([label, value]) => (
+                    <div
+                      key={label}
+                      className="rounded-2xl border px-3 py-3 text-center"
+                      style={{ borderColor: 'rgba(124, 58, 237, 0.12)', backgroundColor: 'rgba(255, 255, 255, 0.82)' }}
+                    >
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">{label}</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-950">{value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div
+              className="rounded-[28px] border p-5"
+              style={{ borderColor: 'rgba(124, 58, 237, 0.12)', backgroundColor: 'rgba(255,255,255,0.92)' }}
+            >
+              <div className="flex items-center gap-2">
+                <CalendarDays className="h-4 w-4 text-violet-600" />
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  On-Screen Status
+                </p>
+              </div>
+              <div className="mt-4 space-y-3">
+                {activitySteps.map((step, index) => {
+                  const isComplete = currentActivityStep > index || activity?.status === 'completed';
+                  const isCurrent = currentActivityStep === index && activity?.status !== 'completed';
+
+                  return (
+                    <div key={step} className="flex items-center gap-3">
+                      <div
+                        className="flex h-7 w-7 items-center justify-center rounded-full border"
+                        style={{
+                          borderColor: isCurrent || isComplete ? 'rgba(124, 58, 237, 0.2)' : 'rgba(148, 163, 184, 0.24)',
+                          backgroundColor: isCurrent || isComplete ? 'rgba(124, 58, 237, 0.08)' : '#ffffff',
+                          color: isCurrent || isComplete ? '#6d28d9' : '#94a3b8',
+                        }}
+                      >
+                        {isCurrent ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <span className="text-[11px] font-semibold">{index + 1}</span>}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-slate-900">{step}</p>
+                        {index === 2 ? (
+                          <p className="text-xs text-slate-500">
+                            {pendingItems.length > 0
+                              ? `${pendingItems.length} placeholder${pendingItems.length === 1 ? '' : 's'} spinning in the gallery`
+                              : 'Every finished render is already landing in the grid below'}
+                          </p>
+                        ) : null}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       ) : null}
 
-      <div className="border-b px-5 py-2.5 flex-shrink-0" style={{ borderColor: 'rgba(124, 58, 237, 0.08)', backgroundColor: 'rgba(255,255,255,0.82)' }}>
-        <div className="flex flex-col gap-2 xl:flex-row xl:items-center">
+      <div className="border-b px-5 py-4" style={{ borderColor: 'rgba(124, 58, 237, 0.12)', backgroundColor: 'rgba(255,255,255,0.82)' }}>
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
@@ -545,7 +646,7 @@ export function GenerationGalleryWorkspace({
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search prompts, rings, metals, styles, gemstones..."
-              className="w-full rounded-xl border py-2 pl-10 pr-4 text-sm text-slate-900 outline-none transition-all focus:ring-2"
+              className="w-full rounded-2xl border py-3 pl-10 pr-4 text-sm text-slate-900 outline-none transition-all focus:ring-2"
               style={{
                 borderColor: 'rgba(124, 58, 237, 0.12)',
                 backgroundColor: '#ffffff',
@@ -554,11 +655,11 @@ export function GenerationGalleryWorkspace({
             />
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-3">
             <select
               value={typeFilter}
               onChange={(event) => setTypeFilter(event.target.value)}
-              className="rounded-xl border px-3 py-2 text-sm text-slate-700 outline-none"
+              className="rounded-2xl border px-4 py-3 text-sm text-slate-700 outline-none"
               style={{ borderColor: 'rgba(124, 58, 237, 0.12)', backgroundColor: '#ffffff' }}
             >
               <option value="all">All types</option>
@@ -572,7 +673,7 @@ export function GenerationGalleryWorkspace({
             <select
               value={granularity}
               onChange={(event) => setGranularity(event.target.value as DateGranularity)}
-              className="rounded-xl border px-3 py-2 text-sm text-slate-700 outline-none"
+              className="rounded-2xl border px-4 py-3 text-sm text-slate-700 outline-none"
               style={{ borderColor: 'rgba(124, 58, 237, 0.12)', backgroundColor: '#ffffff' }}
             >
               <option value="all">All dates</option>
@@ -642,6 +743,10 @@ export function GenerationGalleryWorkspace({
             <p className="text-sm font-medium text-violet-700">
               {pendingItems.length} new {pendingItems.length === 1 ? 'image is' : 'images are'} still generating in this grid.
             </p>
+          ) : refreshing ? (
+            <p className="text-sm font-medium text-slate-500">
+              Syncing latest designs...
+            </p>
           ) : null}
         </div>
 
@@ -665,44 +770,55 @@ export function GenerationGalleryWorkspace({
             </div>
           </div>
         ) : (
-          <div className="grid gap-3 grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
             {pendingItems.map((item) => (
               <motion.div
                 key={item.id}
-                initial={{ opacity: 0, y: 6 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="overflow-hidden rounded-2xl border border-dashed bg-white"
+                className="overflow-hidden rounded-[28px] border border-dashed bg-white shadow-[0_18px_42px_rgba(15,23,42,0.06)]"
                 style={{ borderColor: 'rgba(124, 58, 237, 0.22)' }}
               >
                 <div
-                  className="flex aspect-[4/3] flex-col items-center justify-center gap-2 px-4 text-center"
-                  style={{ background: 'radial-gradient(circle at top, rgba(124,58,237,0.10), rgba(255,255,255,0.95) 65%)' }}
+                  className="flex aspect-square flex-col items-center justify-center gap-4 px-6 text-center"
+                  style={{ background: 'radial-gradient(circle at top, rgba(124,58,237,0.14), rgba(255,255,255,0.92) 65%)' }}
                 >
-                  <Loader2 className="h-6 w-6 animate-spin text-violet-500" />
-                  <p className="text-xs font-medium text-slate-700">
-                    Image {item.order + 1} of {pendingItems.length}
-                  </p>
-                </div>
-                <div className="px-3 py-2.5 border-t" style={{ borderColor: 'rgba(124, 58, 237, 0.08)' }}>
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-semibold text-slate-900 truncate">
-                      {titleize(item.type)} · {titleize(item.style)}
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full border bg-white/75" style={{ borderColor: 'rgba(124, 58, 237, 0.22)' }}>
+                    <Loader2 className="h-7 w-7 animate-spin text-violet-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-950">
+                      Generating image {item.order + 1}
                     </p>
-                    <span className="rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-semibold text-violet-600 flex-shrink-0">
-                      Generating
+                    <p className="mt-1 text-sm text-slate-500">{item.message}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-base font-semibold text-slate-950">
+                      {titleize(item.type)} Concept
+                    </p>
+                    <span className="rounded-full bg-violet-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-violet-700">
+                      Live
                     </span>
                   </div>
-                  <div className="flex flex-wrap gap-1 mt-1.5">
-                    {[item.metal, ...item.gemstones].filter(Boolean).slice(0, 3).map((value) => (
+
+                  <div className="flex flex-wrap gap-2">
+                    {[item.metal, item.style, ...item.gemstones].filter(Boolean).slice(0, 4).map((value) => (
                       <span
                         key={value}
-                        className="rounded-full border px-2 py-0.5 text-[10px] font-medium"
-                        style={{ borderColor: 'rgba(124, 58, 237, 0.12)', color: '#6d28d9' }}
+                        className="rounded-full border px-3 py-1 text-[11px] font-medium"
+                        style={{ borderColor: 'rgba(124, 58, 237, 0.14)', backgroundColor: '#faf5ff', color: '#6d28d9' }}
                       >
                         {titleize(value)}
                       </span>
                     ))}
                   </div>
+
+                  <p className="text-xs text-slate-500">
+                    Placeholder added to the gallery while the render spins up.
+                  </p>
                 </div>
               </motion.div>
             ))}
@@ -712,11 +828,11 @@ export function GenerationGalleryWorkspace({
                 key={design.id}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="group cursor-pointer overflow-hidden rounded-2xl border bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                className="group cursor-pointer overflow-hidden rounded-[28px] border bg-white shadow-[0_18px_42px_rgba(15,23,42,0.06)] transition-all hover:-translate-y-1 hover:shadow-[0_24px_54px_rgba(79,70,229,0.14)]"
                 style={{ borderColor: 'rgba(124, 58, 237, 0.12)' }}
                 onClick={() => setSelectedDesignId(design.id)}
               >
-                <div className="relative aspect-[4/3] overflow-hidden" style={{ backgroundColor: '#f8fafc' }}>
+                <div className="relative aspect-square overflow-hidden" style={{ backgroundColor: '#f8fafc' }}>
                   <ImageWithFallback
                     src={design.imageUrl}
                     alt={buildDesignTitle(design)}
@@ -763,25 +879,35 @@ export function GenerationGalleryWorkspace({
                   </div>
                 </div>
 
-                <div className="px-3 py-2.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-semibold text-slate-900 truncate">{buildDesignTitle(design)}</p>
-                    <span className="text-[10px] text-slate-400 flex-shrink-0">{formatDate(design.createdAt)}</span>
+                <div className="space-y-3 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-base font-semibold text-slate-950">{buildDesignTitle(design)}</p>
+                      <p className="mt-1 text-sm text-slate-500">{formatDate(design.createdAt)}</p>
+                    </div>
+                    <span className="rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ backgroundColor: 'rgba(124, 58, 237, 0.08)', color: '#6d28d9' }}>
+                      Open
+                    </span>
                   </div>
-                  <div className="flex flex-wrap gap-1 mt-1.5">
+
+                  <div className="flex flex-wrap gap-2">
                     {[design.features.metal, design.features.style, ...design.features.gemstones]
                       .filter(Boolean)
-                      .slice(0, 3)
+                      .slice(0, 4)
                       .map((value) => (
                         <span
                           key={value}
-                          className="rounded-full border px-2 py-0.5 text-[10px] font-medium"
-                          style={{ borderColor: 'rgba(124, 58, 237, 0.12)', color: '#6d28d9' }}
+                          className="rounded-full border px-3 py-1 text-[11px] font-medium"
+                          style={{ borderColor: 'rgba(124, 58, 237, 0.14)', backgroundColor: '#faf5ff', color: '#6d28d9' }}
                         >
                           {titleize(value)}
                         </span>
                       ))}
                   </div>
+
+                  <p className="line-clamp-2 text-sm leading-6 text-slate-600">
+                    {design.prompt || 'Prompt summary unavailable for this design.'}
+                  </p>
                 </div>
               </motion.div>
             ))}

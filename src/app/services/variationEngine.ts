@@ -1,15 +1,17 @@
 /**
  * Variation Engine Service
- * 
+ *
  * This service injects structured randomness into jewelry design prompts
  * to ensure unique and diverse design generations. It manages multiple
  * variation categories and provides random combinations for each design.
- * 
+ *
  * Why this exists:
  * - Prevents the same boring designs from being generated
  * - Ensures structural diversity across generations
  * - Allows future expansion with new variation types
  */
+
+import { distributeViews } from '@skygems/shared';
 
 export interface VariationConfig {
   bandStyle: string[];
@@ -25,6 +27,7 @@ export interface SelectedVariations {
   stonePosition: string;
   profile: string;
   motif: string;
+  viewId?: string;
 }
 
 /**
@@ -187,14 +190,19 @@ export function generateVariations(jewelryType: string): SelectedVariations {
 }
 
 /**
- * Generate multiple unique variation sets
- * Useful for batch generation or preview
+ * Generate multiple unique variation sets with distributed views.
+ * Each concept in a batch gets a different camera angle from the
+ * VIEW_CATALOG so the designer sees every important perspective.
  */
 export function generateMultipleVariations(
   jewelryType: string,
   count: number
 ): SelectedVariations[] {
-  return Array.from({ length: count }, () => generateVariations(jewelryType));
+  const views = distributeViews(jewelryType, count);
+  return Array.from({ length: count }, (_, i) => ({
+    ...generateVariations(jewelryType),
+    viewId: views[i]?.id,
+  }));
 }
 
 /**

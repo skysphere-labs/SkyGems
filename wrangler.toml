@@ -6,6 +6,10 @@ compatibility_date = "2026-04-05"
 [observability]
 enabled = true
 
+[dev]
+ip = "127.0.0.1"
+port = 8787
+
 [vars]
 SKYGEMS_PROVIDER_PRIMARY = "xai"
 SKYGEMS_PROVIDER_SECONDARY = "google"
@@ -22,11 +26,15 @@ binding = "AI_GATEWAY"
 binding = "SKYGEMS_DB"
 database_name = "skygems"
 database_id = "d21c67b6-353b-4600-8501-db6fde7e3084"
+preview_database_id = "d21c67b6-353b-4600-8501-db6fde7e3084"
 migrations_dir = "apps/api/migrations"
+remote = true
 
 [[r2_buckets]]
 binding = "SKYGEMS_ARTIFACTS"
 bucket_name = "skygems-artifacts"
+preview_bucket_name = "skygems-artifacts"
+remote = true
 
 [[queues.producers]]
 binding = "GENERATE_QUEUE"

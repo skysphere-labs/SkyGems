@@ -258,7 +258,9 @@ export const PipelineView: React.FC<PipelineViewProps> = ({
 
       const displayResults = generatedResults.map((design: RootGeneratedDesign, i) => ({
         id: design.designId,
-        title: `${design.features.type.charAt(0).toUpperCase()}${design.features.type.slice(1)} — ${design.features.style.charAt(0).toUpperCase()}${design.features.style.slice(1)}`,
+        title: design.viewLabel
+          ? `${design.viewLabel} — ${design.features.style.charAt(0).toUpperCase()}${design.features.style.slice(1)}`
+          : `${design.features.type.charAt(0).toUpperCase()}${design.features.type.slice(1)} — ${design.features.style.charAt(0).toUpperCase()}${design.features.style.slice(1)}`,
         imageUrl: design.imageUrl,
         score: {
           totalScore: Math.max(88, 98 - i * 3),

@@ -76,6 +76,378 @@ export const styleOptions = [
   { id: "spiritual", label: "Spiritual" },
 ] as const satisfies ReadonlyArray<{ id: Style; label: string }>;
 
+// ── View Catalog ──
+// Each jewelry type has a set of canonical camera views. When generating
+// multiple concepts the agent distributes different views across concepts
+// so the designer sees every important angle in a single batch.
+
+export interface ViewDefinition {
+  /** Stable identifier used in variationOverrides.viewId */
+  id: string;
+  /** Human-readable label shown in the UI */
+  label: string;
+  /** Full composition/framing prompt injected into the image-generation prompt */
+  compositionPrompt: string;
+}
+
+export const VIEW_CATALOG: Record<JewelryType, ViewDefinition[]> = {
+  ring: [
+    {
+      id: "ring-front",
+      label: "Front View",
+      compositionPrompt:
+        "A single hero shot of the ring on a pure white background. The ring is shown FRONT VIEW face-on, slightly tilted toward the camera so the setting, head, and shank are all visible. The complete ring is visible with nothing cropped. Studio lighting with soft key light.",
+    },
+    {
+      id: "ring-three-quarter",
+      label: "Three-Quarter View",
+      compositionPrompt:
+        "A single hero shot of the ring on a pure white background. The ring is shown at a THREE-QUARTER ANGLE (approximately 45 degrees) revealing both the front face of the setting and the side profile of the shank simultaneously. The complete ring is visible with nothing cropped. Professional studio lighting.",
+    },
+    {
+      id: "ring-top",
+      label: "Top-Down View",
+      compositionPrompt:
+        "A single hero shot of the ring on a pure white background. The ring is shown TOP-DOWN from directly above, the band forming a perfect circle with the crown and head in the center. The complete ring is visible with nothing cropped. Even studio lighting.",
+    },
+    {
+      id: "ring-side-profile",
+      label: "Side Profile",
+      compositionPrompt:
+        "A single hero shot of the ring on a pure white background. The ring is shown in clean SIDE PROFILE, revealing the height of the setting, the curve of the shank, and the gallery details. The complete ring is visible with nothing cropped. Rim-lit studio setup.",
+    },
+  ],
+  necklace: [
+    {
+      id: "necklace-front-crescent",
+      label: "Full Front Crescent",
+      compositionPrompt:
+        "A single hero shot on a pure white background. The complete necklace is laid flat in a gentle U-shaped CRESCENT from clasp to clasp, pendant centered at the lowest point. The entire chain, all links, and the pendant are fully visible with nothing cropped. Overhead studio lighting.",
+    },
+    {
+      id: "necklace-pendant-detail",
+      label: "Pendant Detail",
+      compositionPrompt:
+        "A close-up DETAIL VIEW of the necklace pendant on a pure white background. The pendant is shown face-on with the bail at top, filling most of the frame. Show gemstone facets, metal texture, and setting construction clearly. Nothing cropped. Macro studio lighting.",
+    },
+    {
+      id: "necklace-clasp-detail",
+      label: "Clasp & Chain Detail",
+      compositionPrompt:
+        "A DETAIL VIEW showing the clasp mechanism and a section of the chain on a pure white background. Reveal the chain link style, clasp type, and jump ring connections. Sharp focus on metalwork details. Nothing cropped. Studio lighting.",
+    },
+    {
+      id: "necklace-draped",
+      label: "Draped Display",
+      compositionPrompt:
+        "The necklace displayed in a natural DRAPED position on a pure white background, as if hanging on an invisible bust. The chain forms a gentle arc and the pendant hangs naturally at center. The complete necklace is visible with nothing cropped. Soft studio lighting.",
+    },
+  ],
+  earrings: [
+    {
+      id: "earrings-front-pair",
+      label: "Front Pair View",
+      compositionPrompt:
+        "A single hero shot on a pure white background. Both earrings of the matching pair are shown FRONT VIEW side by side with even spacing, each displayed face-on from ear wire to lowest point. The complete earrings are visible with nothing cropped. Balanced studio lighting.",
+    },
+    {
+      id: "earrings-single-detail",
+      label: "Single Earring Detail",
+      compositionPrompt:
+        "A close-up DETAIL VIEW of one earring on a pure white background. The earring is shown face-on, filling the frame to reveal gemstone settings, metalwork texture, and construction details. Nothing cropped. Macro studio lighting.",
+    },
+    {
+      id: "earrings-side-profile",
+      label: "Side Profile",
+      compositionPrompt:
+        "A SIDE PROFILE VIEW of one earring on a pure white background, showing the depth, curvature, and construction from ear wire through the body to the lowest point. The complete earring is visible with nothing cropped. Rim-lit studio lighting.",
+    },
+    {
+      id: "earrings-angled",
+      label: "Three-Quarter Angle",
+      compositionPrompt:
+        "Both earrings shown at a THREE-QUARTER ANGLE on a pure white background, revealing depth and dimension while keeping the front decorative face visible. The complete pair is visible with nothing cropped. Professional studio lighting.",
+    },
+  ],
+  bracelet: [
+    {
+      id: "bracelet-top-oval",
+      label: "Top-Down Oval",
+      compositionPrompt:
+        "A single hero shot on a pure white background. The bracelet is shown TOP-DOWN from directly above, laid flat as a closed oval. The clasp, all links or segments, and decorative elements are fully visible. Nothing cropped. Even overhead studio lighting.",
+    },
+    {
+      id: "bracelet-side-profile",
+      label: "Side Profile",
+      compositionPrompt:
+        "A SIDE PROFILE VIEW of the bracelet on a pure white background, shown edge-on to reveal the width, thickness, and cross-section of the design. The complete bracelet is visible with nothing cropped. Rim-lit studio setup.",
+    },
+    {
+      id: "bracelet-clasp-detail",
+      label: "Clasp Detail",
+      compositionPrompt:
+        "A close-up DETAIL VIEW of the bracelet clasp mechanism and adjacent links on a pure white background. Show the clasp type, hinge, safety catch, and connection details. Sharp focus. Nothing cropped. Macro studio lighting.",
+    },
+    {
+      id: "bracelet-three-quarter",
+      label: "Three-Quarter View",
+      compositionPrompt:
+        "The bracelet shown at a THREE-QUARTER ANGLE on a pure white background, partially open, revealing the interior finish, the exterior design, and the clasp. The complete bracelet is visible with nothing cropped. Professional studio lighting.",
+    },
+  ],
+  pendant: [
+    {
+      id: "pendant-front",
+      label: "Front View",
+      compositionPrompt:
+        "A single hero shot on a pure white background. The pendant is shown FRONT VIEW face-on with the bail at top. The complete pendant shape, gemstone settings, and decorative details are fully visible. Nothing cropped. Studio lighting.",
+    },
+    {
+      id: "pendant-side-profile",
+      label: "Side Profile",
+      compositionPrompt:
+        "A SIDE PROFILE VIEW of the pendant on a pure white background, revealing depth, gallery construction, and the bail attachment. The complete pendant is visible with nothing cropped. Rim-lit studio lighting.",
+    },
+    {
+      id: "pendant-back",
+      label: "Back View",
+      compositionPrompt:
+        "A BACK VIEW of the pendant on a pure white background, showing the reverse construction, bail attachment point, and any hallmarks or finishing details. The complete pendant is visible with nothing cropped. Even studio lighting.",
+    },
+    {
+      id: "pendant-three-quarter",
+      label: "Three-Quarter View",
+      compositionPrompt:
+        "The pendant shown at a THREE-QUARTER ANGLE on a pure white background, revealing both front decorative face and side depth simultaneously. The complete pendant is visible with nothing cropped. Professional studio lighting.",
+    },
+  ],
+  anklet: [
+    {
+      id: "anklet-full-layout",
+      label: "Full Layout",
+      compositionPrompt:
+        "A single hero shot on a pure white background. The anklet is laid flat in a gentle oval from clasp to clasp, all charms and decorative elements visible. Nothing cropped. Overhead studio lighting.",
+    },
+    {
+      id: "anklet-charm-detail",
+      label: "Charm Detail",
+      compositionPrompt:
+        "A close-up DETAIL VIEW of the anklet's decorative charms and chain links on a pure white background. Sharp focus on metalwork and charm details. Nothing cropped. Macro studio lighting.",
+    },
+    {
+      id: "anklet-clasp-detail",
+      label: "Clasp Detail",
+      compositionPrompt:
+        "A DETAIL VIEW of the anklet clasp and extender chain on a pure white background. Show clasp mechanism and chain style clearly. Nothing cropped. Studio lighting.",
+    },
+    {
+      id: "anklet-draped",
+      label: "Draped Display",
+      compositionPrompt:
+        "The anklet displayed in a natural DRAPED circle on a pure white background, as if resting on an invisible ankle. Natural fall showing chain weight and charm movement. Nothing cropped. Soft studio lighting.",
+    },
+  ],
+  brooch: [
+    {
+      id: "brooch-front",
+      label: "Front View",
+      compositionPrompt:
+        "A single hero shot on a pure white background. The brooch is shown FRONT VIEW face-on, all decorative elements, gemstones, and surface details fully visible. Nothing cropped. Studio lighting.",
+    },
+    {
+      id: "brooch-back",
+      label: "Back & Pin View",
+      compositionPrompt:
+        "A BACK VIEW of the brooch on a pure white background, showing the pin mechanism, hinge, clasp, and reverse construction. Nothing cropped. Even studio lighting.",
+    },
+    {
+      id: "brooch-three-quarter",
+      label: "Three-Quarter View",
+      compositionPrompt:
+        "The brooch at a THREE-QUARTER ANGLE on a pure white background, showing both the front decorative surface and the side depth. Nothing cropped. Professional studio lighting.",
+    },
+    {
+      id: "brooch-detail",
+      label: "Surface Detail",
+      compositionPrompt:
+        "A macro DETAIL VIEW of the brooch surface on a pure white background, revealing gemstone settings, enamel work, or metalwork texture at close range. Nothing cropped. Macro studio lighting.",
+    },
+  ],
+  tiara: [
+    {
+      id: "tiara-front",
+      label: "Front View",
+      compositionPrompt:
+        "A single hero shot on a pure white background. The tiara is shown FRONT VIEW face-on, the full arc visible from end to end with all decorative peaks and gemstones. Nothing cropped. Studio lighting.",
+    },
+    {
+      id: "tiara-side",
+      label: "Side Profile",
+      compositionPrompt:
+        "A SIDE PROFILE of the tiara on a pure white background, showing the height of the peaks, the curve of the band, and the depth of the decorative elements. Nothing cropped. Rim-lit studio lighting.",
+    },
+    {
+      id: "tiara-three-quarter",
+      label: "Three-Quarter View",
+      compositionPrompt:
+        "The tiara at a THREE-QUARTER ANGLE on a pure white background, showing the front face and the side curve simultaneously. Nothing cropped. Professional studio lighting.",
+    },
+    {
+      id: "tiara-top",
+      label: "Top-Down View",
+      compositionPrompt:
+        "A TOP-DOWN VIEW of the tiara on a pure white background, showing the arc shape, spacing of decorative elements, and overall symmetry. Nothing cropped. Overhead studio lighting.",
+    },
+  ],
+  "body-chain": [
+    {
+      id: "body-chain-full-layout",
+      label: "Full Layout",
+      compositionPrompt:
+        "A single hero shot on a pure white background. The body chain is laid flat showing the complete layout — all chains, connecting points, and the central decorative element. Nothing cropped. Overhead studio lighting.",
+    },
+    {
+      id: "body-chain-center-detail",
+      label: "Center Detail",
+      compositionPrompt:
+        "A close-up DETAIL VIEW of the body chain's central decorative element on a pure white background. Show gemstones, metalwork, and connection points. Nothing cropped. Macro studio lighting.",
+    },
+    {
+      id: "body-chain-connector-detail",
+      label: "Connector Detail",
+      compositionPrompt:
+        "A DETAIL VIEW of the body chain connectors and chain style on a pure white background. Reveal link patterns and adjustment mechanisms. Nothing cropped. Studio lighting.",
+    },
+    {
+      id: "body-chain-draped",
+      label: "Draped Display",
+      compositionPrompt:
+        "The body chain displayed as if draped on an invisible form on a pure white background, showing the natural drape and how chains layer. Nothing cropped. Soft studio lighting.",
+    },
+  ],
+  "hair-jewelry": [
+    {
+      id: "hair-jewelry-front",
+      label: "Front View",
+      compositionPrompt:
+        "A single hero shot on a pure white background. The hair jewelry is shown FRONT VIEW face-on, all decorative elements visible. Nothing cropped. Studio lighting.",
+    },
+    {
+      id: "hair-jewelry-side",
+      label: "Side View",
+      compositionPrompt:
+        "A SIDE VIEW of the hair jewelry on a pure white background, showing how it curves and attaches. Nothing cropped. Rim-lit studio lighting.",
+    },
+    {
+      id: "hair-jewelry-detail",
+      label: "Detail View",
+      compositionPrompt:
+        "A close-up DETAIL VIEW of the hair jewelry decorative elements on a pure white background. Sharp focus on gemstones and metalwork. Nothing cropped. Macro studio lighting.",
+    },
+    {
+      id: "hair-jewelry-back",
+      label: "Back & Attachment",
+      compositionPrompt:
+        "A BACK VIEW of the hair jewelry on a pure white background, showing teeth, clips, or pins used for attachment. Nothing cropped. Even studio lighting.",
+    },
+  ],
+  cufflinks: [
+    {
+      id: "cufflinks-front-pair",
+      label: "Front Pair View",
+      compositionPrompt:
+        "A single hero shot on a pure white background. Both cufflinks shown FRONT VIEW side by side, decorative faces visible. Nothing cropped. Balanced studio lighting.",
+    },
+    {
+      id: "cufflinks-side",
+      label: "Side Profile",
+      compositionPrompt:
+        "A SIDE PROFILE of one cufflink on a pure white background, showing the toggle mechanism, depth, and connection. Nothing cropped. Rim-lit studio lighting.",
+    },
+    {
+      id: "cufflinks-detail",
+      label: "Face Detail",
+      compositionPrompt:
+        "A macro DETAIL VIEW of one cufflink face on a pure white background, showing engraving, gemstones, or textured surface. Nothing cropped. Macro studio lighting.",
+    },
+    {
+      id: "cufflinks-back",
+      label: "Toggle Detail",
+      compositionPrompt:
+        "A BACK VIEW of one cufflink on a pure white background, showing the toggle bar, hinge, and fastening mechanism. Nothing cropped. Even studio lighting.",
+    },
+  ],
+  "nose-ring": [
+    {
+      id: "nose-ring-front",
+      label: "Front View",
+      compositionPrompt:
+        "A single hero shot on a pure white background. The nose ring is shown FRONT VIEW face-on, decorative elements and gem settings visible. Nothing cropped. Studio lighting.",
+    },
+    {
+      id: "nose-ring-side",
+      label: "Side Profile",
+      compositionPrompt:
+        "A SIDE PROFILE of the nose ring on a pure white background, showing the curve, gauge, and closure mechanism. Nothing cropped. Rim-lit studio lighting.",
+    },
+    {
+      id: "nose-ring-detail",
+      label: "Detail View",
+      compositionPrompt:
+        "A macro DETAIL VIEW of the nose ring's decorative element on a pure white background. Sharp focus on gem setting and metalwork. Nothing cropped. Macro studio lighting.",
+    },
+    {
+      id: "nose-ring-three-quarter",
+      label: "Three-Quarter View",
+      compositionPrompt:
+        "The nose ring at a THREE-QUARTER ANGLE on a pure white background, showing both the front decoration and the curve of the ring simultaneously. Nothing cropped. Professional studio lighting.",
+    },
+  ],
+  "toe-ring": [
+    {
+      id: "toe-ring-front",
+      label: "Front View",
+      compositionPrompt:
+        "A single hero shot on a pure white background. The toe ring is shown FRONT VIEW face-on with decorative elements visible. Nothing cropped. Studio lighting.",
+    },
+    {
+      id: "toe-ring-top",
+      label: "Top-Down View",
+      compositionPrompt:
+        "A TOP-DOWN VIEW of the toe ring on a pure white background, showing the band as a circle with any decorative elements at center. Nothing cropped. Overhead studio lighting.",
+    },
+    {
+      id: "toe-ring-side",
+      label: "Side Profile",
+      compositionPrompt:
+        "A SIDE PROFILE of the toe ring on a pure white background, showing band width, any setting height, and adjustable opening. Nothing cropped. Rim-lit studio lighting.",
+    },
+    {
+      id: "toe-ring-detail",
+      label: "Detail View",
+      compositionPrompt:
+        "A macro DETAIL VIEW of the toe ring's decorative element on a pure white background. Sharp focus on surface detail and metalwork. Nothing cropped. Macro studio lighting.",
+    },
+  ],
+};
+
+/** Look up a specific view from the catalog. Returns the first view as fallback. */
+export function resolveView(jewelryType: JewelryType, viewId: string | undefined): ViewDefinition {
+  const views = VIEW_CATALOG[jewelryType];
+  if (viewId) {
+    const match = views.find((v) => v.id === viewId);
+    if (match) return match;
+  }
+  return views[0];
+}
+
+/** Get N views for a jewelry type, cycling through the catalog. */
+export function distributeViews(jewelryType: JewelryType, count: number): ViewDefinition[] {
+  const views = VIEW_CATALOG[jewelryType];
+  return Array.from({ length: count }, (_, i) => views[i % views.length]);
+}
+
+// Legacy two-view composition prompts (used by sketch prompt in prompt-compile)
 export const typeCompositionPrompts: Record<JewelryType, string> = {
   ring:
     "A jewelry design sheet showing TWO hand-drawn views of the same finger ring on white paper: a FRONT VIEW showing the ring face-on with the setting visible and a TOP VIEW from directly above showing the band as a circle with the head and crown. Both views are side by side with clear spacing. The full ring is visible in each view with nothing cropped.",

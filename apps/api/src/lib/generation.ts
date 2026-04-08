@@ -42,7 +42,7 @@ async function generateImageWithXai(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "grok-imagine-image",
+        model: "grok-imagine-image-pro",
         prompt,
         n: 1,
         response_format: "b64_json",

@@ -5,8 +5,17 @@
  */
 
 import { generateMultipleVariations, type SelectedVariations } from './variationEngine';
+import { resolveView, type JewelryType } from '@skygems/shared';
 import type { DesignMetadata } from './storageService';
-import { getDesign, resetStorage, upsertDesignMetadata } from './storageService';
+import {
+  clearGalleryCacheState,
+  getCachedDesigns,
+  getDesign,
+  readGalleryCacheState,
+  resetStorage,
+  upsertDesignMetadata,
+  writeGalleryCacheState,
+} from './storageService';
 import { generateJewelryPrompt } from '../utils/promptGenerator';
 
 // ── Types ──
@@ -49,6 +58,7 @@ export interface RootGeneratedDesign {
   designId: string;
   prompt: string;
   imageUrl: string;
+  viewLabel?: string;
   features: {
     type: string;
     metal: string;
@@ -66,6 +76,9 @@ export interface GenerateConceptSetProgressCallbacks {
 
 export type DesignOwnerScope = 'all' | 'mine';
 export const DESIGNS_UPDATED_EVENT = 'skygems:designs-updated';
+const GALLERY_CACHE_TTL_MS = 60_000;
+const GALLERY_SYNC_PAGE_SIZE = 100;
+const gallerySyncInFlight = new Map<string, Promise<DesignMetadata[]>>();
 
 interface DevBootstrapConfig {
   username?: string;
@@ -89,7 +102,7 @@ interface DevSession {
 
 export type AuthSession = DevSession;
 
-const DEV_SESSION_KEY = 'skygems.session.v1';
+const DEV_SESSION_KEY = 'skygems.session.v2';
 const DEV_BOOTSTRAP_CONFIG_KEY = 'skygems.dev-bootstrap.config.v1';
 const AUTH_REQUIRED_MESSAGE = 'SkyGems authentication is required.';
 let validatedSessionToken: string | null = null;
@@ -100,6 +113,36 @@ function titleizeSegment(value: string): string {
     .filter(Boolean)
     .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
     .join(' ');
+}
+
+function slugifySegment(value: string): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
+
+function isFixtureDevAccount(username: string): boolean {
+  return username === 'gemsdev' || username === 'acegems';
+}
+
+function resolveBootstrapIdentity(username: string) {
+  const normalized = username.trim().toLowerCase();
+  const isEmail = normalized.includes('@');
+  const email = isEmail ? normalized : `${slugifySegment(normalized)}@skygems.local`;
+  const localPart = email.split('@')[0] ?? normalized;
+  const displayName = titleizeSegment(localPart) || 'SkyGems User';
+  const tenantSlug = slugifySegment(isEmail ? email.replace('@', '-') : normalized) || 'skygems-user';
+
+  return {
+    email,
+    displayName,
+    tenantSlug,
+    tenantName: `${displayName} Studio`,
+    projectName: `${displayName} Workspace`,
+    projectDescription: `Remote Cloudflare workspace for ${email}.`,
+  };
 }
 
 function normalizeBootstrapConfig(config: DevBootstrapConfig): DevBootstrapConfig {
@@ -228,10 +271,15 @@ export function readStoredSession(): AuthSession | null {
 export function readDevBootstrapState() {
   const config = getStoredBootstrapConfig();
   const session = getStoredSession();
+  const fallbackUsername = config.username ?? '';
+  const fallbackDisplayName =
+    fallbackUsername.trim().length > 0
+      ? titleizeSegment(fallbackUsername.trim())
+      : 'Personal Workspace';
 
   return {
-    username: config.username ?? 'gemsdev',
-    displayName: session?.userDisplayName ?? titleizeSegment((config.username ?? 'gemsdev').trim()),
+    username: fallbackUsername,
+    displayName: session?.userDisplayName ?? fallbackDisplayName,
     userId: session?.userId,
     projectId: session?.projectId,
     hasCustomConfig: Object.keys(config).length > 0,
@@ -242,6 +290,7 @@ export function clearAuthSession() {
   storeBootstrapConfig({});
   clearStoredSession();
   validatedSessionToken = null;
+  clearGalleryCacheState();
   resetStorage();
 }
 
@@ -249,6 +298,7 @@ function saveBootstrapIdentity(config: DevBootstrapConfig) {
   storeBootstrapConfig(config);
   clearStoredSession();
   validatedSessionToken = null;
+  clearGalleryCacheState();
   resetStorage();
 }
 
@@ -290,16 +340,21 @@ export async function signInWithDevBootstrap(input: {
 
   let response: Response;
   try {
-    response = await fetch('/v1/dev/login', {
+    const endpoint = isFixtureDevAccount(username) ? '/v1/dev/login' : '/v1/dev/bootstrap';
+    const body = isFixtureDevAccount(username)
+      ? {
+          username,
+          password: input.password,
+        }
+      : resolveBootstrapIdentity(username);
+
+    response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
-      body: JSON.stringify({
-        username,
-        password: input.password,
-      }),
+      body: JSON.stringify(body),
     });
   } catch (error) {
     throw new Error(
@@ -473,11 +528,13 @@ async function generateSingleConcept(
       throw new Error(status.error?.message ?? `Generation ${status.status}`);
     }
     if (status.status === 'succeeded' && status.pair?.render?.signedUrl) {
+      const view = resolveView(input.type as JewelryType, variation.viewId);
       return {
         generationId: gen.generationId,
         designId: status.design.designId,
         prompt: input.promptText,
         imageUrl: status.pair.render.signedUrl,
+        viewLabel: view.label,
         features: {
           type: input.type,
           metal: input.metal,
@@ -608,6 +665,123 @@ function mapBackendDesign(design: any): DesignMetadata {
   return metadata;
 }
 
+function matchesGalleryQuery(design: DesignMetadata, query: string) {
+  const normalizedQuery = query.trim().toLowerCase();
+  if (!normalizedQuery) {
+    return true;
+  }
+
+  return [
+    design.prompt,
+    design.features.type,
+    design.features.metal,
+    design.features.style,
+    ...design.features.gemstones,
+    ...(design.tags ?? []),
+    design.id,
+  ]
+    .join(' ')
+    .toLowerCase()
+    .includes(normalizedQuery);
+}
+
+function getLatestUpdatedIso(designs: DesignMetadata[]): string | undefined {
+  if (designs.length === 0) {
+    return undefined;
+  }
+
+  const latest = designs.reduce((max, design) => Math.max(max, design.updatedAt), 0);
+  return latest > 0 ? new Date(latest).toISOString() : undefined;
+}
+
+function getGallerySyncKey(ownerScope: DesignOwnerScope) {
+  const session = readStoredSession();
+  return `${session?.tenantId ?? 'anonymous-tenant'}:${session?.userId ?? 'anonymous'}:${ownerScope}`;
+}
+
+async function syncBackendGalleryCache(
+  ownerScope: DesignOwnerScope = 'mine',
+  options: {
+    forceFull?: boolean;
+    emitUpdateEvent?: boolean;
+  } = {},
+): Promise<DesignMetadata[]> {
+  const syncKey = getGallerySyncKey(ownerScope);
+  const inFlight = gallerySyncInFlight.get(syncKey);
+  if (inFlight) {
+    return inFlight;
+  }
+
+  const syncPromise = (async () => {
+    const cachedBefore = getCachedDesigns(ownerScope);
+    const cacheState = readGalleryCacheState(ownerScope);
+    const updatedAfter =
+      options.forceFull || !cacheState?.complete
+        ? undefined
+        : cacheState.lastServerUpdatedAt ?? getLatestUpdatedIso(cachedBefore);
+
+    let page = 1;
+    let fetchedCount = 0;
+    let latestServerUpdatedAt = cacheState?.lastServerUpdatedAt ?? getLatestUpdatedIso(cachedBefore);
+
+    while (true) {
+      const payload = await authedJson<{ items: any[] }>('/v1/gallery/search', {
+        method: 'POST',
+        body: JSON.stringify({
+          ownerScope,
+          query: '',
+          updatedAfter,
+          filters: {},
+          page,
+          pageSize: GALLERY_SYNC_PAGE_SIZE,
+          sort: updatedAfter ? 'updated' : 'newest',
+        }),
+      });
+
+      const mapped = payload.items.map(mapBackendDesign);
+      fetchedCount += mapped.length;
+
+      for (const design of mapped) {
+        const updatedAtIso = new Date(design.updatedAt).toISOString();
+        if (!latestServerUpdatedAt || updatedAtIso > latestServerUpdatedAt) {
+          latestServerUpdatedAt = updatedAtIso;
+        }
+      }
+
+      if (mapped.length < GALLERY_SYNC_PAGE_SIZE) {
+        break;
+      }
+
+      page += 1;
+    }
+
+    const cachedAfter = getCachedDesigns(ownerScope);
+    writeGalleryCacheState(ownerScope, {
+      ownerScope,
+      lastSyncedAt: Date.now(),
+      lastServerUpdatedAt: latestServerUpdatedAt ?? getLatestUpdatedIso(cachedAfter),
+      complete: true,
+      cachedCount: cachedAfter.length,
+    });
+
+    const changed =
+      fetchedCount > 0 ||
+      cachedAfter.length !== cachedBefore.length ||
+      (getLatestUpdatedIso(cachedAfter) ?? '') !== (getLatestUpdatedIso(cachedBefore) ?? '');
+
+    if (options.emitUpdateEvent && changed) {
+      notifyDesignsUpdated();
+    }
+
+    return cachedAfter;
+  })().finally(() => {
+    gallerySyncInFlight.delete(syncKey);
+  });
+
+  gallerySyncInFlight.set(syncKey, syncPromise);
+  return syncPromise;
+}
+
 function mapGeneratedDesign(result: RootGeneratedDesign, userId?: string): DesignMetadata {
   const existing = getDesign(result.designId);
   const metadata: DesignMetadata = {
@@ -628,20 +802,44 @@ function mapGeneratedDesign(result: RootGeneratedDesign, userId?: string): Desig
 }
 
 export async function listBackendDesigns(ownerScope: DesignOwnerScope = 'mine'): Promise<DesignMetadata[]> {
-  const payload = await authedJson<{ items: any[] }>('/v1/gallery/search', {
-    method: 'POST',
-    body: JSON.stringify({ ownerScope, query: '', filters: {}, page: 1, pageSize: 50, sort: 'newest' }),
-  });
-  return payload.items.map(mapBackendDesign);
+  const cached = getCachedDesigns(ownerScope);
+  const cacheState = readGalleryCacheState(ownerScope);
+  const shouldRefresh =
+    !cacheState ||
+    !cacheState.complete ||
+    Date.now() - cacheState.lastSyncedAt > GALLERY_CACHE_TTL_MS;
+
+  if (cached.length > 0) {
+    if (shouldRefresh) {
+      void syncBackendGalleryCache(ownerScope, { emitUpdateEvent: true });
+    }
+    return cached;
+  }
+
+  try {
+    return await syncBackendGalleryCache(ownerScope);
+  } catch {
+    return cached;
+  }
 }
 
 export async function searchBackendGallery(
   query: string,
   ownerScope: DesignOwnerScope = 'mine',
 ): Promise<DesignMetadata[]> {
-  const payload = await authedJson<{ items: any[] }>('/v1/gallery/search', {
-    method: 'POST',
-    body: JSON.stringify({ ownerScope, query, filters: {}, page: 1, pageSize: 50, sort: 'newest' }),
-  });
-  return payload.items.map(mapBackendDesign);
+  const normalizedQuery = query.trim();
+  if (normalizedQuery.length === 0) {
+    return listBackendDesigns(ownerScope);
+  }
+
+  const cacheState = readGalleryCacheState(ownerScope);
+  if (!cacheState?.complete && getCachedDesigns(ownerScope).length === 0) {
+    try {
+      await syncBackendGalleryCache(ownerScope);
+    } catch {
+      return getCachedDesigns(ownerScope).filter((design) => matchesGalleryQuery(design, normalizedQuery));
+    }
+  }
+
+  return getCachedDesigns(ownerScope).filter((design) => matchesGalleryQuery(design, normalizedQuery));
 }

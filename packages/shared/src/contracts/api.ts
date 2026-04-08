@@ -337,6 +337,7 @@ export const GallerySearchRequestSchema = z.object({
   projectId: ProjectIdSchema.optional(),
   ownerScope: DesignOwnerScopeSchema.default("all"),
   query: z.string().trim().max(200).default(""),
+  updatedAfter: IsoTimestampSchema.optional(),
   filters: z
     .object({
       jewelryTypes: z.array(CreateDesignInputSchema.shape.jewelryType).optional(),
@@ -347,7 +348,7 @@ export const GallerySearchRequestSchema = z.object({
     })
     .default({}),
   page: z.number().int().min(1).default(1),
-  pageSize: z.number().int().min(1).max(50).default(24),
+  pageSize: z.number().int().min(1).max(200).default(24),
   sort: z.enum(["newest", "updated", "selected"]).default("newest"),
 });
 

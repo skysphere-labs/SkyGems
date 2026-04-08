@@ -94,14 +94,14 @@ export function LoginScreen() {
               <p className="text-sm font-medium text-purple-600">Welcome back</p>
               <h2 className="text-2xl font-semibold text-foreground">Sign in with your email</h2>
               <p className="text-sm leading-6 text-muted-foreground">
-                For local development this uses the existing SkyGems bootstrap auth path and restores your scoped workspace.
+                Enter your email or workspace username. SkyGems will restore or create a remote tenant-scoped workspace for that identity.
               </p>
             </div>
 
             <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
             <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground" htmlFor="email">
-                  Username
+                <label className="text-sm font-medium text-foreground" htmlFor="username">
+                  Email or Username
                 </label>
                 <input
                   id="username"
@@ -109,7 +109,7 @@ export function LoginScreen() {
                   autoComplete="username"
                   value={username}
                   onChange={(event) => setUsername(event.target.value)}
-                  placeholder="gemsdev"
+                  placeholder="you@example.com"
                   className="w-full rounded-xl border border-border bg-white px-4 py-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-purple-400 focus:ring-4 focus:ring-purple-100"
                   required
                 />
@@ -150,7 +150,7 @@ export function LoginScreen() {
             </form>
 
             <p className="mt-6 text-xs leading-5 text-muted-foreground">
-              Local test accounts: <span className="font-medium text-foreground">gemsdev / gemsdev123</span> and <span className="font-medium text-foreground">acegems / acegems123</span>.
+              Fixture accounts still work: <span className="font-medium text-foreground">gemsdev / gemsdev123</span> and <span className="font-medium text-foreground">acegems / acegems123</span>. Any other email or username gets its own remote workspace.
             </p>
           </div>
         </div>

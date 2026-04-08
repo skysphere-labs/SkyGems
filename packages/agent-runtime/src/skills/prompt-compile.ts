@@ -1,7 +1,9 @@
 import {
   PromptBundleSchema,
   formatVariationsForPrompt,
+  resolveView,
   type DesignDna,
+  type JewelryType,
   type PromptBundle,
   type PromptPreviewProvider,
 } from "@skygems/shared";
@@ -15,6 +17,7 @@ export function compilePromptBundle(options: {
   provider?: PromptPreviewProvider;
   promptPack: PromptPackRelease;
   viewPlan?: ViewPlan;
+  viewId?: string;
 }): PromptBundle {
   const provider = options.provider ?? "xai";
   const { content } = options.promptPack;
@@ -25,6 +28,7 @@ export function compilePromptBundle(options: {
     : "";
   const providerDirectives = content.providerDirectives[provider];
 
+  // Sketch prompt uses the legacy two-view composition (design sheet with multiple angles)
   const compositionPrompt =
     options.viewPlan?.compositionPrompt ??
     content.typeCompositionPrompts[options.designDna.jewelryType];
@@ -44,9 +48,18 @@ Provider targeting: ${providerDirectives.sketch}${notesSuffix}
 
 IMPORTANT: This is a ${options.designDna.jewelryType.toUpperCase()}. ${content.wholePieceConstraint}`;
 
-  const renderPrompt = `A luxury studio render of the same ${options.designDna.jewelryType} concept. Showcase ${content.metalDescriptions[
+  // Render prompt uses the view-specific composition from VIEW_CATALOG
+  // so each concept in a batch shows a different camera angle.
+  const view = resolveView(
+    options.designDna.jewelryType as JewelryType,
+    options.viewId,
+  );
+
+  const renderPrompt = `${view.compositionPrompt}
+
+This is a ${options.designDna.jewelryType} in ${content.metalDescriptions[
     options.designDna.metal
-  ]} with ${describeGemstones(content, options.designDna.gemstones).toLowerCase()} Keep the structure faithful to this design DNA: ${options.designDna.bandStyle}, ${options.designDna.settingType}, ${options.designDna.stonePosition}, ${options.designDna.profile}, and ${options.designDna.motif}. Style direction: ${content.styleDescriptions[
+  ]} with ${describeGemstones(content, options.designDna.gemstones).toLowerCase()} Design DNA: ${options.designDna.bandStyle}, ${options.designDna.settingType}, ${options.designDna.stonePosition}, ${options.designDna.profile}, and ${options.designDna.motif}. Style direction: ${content.styleDescriptions[
     options.designDna.style
   ]}. Complexity level: ${complexityDescription}. ${content.renderRenderingStyle}
 

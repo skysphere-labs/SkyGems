@@ -48,8 +48,17 @@ export interface DesignMetadata {
   notes?: string;
 }
 
-const AUTH_SESSION_KEY = 'skygems.session.v1';
+export interface GalleryCacheState {
+  ownerScope: 'all' | 'mine';
+  lastSyncedAt: number;
+  lastServerUpdatedAt?: string;
+  complete: boolean;
+  cachedCount: number;
+}
+
+const AUTH_SESSION_KEY = 'skygems.session.v2';
 const STORAGE_KEY_PREFIX = 'jewel_designs_metadata';
+const GALLERY_CACHE_KEY_PREFIX = 'jewel_gallery_cache';
 
 function getStorageNamespace(): string {
   if (typeof window === 'undefined') {
@@ -62,8 +71,10 @@ function getStorageNamespace(): string {
       return 'anonymous';
     }
 
-    const parsed = JSON.parse(raw) as { userId?: string };
-    return parsed.userId?.trim() || 'anonymous';
+    const parsed = JSON.parse(raw) as { userId?: string; tenantId?: string };
+    const tenantId = parsed.tenantId?.trim() || 'anonymous-tenant';
+    const userId = parsed.userId?.trim() || 'anonymous';
+    return `${tenantId}:${userId}`;
   } catch {
     return 'anonymous';
   }
@@ -71,6 +82,10 @@ function getStorageNamespace(): string {
 
 function getMetadataStorageKey(): string {
   return `${STORAGE_KEY_PREFIX}:${getStorageNamespace()}`;
+}
+
+function getGalleryCacheStorageKey(ownerScope: 'all' | 'mine'): string {
+  return `${GALLERY_CACHE_KEY_PREFIX}:${getStorageNamespace()}:${ownerScope}`;
 }
 
 /**
@@ -500,9 +515,57 @@ export function upsertDesignMetadata(metadata: DesignMetadata): void {
   getStorageManager().upsertMetadata(metadata);
 }
 
+export function getCachedDesigns(ownerScope: 'all' | 'mine' = 'all'): DesignMetadata[] {
+  const allDesigns = getAllDesigns();
+  if (ownerScope === 'mine') {
+    return allDesigns.filter((design) => design.ownedByCurrentUser !== false);
+  }
+  return allDesigns;
+}
+
+export function readGalleryCacheState(
+  ownerScope: 'all' | 'mine',
+): GalleryCacheState | null {
+  try {
+    const raw = localStorage.getItem(getGalleryCacheStorageKey(ownerScope));
+    if (!raw) {
+      return null;
+    }
+    return JSON.parse(raw) as GalleryCacheState;
+  } catch {
+    return null;
+  }
+}
+
+export function writeGalleryCacheState(
+  ownerScope: 'all' | 'mine',
+  state: GalleryCacheState,
+): void {
+  try {
+    localStorage.setItem(getGalleryCacheStorageKey(ownerScope), JSON.stringify(state));
+  } catch (error) {
+    console.error('Failed to save gallery cache state:', error);
+  }
+}
+
+export function clearGalleryCacheState(ownerScope?: 'all' | 'mine'): void {
+  try {
+    if (ownerScope) {
+      localStorage.removeItem(getGalleryCacheStorageKey(ownerScope));
+      return;
+    }
+
+    localStorage.removeItem(getGalleryCacheStorageKey('all'));
+    localStorage.removeItem(getGalleryCacheStorageKey('mine'));
+  } catch (error) {
+    console.error('Failed to clear gallery cache state:', error);
+  }
+}
+
 /**
  * Clear all storage
  */
 export function clearAllDesigns(): void {
   getStorageManager().clearAll();
+  clearGalleryCacheState();
 }

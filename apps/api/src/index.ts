@@ -660,7 +660,7 @@ async function loadArtifact(
               projectId: artifact.project_id,
             },
             env,
-            { allowLocalFallback: true, ttlMinutes: 15 },
+            { allowLocalFallback: true, ttlMinutes: 60 * 24 },
           ),
         )}`,
         origin,
@@ -2103,6 +2103,11 @@ async function handleGallerySearch(request: Request, env: Env, auth: AuthContext
     bindings.push(`%${payload.query.toLowerCase()}%`);
   }
 
+  if (payload.updatedAfter) {
+    whereClauses.push("updated_at > ?");
+    bindings.push(payload.updatedAfter);
+  }
+
   if (payload.filters.jewelryTypes?.length) {
     whereClauses.push(
       `json_extract(design_dna_json, '$.jewelryType') IN (${payload.filters.jewelryTypes
@@ -2623,7 +2628,7 @@ async function handleQuickGenerate(request: Request, env: ApiEnv): Promise<Respo
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "grok-imagine-image",
+      model: "grok-imagine-image-pro",
       prompt: body.prompt,
       n: 1,
       response_format: "url",
