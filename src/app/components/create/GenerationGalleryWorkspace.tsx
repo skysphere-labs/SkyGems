@@ -3,6 +3,8 @@ import { Link } from 'react-router';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   CalendarDays,
+  ChevronDown,
+  ChevronUp,
   Download,
   ExternalLink,
   Gem,
@@ -163,6 +165,8 @@ function GenerationDetailModal({
   onClose: () => void;
   onLikeToggle: (design: DesignMetadata) => void;
 }) {
+  const [promptExpanded, setPromptExpanded] = useState(false);
+
   const variationRows = [
     design.features.variation.bandStyle,
     design.features.variation.settingType,
@@ -171,13 +175,15 @@ function GenerationDetailModal({
     design.features.variation.motif,
   ].filter(Boolean);
 
+  const promptText = design.prompt || 'Prompt summary will appear here when available.';
+
   return (
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-5"
+        className="fixed inset-0 z-50 flex items-stretch bg-black/80"
         onClick={(event) => {
           if (event.target === event.currentTarget) {
             onClose();
@@ -185,163 +191,192 @@ function GenerationDetailModal({
         }}
       >
         <motion.div
-          initial={{ opacity: 0, scale: 0.96, y: 12 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.96, y: 12 }}
+          initial={{ opacity: 0, scale: 0.97 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.97 }}
           transition={{ duration: 0.2 }}
-          className="relative w-full max-w-2xl max-h-[calc(100vh-40px)] overflow-y-auto rounded-[28px] border bg-white shadow-2xl"
-          style={{ borderColor: 'rgba(124, 58, 237, 0.16)' }}
+          className="relative flex w-full h-full"
           onClick={(event) => event.stopPropagation()}
         >
+          {/* Close button — top right corner of the overlay */}
           <button
             type="button"
             onClick={onClose}
-            className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full border bg-white/85 transition-all hover:bg-white"
-            style={{ borderColor: 'rgba(124, 58, 237, 0.18)', color: '#374151' }}
+            className="absolute right-4 top-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/80 backdrop-blur-sm transition-all hover:bg-white/20 hover:text-white"
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </button>
 
-          {/* Image — full width at top */}
-          {design.imageUrl ? (
-            <div
-              className="p-5 pb-3"
-              style={{ background: 'linear-gradient(135deg, #eef2ff 0%, #f8fafc 55%, #eff6ff 100%)' }}
-            >
-              <div className="overflow-hidden rounded-2xl border bg-white" style={{ borderColor: 'rgba(124, 58, 237, 0.12)' }}>
-                <ImageWithFallback
-                  src={design.imageUrl}
-                  alt={buildDesignTitle(design)}
-                  className="w-full rounded-2xl object-contain"
-                  style={{ backgroundColor: '#f8fafc', maxHeight: '50vh' }}
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center justify-center py-16" style={{ background: 'linear-gradient(135deg, #eef2ff 0%, #f8fafc 55%, #eff6ff 100%)' }}>
+          {/* LEFT — Image area (dark background, centered, full image visible) */}
+          <div
+            className="relative flex flex-1 items-center justify-center bg-slate-950"
+            style={{ minWidth: 0 }}
+          >
+            {design.imageUrl ? (
+              <ImageWithFallback
+                src={design.imageUrl}
+                alt={buildDesignTitle(design)}
+                className="max-h-full max-w-full object-contain"
+                style={{ padding: '24px' }}
+              />
+            ) : (
               <div className="text-center">
-                <Gem className="mx-auto h-12 w-12" style={{ color: '#c4b5fd' }} />
-                <p className="mt-3 text-sm text-slate-500">Image not available</p>
+                <Gem className="mx-auto h-16 w-16 text-slate-700" />
+                <p className="mt-4 text-sm text-slate-500">Image not available</p>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
-          {/* Details — below image */}
-          <div className="p-6 pt-3">
-            <div className="space-y-5">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.22em]" style={{ color: '#7c3aed' }}>
-                  Design Popup
-                </p>
-                <h2 className="mt-2 text-2xl font-semibold text-slate-950">
-                  {buildDesignTitle(design)}
-                </h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  Saved to your profile gallery on {formatDate(design.createdAt)}
-                </p>
-              </div>
+          {/* RIGHT — Details panel */}
+          <div
+            className="flex w-[380px] min-w-[340px] max-w-[420px] flex-col border-l border-white/10 bg-white"
+            style={{ flexShrink: 0 }}
+          >
+            {/* Scrollable content area */}
+            <div className="flex-1 overflow-y-auto p-5">
+              <div className="space-y-4">
+                {/* Title & date */}
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-950 leading-snug">
+                    {buildDesignTitle(design)}
+                  </h2>
+                  <p className="mt-1 text-xs text-slate-400">
+                    {formatDate(design.createdAt)}
+                  </p>
+                </div>
 
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => onLikeToggle(design)}
-                  className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-all"
-                  style={{
-                    borderColor: design.liked ? 'rgba(239, 68, 68, 0.28)' : 'rgba(124, 58, 237, 0.16)',
-                    backgroundColor: design.liked ? 'rgba(254, 226, 226, 0.7)' : 'rgba(124, 58, 237, 0.06)',
-                    color: design.liked ? '#dc2626' : '#5b21b6',
-                  }}
-                >
-                  <Heart className={`h-4 w-4 ${design.liked ? 'fill-current' : ''}`} />
-                  {design.liked ? 'Favorited' : 'Add to Favorites'}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => downloadImage(design.imageUrl, `${design.id}.png`)}
-                  className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium text-slate-700 transition-all hover:bg-slate-50"
-                  style={{ borderColor: 'rgba(148, 163, 184, 0.28)' }}
-                >
-                  <Download className="h-4 w-4" />
-                  Download
-                </button>
-
-                <Link
-                  to={`/app/preview/${design.id}`}
-                  className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium text-slate-700 transition-all hover:bg-slate-50"
-                  style={{ borderColor: 'rgba(148, 163, 184, 0.28)' }}
-                >
-                  <ExternalLink className="h-4 w-4" />
-                  Open Preview
-                </Link>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  ['Type', titleize(design.features.type)],
-                  ['Metal', titleize(design.features.metal)],
-                  ['Style', titleize(design.features.style)],
-                  ['Complexity', `${design.features.complexity}%`],
-                ].map(([label, value]) => (
-                  <div
-                    key={label}
-                    className="rounded-2xl border p-3"
-                    style={{ borderColor: 'rgba(124, 58, 237, 0.12)', backgroundColor: '#faf5ff' }}
+                {/* Action buttons row */}
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onLikeToggle(design)}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all"
+                    style={{
+                      borderColor: design.liked ? 'rgba(239, 68, 68, 0.3)' : 'rgba(148, 163, 184, 0.3)',
+                      backgroundColor: design.liked ? 'rgba(254, 226, 226, 0.5)' : 'transparent',
+                      color: design.liked ? '#dc2626' : '#64748b',
+                    }}
                   >
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-                      {label}
-                    </p>
-                    <p className="mt-1 text-sm font-semibold text-slate-900">{value}</p>
-                  </div>
-                ))}
-              </div>
+                    <Heart className={`h-3.5 w-3.5 ${design.liked ? 'fill-current' : ''}`} />
+                    {design.liked ? 'Favorited' : 'Favorite'}
+                  </button>
 
-              <div className="rounded-3xl border p-4" style={{ borderColor: 'rgba(124, 58, 237, 0.12)', backgroundColor: '#f8fafc' }}>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                  Gemstones
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {design.features.gemstones.length > 0 ? (
-                    design.features.gemstones.map((gem) => (
+                  <button
+                    type="button"
+                    onClick={() => downloadImage(design.imageUrl, `${design.id}.png`)}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium text-slate-500 transition-all hover:bg-slate-50 hover:text-slate-700"
+                    style={{ borderColor: 'rgba(148, 163, 184, 0.3)' }}
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    Download
+                  </button>
+
+                  <Link
+                    to={`/app/preview/${design.id}`}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium text-slate-500 transition-all hover:bg-slate-50 hover:text-slate-700"
+                    style={{ borderColor: 'rgba(148, 163, 184, 0.3)' }}
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    Preview
+                  </Link>
+                </div>
+
+                {/* Divider */}
+                <div className="h-px bg-slate-100" />
+
+                {/* Settings badges (type, metal, style, complexity) */}
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 mb-2">
+                    Settings
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      ['Type', titleize(design.features.type)],
+                      ['Metal', titleize(design.features.metal)],
+                      ['Style', titleize(design.features.style)],
+                      ['Complexity', `${design.features.complexity}%`],
+                    ].map(([label, value]) => (
                       <span
-                        key={gem}
-                        className="rounded-full border px-3 py-1 text-xs font-medium"
-                        style={{ borderColor: 'rgba(124, 58, 237, 0.16)', backgroundColor: '#ffffff', color: '#6d28d9' }}
+                        key={label}
+                        className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium"
+                        style={{ backgroundColor: '#f5f3ff', color: '#6d28d9' }}
                       >
-                        {titleize(gem)}
+                        <span className="text-slate-400 font-normal">{label}</span>
+                        {value}
                       </span>
-                    ))
+                    ))}
+                  </div>
+                </div>
+
+                {/* Gemstones */}
+                {design.features.gemstones.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 mb-2">
+                      Gemstones
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {design.features.gemstones.map((gem) => (
+                        <span
+                          key={gem}
+                          className="rounded-md border px-2 py-1 text-[11px] font-medium"
+                          style={{ borderColor: 'rgba(124, 58, 237, 0.15)', backgroundColor: '#fff', color: '#6d28d9' }}
+                        >
+                          {titleize(gem)}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Divider */}
+                <div className="h-px bg-slate-100" />
+
+                {/* Prompt (collapsible) */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setPromptExpanded(!promptExpanded)}
+                    className="flex w-full items-center justify-between text-left"
+                  >
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                      Prompt
+                    </p>
+                    {promptExpanded ? (
+                      <ChevronUp className="h-3.5 w-3.5 text-slate-400" />
+                    ) : (
+                      <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+                    )}
+                  </button>
+                  {promptExpanded ? (
+                    <p className="mt-2 text-xs leading-5 text-slate-600">
+                      {promptText}
+                    </p>
                   ) : (
-                    <span className="text-sm text-slate-500">No gemstones selected.</span>
+                    <p className="mt-2 text-xs leading-5 text-slate-600 line-clamp-2">
+                      {promptText}
+                    </p>
                   )}
                 </div>
-              </div>
 
-              <div className="rounded-3xl border p-4" style={{ borderColor: 'rgba(124, 58, 237, 0.12)', backgroundColor: '#f8fafc' }}>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                  Prompt
-                </p>
-                <p className="mt-3 text-sm leading-6 text-slate-700">
-                  {design.prompt || 'Prompt summary will appear here when available.'}
-                </p>
-              </div>
-
-              <div className="rounded-3xl border p-4" style={{ borderColor: 'rgba(124, 58, 237, 0.12)', backgroundColor: '#f8fafc' }}>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                  Design Features
-                </p>
-                <div className="mt-3 space-y-2">
-                  {variationRows.length > 0 ? (
-                    variationRows.map((row) => (
-                      <div key={row} className="flex items-center gap-2 text-sm text-slate-700">
-                        <span className="h-2 w-2 rounded-full bg-violet-500" />
-                        <span>{titleize(row)}</span>
+                {/* Design Features / Variations */}
+                {variationRows.length > 0 && (
+                  <>
+                    <div className="h-px bg-slate-100" />
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 mb-2">
+                        Design Features
+                      </p>
+                      <div className="space-y-1.5">
+                        {variationRows.map((row) => (
+                          <div key={row} className="flex items-center gap-2 text-xs text-slate-600">
+                            <span className="h-1.5 w-1.5 rounded-full bg-violet-400 flex-shrink-0" />
+                            <span>{titleize(row)}</span>
+                          </div>
+                        ))}
                       </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-slate-500">Variation details will populate after the design DNA syncs.</p>
-                  )}
-                </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -778,7 +813,7 @@ export function GenerationGalleryWorkspace({
             </div>
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '12px' }}>
             {pendingItems.map((item) => (
               <motion.div
                 key={item.id}
