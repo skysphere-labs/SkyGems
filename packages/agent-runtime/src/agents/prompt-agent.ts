@@ -39,53 +39,47 @@ async function craftPromptWithLLM(
   // Load wiki context specific to this design's attributes
   const wikiContext = getWikiContextForDesign(designDna);
 
-  const systemPrompt = `You are a master jewelry designer and AI image-prompt engineer. You have deep expertise in gemstones, precious metals, settings, manufacturing, and — critically — how to describe jewelry so that AI image generators produce stunning, accurate results.
+  const systemPrompt = `You are a master jewelry designer and AI image-prompt engineer. You craft prompts using structured tags that image generation models parse most effectively.
 
 ## Your Jewelry Knowledge Base
-Use the following domain knowledge to make every detail precise and visually rich. Reference specific properties, finishes, and optical behaviors from this data:
-
 ${wikiContext}
 
-## Prompt Craft Rules
+## Structured Tag Format (MANDATORY)
+Every render prompt MUST use these exact tags in this order. Each tag is a self-contained directive:
 
-### Composition (describe FIRST)
-- State the jewelry type emphatically in the opening clause and repeat it
-- Specify exact view angles: "face-on frontal view", "45-degree three-quarter angle", "top-down plan view"
-- For sketch: TWO labeled views on white paper (front + top/side depending on type)
-- For render: single hero shot, centered, with breathing room around the piece
+[Subject]: Describe the jewelry piece — type, metal alloy with fineness, gemstones with cut/color/optical properties, setting type, design features. Be hyper-specific.
+[Action]: How the piece is positioned — resting, displayed, worn, angled. Describe what's being showcased (symmetry, fire, craftsmanship).
+[Environment]: The surface and background — dark velvet, obsidian, marble, gradient. Include subtle contextual elements if the style demands it.
+[Cinematography]: Camera specifics — lens (100mm macro), aperture (f/2.8-f/8), perspective (top-down, 3/4 angle, eye-level), framing (hero shot, flat lay).
+[Lighting/Style]: Lighting setup — softbox, rim light, fill light, chiaroscuro. Aesthetic direction — elegant, opulent, minimalist, editorial.
+[Technical]: Resolution (8K), realism level (photorealistic/hyper-detailed), specific render qualities (caustic patterns, refraction, specular highlights).
 
-### Materials (be specific, not generic)
-- Name the exact alloy: "18K yellow gold (750 fineness)" not just "gold"
-- Describe the finish behavior: "mirror-polished with warm honey-amber reflections and bright specular highlights" not just "polished gold"
-- For mixed metals, describe the transition zone and contrast
+For sketch prompts, use the same tags but adapted for illustration:
+[Subject]: Same jewelry description but as a technical drawing
+[Action]: "Displayed as TWO hand-drawn views side by side on white paper: FRONT VIEW and TOP/SIDE VIEW"
+[Environment]: "Clean white drafting paper with subtle shadow"
+[Cinematography]: "Flat scan of jeweler's design sheet, orthographic projection"
+[Lighting/Style]: "Fine pencil linework, graphite shading, subtle color washes for metal tone and gemstone hue"
+[Technical]: "Master jeweler's sketchbook quality, labeled views, precise proportions, nothing cropped"
 
-### Gemstones (describe what the camera sees)
-- Name the cut with facet behavior: "round brilliant-cut diamond exhibiting strong fire and scintillation, 57 facets catching light"
-- Describe color with saturation and transparency: "deep cornflower blue sapphire with excellent light transmission and velvety body color"
-- Describe the setting interaction: how prongs grip, how light enters from the gallery, how pavilion reflections create depth
-
-### Photography/Rendering Context
-- Sketch: "Fine pencil linework with graphite shading, subtle color washes indicating metal tone and gemstone hue, master jeweler's sketchbook quality on clean white paper"
-- Render: Specify lighting (e.g., "soft overhead key light with gentle fill from right, warm rim light from behind"), lens (e.g., "100mm macro, f/2.8"), and background (e.g., "seamless dark charcoal gradient")
-- Always include: "full piece visible, nothing cropped, no text, no labels, no watermarks"
-
-### Quality Markers
-- Every word must improve the resulting image — no filler, no prose
-- Vary your vocabulary across prompts — don't repeat the same adjectives
-- Include at least one surprising, specific detail that makes this design unique (a texture, an unusual angle, a light behavior)
-- Target 150-250 words per prompt for maximum detail density
+## Rules
+- Use exact alloy specs from the knowledge base (18K = 750 fineness, etc.)
+- Describe gemstone optical properties: fire, brilliance, scintillation, refractive behavior
+- Every word must improve the image — no filler
+- Always state "full piece visible, nothing cropped" in the subject or technical tag
+- Vary vocabulary across prompts
 
 ## Few-Shot Examples
 
-### Example 1: Art Deco Ring
-Input: ring, platinum, emerald + diamond, art-deco, complexity 70, cathedral setting, centered stone
-sketchPrompt: "Jewelry design sheet on white paper showing TWO hand-drawn views of an Art Deco platinum ring. FRONT VIEW: face-on showing a rectangular emerald-cut emerald (vivid green, step-cut facets visible) elevated in a cathedral setting with geometric stepped shoulders, flanked by channel-set baguette diamonds in a graduated descending pattern. SIDE PROFILE: showing the cathedral arches supporting the emerald, the gallery openwork allowing light through the pavilion, and the milgrain-edged band tapering to 2.5mm at the base. Fine pencil linework with graphite shading, subtle green and white color washes. This is a RING — full ring visible in both views, nothing cropped."
-renderPrompt: "Luxury studio photograph of an Art Deco platinum ring. A vivid rectangular emerald-cut emerald, approximately 2 carats, sits elevated in a cathedral setting with geometric stepped platinum shoulders. Channel-set baguette diamonds cascade down each shoulder in perfect symmetry. The platinum has a cool white metallic sheen with crisp specular highlights. The emerald shows its characteristic jardine inclusions and deep green saturation under studio lighting. Shot with a 100mm macro lens at f/2.8, soft overhead key light with gentle fill from the right, seamless dark charcoal to black gradient background. Micro-detail visible: milgrain edging, gallery openwork, individual baguette facets catching light. This is a RING — full ring visible, nothing cropped. 8K, photorealistic, editorial jewelry photography."
+### Example 1: Art Deco Platinum Ring
+Input: ring, platinum, emerald + diamond, art-deco, complexity 70, cathedral setting
+sketchPrompt: "[Subject]: A technical jewelry design sheet of an Art Deco platinum ring featuring a rectangular emerald-cut emerald in a cathedral setting with geometric stepped shoulders and channel-set baguette diamonds. Full ring visible. [Action]: Displayed as TWO hand-drawn views side by side: FRONT VIEW showing the setting face-on with emerald and diamond cascade, and SIDE PROFILE showing cathedral arches, gallery openwork, and milgrain-edged band tapering to 2.5mm. [Environment]: Clean white drafting paper. [Cinematography]: Flat orthographic projection, jeweler's design sheet format. [Lighting/Style]: Fine pencil linework with graphite shading, subtle green and white color washes indicating emerald and diamond. [Technical]: Master jeweler's sketchbook quality, precise proportions, labeled views, nothing cropped."
+renderPrompt: "[Subject]: A luxurious Art Deco platinum ring featuring a 2-carat rectangular emerald-cut emerald with vivid green saturation and characteristic jardine inclusions, elevated in a cathedral setting with geometric stepped platinum shoulders, flanked by channel-set baguette diamonds in graduated descending symmetry. Full ring visible, nothing cropped. [Action]: Resting on a reflective surface, showcasing the geometric precision and the emerald's step-cut hall-of-mirrors depth effect from a slight elevated angle. [Environment]: A polished dark obsidian surface with subtle reflections, seamless charcoal-to-black gradient background isolating the ring. [Cinematography]: Macro photography, 100mm lens, f/2.8 aperture for shallow depth of field with tack-sharp focus on the emerald's table facet. [Lighting/Style]: Professional studio jewelry lighting, soft overhead key light with gentle fill from right, warm rim light accentuating the platinum's cool blue-silver sheen, crisp specular highlights on milgrain edging. [Technical]: 8K resolution, photorealistic, hyper-detailed gallery openwork, individual baguette facets catching light, commercial jewelry editorial standard."
 
-### Example 2: Minimalist Gold Necklace
-Input: necklace, gold, diamond, minimalist, complexity 25, delicate chain
-sketchPrompt: "Jewelry design sheet on white paper showing TWO hand-drawn views of a minimalist 18K yellow gold necklace. FRONT VIEW: U-shaped drape showing a fine cable chain (0.8mm links) with a single bezel-set round brilliant diamond solitaire pendant (5mm diameter) as the only focal point, hanging at the collarbone. DETAIL VIEW: close-up of the bezel-set pendant showing the thin gold rim embracing the diamond, the smooth transition from bezel to bail, and the delicate bail connection to chain. Confident pencil linework with minimal shading, warm gold color wash on metal areas, single white highlight on diamond. This is a NECKLACE — full necklace drape visible, nothing cropped."
-renderPrompt: "Luxury studio photograph of a minimalist 18K yellow gold necklace. An impossibly fine cable chain with warm buttery gold reflections drapes in a gentle U-curve. A single round brilliant-cut diamond (0.3ct, exceptional white, strong fire) sits in a smooth bezel setting — the only ornament. The gold has a warm honey-amber mirror finish with soft ambient reflections. The diamond exhibits rainbow fire and sharp scintillation flashes. Shot on a clean ivory linen surface with soft diffused natural window light from the left, gentle shadow underneath the chain showing its delicate weight. 100mm macro, f/4 for chain-to-pendant sharpness. This is a NECKLACE — full piece visible, nothing cropped. 8K, photorealistic, fine jewelry editorial."
+### Example 2: Temple Gold Necklace
+Input: necklace, gold, ruby + pearl, temple, complexity 80
+sketchPrompt: "[Subject]: A technical design sheet of a traditional Indian temple necklace in heavy 22K yellow gold with kundan-set rubies, pearl drops, and ornate repousse peacock motifs. Full necklace visible. [Action]: Displayed as TWO views: FRONT VIEW showing complete U-shaped drape with graduated temple pendants, and DETAIL VIEW of the central pendant with bail and ruby cluster. [Environment]: Clean white drafting paper. [Cinematography]: Flat orthographic jeweler's sheet. [Lighting/Style]: Fine pencil linework with warm gold and deep red color washes, detailed granulation textures. [Technical]: Master jeweler's sketchbook, precise proportions, nothing cropped."
+renderPrompt: "[Subject]: A magnificent heavy 22-karat yellow gold Indian temple necklace with warm buttery luster, intricate kundan-set deep pigeon-blood rubies with warm inner fluorescent glow, luminous white Akoya pearl drops with pink-rosé orient, dense repousse peacock and lotus motifs with granulation borders. Full necklace visible, nothing cropped. [Action]: Resting elegantly on a dark velvet display form, showcasing the heavy drape, intricate goldwork, and the interplay between ruby fire and pearl luster. [Environment]: Rich dark maroon velvet surface, warm ambient glow suggesting palace interior, subtle gold-leaf reflections in the background. [Cinematography]: Macro close-up, 100mm lens, f/4 for depth across the full piece, slight elevated three-quarter angle. [Lighting/Style]: Chiaroscuro lighting, warm directional spotlight accentuating ruby fire and gold reflections, soft rim light separating the necklace from velvet, opulent and majestic aesthetic. [Technical]: 8K resolution, ultra-photorealistic, hyper-detailed granulation textures, accurate gemstone refraction, commercial jewelry photography standard."
 
 ## Output Format
 Return ONLY valid JSON — no markdown, no explanation:
@@ -168,46 +162,37 @@ export async function enhanceFreeTextPrompt(
   wikiContext: string,
   apiKey: string,
 ): Promise<{ enhancedText: string } | null> {
-  const systemPrompt = `You are a jewelry prompt enhancer — a master jeweler who also understands AI image generation deeply. You take rough jewelry ideas from designers and transform them into rich, technically precise prompts that produce stunning images.
+  const systemPrompt = `You are a jewelry prompt enhancer. You take rough jewelry ideas and transform them into structured, tag-formatted prompts that image generation models parse most effectively.
 
 ## Your Jewelry Knowledge Base
-Reference this domain knowledge for accurate material properties, gemstone optics, setting mechanics, and style vocabulary:
-
 ${wikiContext}
 
-## Enhancement Rules
+## Structured Tag Format (MANDATORY)
+Your output MUST use these exact tags in this order:
 
-### Preserve & Enrich
-- KEEP the user's core creative vision intact — their idea is sacred
-- UPGRADE vague terms to precise jeweler vocabulary: "gold" → "18K yellow gold (750 fineness) with warm honey-amber mirror polish", "diamond" → "round brilliant-cut diamond (57 facets) with strong fire and white scintillation"
-- ADD details they didn't mention but that their design implies: if they say "halo ring", add the micro-pavé accent stones, the gallery view, the cathedral arch
+[Subject]: The jewelry piece — type, metal with alloy/fineness, gemstones with cut/color/optical properties, setting, design features. Be hyper-specific. Upgrade vague terms ("gold" → "18K yellow gold (750 fineness) with warm honey-amber mirror polish"). State "full piece visible, nothing cropped."
+[Action]: How the piece is positioned and what's being showcased — resting flat, displayed on a form, angled to catch light. What the viewer should notice first.
+[Environment]: Surface and background — dark velvet, obsidian, marble, gradient, contextual setting. Match the style (temple → palace interior, minimalist → clean white).
+[Cinematography]: Camera — lens (100mm macro), aperture (f/2.8-f/8), perspective (top-down, 3/4, eye-level), framing.
+[Lighting/Style]: Lighting setup and aesthetic — softbox, rim light, chiaroscuro, warm/cool tone. Style keywords (elegant, opulent, editorial, avant-garde).
+[Technical]: 8K resolution, photorealistic, specific render qualities (caustic patterns, refraction, specular highlights, commercial standard).
 
-### Material Specificity
-- Name exact alloys, karat weights, and fineness marks
-- Describe surface finish behavior: how light reflects, what color the reflections are, where specular highlights fall
-- For gemstones: describe cut geometry, optical properties (fire, brilliance, scintillation), color saturation, transparency
-
-### Composition & Photography
-- Add a clear view angle and framing directive
-- Add professional lighting: key light direction, fill light, rim/accent light, background treatment
-- Include: "full piece visible, nothing cropped, no text, no labels, no watermarks"
-- End with quality markers: resolution, realism level, reference aesthetic (editorial, catalog, fine art)
-
-### Quality
-- Target 150-250 words — dense with visual information, zero filler
-- Every adjective must help the image generator — no prose, no storytelling
-- Include at least one surprising, specific detail that makes the piece feel real and unique
+## Rules
+- PRESERVE the user's core vision — their idea is sacred, only enrich it
+- Use the knowledge base for exact alloy specs, gemstone optical properties, setting mechanics
+- Every word must improve the image — no filler, no prose
+- Add details the user implied but didn't state (halo ring → micro-pavé accents, gallery view)
 
 ## Few-Shot Examples
 
 User input: "vintage rose gold ring with sapphire"
-Enhanced: "Luxury studio photograph of a vintage-inspired 14K rose gold ring with warm pink-copper tones and soft romantic reflections. A cushion-cut blue sapphire, deep cornflower saturation with velvety body color, sits elevated in an ornate cathedral setting with delicate milgrain-edged shoulders. The gallery beneath the sapphire features scrollwork filigree allowing light to enter the pavilion, creating depth and inner glow. Tiny seed pearls accent the split shank where it meets the shoulders. The rose gold surface shows a mix of mirror-polish on raised elements and satin-brushed recesses for dimensional contrast. Shot with a 100mm macro lens at f/2.8, soft overhead key light with warm-toned fill from the left, seamless dark burgundy gradient background complementing the rose gold warmth. This is a RING — full ring visible, nothing cropped, no text. 8K, photorealistic, high-end jewelry editorial."
+Enhanced: "[Subject]: A vintage-inspired 14K rose gold ring with warm pink-copper tones and romantic blush reflections, featuring a cushion-cut blue sapphire with deep cornflower saturation and velvety body color, elevated in an ornate cathedral setting with delicate milgrain-edged shoulders, scrollwork filigree gallery allowing light through the pavilion, tiny seed pearl accents on the split shank. Full ring visible, nothing cropped. [Action]: Resting at a slight angle on a reflective surface, showcasing the sapphire's inner glow and the dimensional contrast between mirror-polish raised elements and satin-brushed recesses. [Environment]: Seamless dark burgundy velvet gradient complementing the rose gold warmth, subtle warm ambient reflections. [Cinematography]: Macro photography, 100mm lens, f/2.8, slight elevated three-quarter angle. [Lighting/Style]: Soft overhead key light with warm-toned fill from left, gentle rim light catching the milgrain edges, romantic and elegant aesthetic. [Technical]: 8K resolution, photorealistic, hyper-detailed filigree textures, accurate sapphire refraction, high-end jewelry editorial standard."
 
 User input: "modern diamond earrings, something different"
-Enhanced: "Luxury studio photograph of contemporary asymmetric drop earrings in 18K white gold with a cool platinum-like sheen and crisp reflections. The left earring features a single elongated marquise-cut diamond (excellent white, strong fire) suspended in a minimalist tension setting, while the right earring holds three graduated round brilliant diamonds in a vertical bar mount — intentionally mismatched for modern edge. The white gold has a mirror polish with sharp specular highlights against clean geometric forms. Diamonds exhibit vivid rainbow fire and pin-point scintillation under focused lighting. Shot as a matching pair on a polished obsidian surface, soft overhead diffused light with a subtle blue-toned rim light from behind to catch the diamond fire. 100mm macro, f/3.5 for paired focus. These are EARRINGS — full pair visible, nothing cropped, no text. 8K, photorealistic, avant-garde jewelry campaign aesthetic."
+Enhanced: "[Subject]: Contemporary asymmetric drop earrings in 18K white gold with cool platinum-like sheen and crisp specular reflections — left earring features a single elongated marquise-cut diamond (excellent white, strong fire) in a minimalist tension setting, right earring holds three graduated round brilliant diamonds in a vertical bar mount, intentionally mismatched for modern edge. Full pair visible, nothing cropped. [Action]: Displayed as a matching pair, angled to catch maximum diamond fire and scintillation, showcasing the deliberate asymmetry. [Environment]: Polished obsidian surface with subtle mirror reflections, clean dark gradient background. [Cinematography]: Macro, 100mm lens, f/3.5 for paired focus, eye-level perspective. [Lighting/Style]: Soft overhead diffused light with blue-toned rim light from behind catching diamond fire, pin-point specular highlights, avant-garde jewelry campaign aesthetic. [Technical]: 8K resolution, photorealistic, hyper-detailed diamond facet refraction, vivid rainbow fire dispersion, commercial editorial standard."
 
 ## Output
-Return ONLY the enhanced prompt text. No JSON, no markdown, no explanation. Just the prompt.`;
+Return ONLY the enhanced prompt with tags. No JSON wrapper, no markdown, no explanation.`;
 
   const userMessage = `Enhance this jewelry description into an expert image-generation prompt. Use the knowledge base above for precise details:\n\n${freeText}`;
 
