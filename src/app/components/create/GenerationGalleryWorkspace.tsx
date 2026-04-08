@@ -665,55 +665,44 @@ export function GenerationGalleryWorkspace({
             </div>
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+          <div className="grid gap-3 grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {pendingItems.map((item) => (
               <motion.div
                 key={item.id}
-                initial={{ opacity: 0, y: 8 }}
+                initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="overflow-hidden rounded-[28px] border border-dashed bg-white shadow-[0_18px_42px_rgba(15,23,42,0.06)]"
+                className="overflow-hidden rounded-2xl border border-dashed bg-white"
                 style={{ borderColor: 'rgba(124, 58, 237, 0.22)' }}
               >
                 <div
-                  className="flex aspect-square flex-col items-center justify-center gap-4 px-6 text-center"
-                  style={{ background: 'radial-gradient(circle at top, rgba(124,58,237,0.14), rgba(255,255,255,0.92) 65%)' }}
+                  className="flex aspect-[4/3] flex-col items-center justify-center gap-2 px-4 text-center"
+                  style={{ background: 'radial-gradient(circle at top, rgba(124,58,237,0.10), rgba(255,255,255,0.95) 65%)' }}
                 >
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full border bg-white/75" style={{ borderColor: 'rgba(124, 58, 237, 0.22)' }}>
-                    <Loader2 className="h-7 w-7 animate-spin text-violet-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-950">
-                      Generating image {item.order + 1}
-                    </p>
-                    <p className="mt-1 text-sm text-slate-500">{item.message}</p>
-                  </div>
+                  <Loader2 className="h-6 w-6 animate-spin text-violet-500" />
+                  <p className="text-xs font-medium text-slate-700">
+                    Image {item.order + 1} of {pendingItems.length}
+                  </p>
                 </div>
-
-                <div className="space-y-3 p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-base font-semibold text-slate-950">
+                <div className="px-3 py-2.5 border-t" style={{ borderColor: 'rgba(124, 58, 237, 0.08)' }}>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-semibold text-slate-900 truncate">
                       {titleize(item.type)} · {titleize(item.style)}
                     </p>
-                    <span className="rounded-full bg-violet-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-violet-700">
+                    <span className="rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-semibold text-violet-600 flex-shrink-0">
                       Generating
                     </span>
                   </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    {[item.metal, item.style, ...item.gemstones].filter(Boolean).slice(0, 4).map((value) => (
+                  <div className="flex flex-wrap gap-1 mt-1.5">
+                    {[item.metal, ...item.gemstones].filter(Boolean).slice(0, 3).map((value) => (
                       <span
                         key={value}
-                        className="rounded-full border px-3 py-1 text-[11px] font-medium"
-                        style={{ borderColor: 'rgba(124, 58, 237, 0.14)', backgroundColor: '#faf5ff', color: '#6d28d9' }}
+                        className="rounded-full border px-2 py-0.5 text-[10px] font-medium"
+                        style={{ borderColor: 'rgba(124, 58, 237, 0.12)', color: '#6d28d9' }}
                       >
                         {titleize(value)}
                       </span>
                     ))}
                   </div>
-
-                  <p className="text-xs text-slate-500">
-                    Placeholder added to the gallery while the render spins up.
-                  </p>
                 </div>
               </motion.div>
             ))}
@@ -723,11 +712,11 @@ export function GenerationGalleryWorkspace({
                 key={design.id}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="group cursor-pointer overflow-hidden rounded-[28px] border bg-white shadow-[0_18px_42px_rgba(15,23,42,0.06)] transition-all hover:-translate-y-1 hover:shadow-[0_24px_54px_rgba(79,70,229,0.14)]"
+                className="group cursor-pointer overflow-hidden rounded-2xl border bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
                 style={{ borderColor: 'rgba(124, 58, 237, 0.12)' }}
                 onClick={() => setSelectedDesignId(design.id)}
               >
-                <div className="relative aspect-square overflow-hidden" style={{ backgroundColor: '#f8fafc' }}>
+                <div className="relative aspect-[4/3] overflow-hidden" style={{ backgroundColor: '#f8fafc' }}>
                   <ImageWithFallback
                     src={design.imageUrl}
                     alt={buildDesignTitle(design)}
@@ -774,35 +763,25 @@ export function GenerationGalleryWorkspace({
                   </div>
                 </div>
 
-                <div className="space-y-3 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-base font-semibold text-slate-950">{buildDesignTitle(design)}</p>
-                      <p className="mt-1 text-sm text-slate-500">{formatDate(design.createdAt)}</p>
-                    </div>
-                    <span className="rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ backgroundColor: 'rgba(124, 58, 237, 0.08)', color: '#6d28d9' }}>
-                      Open
-                    </span>
+                <div className="px-3 py-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-semibold text-slate-900 truncate">{buildDesignTitle(design)}</p>
+                    <span className="text-[10px] text-slate-400 flex-shrink-0">{formatDate(design.createdAt)}</span>
                   </div>
-
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1 mt-1.5">
                     {[design.features.metal, design.features.style, ...design.features.gemstones]
                       .filter(Boolean)
-                      .slice(0, 4)
+                      .slice(0, 3)
                       .map((value) => (
                         <span
                           key={value}
-                          className="rounded-full border px-3 py-1 text-[11px] font-medium"
-                          style={{ borderColor: 'rgba(124, 58, 237, 0.14)', backgroundColor: '#faf5ff', color: '#6d28d9' }}
+                          className="rounded-full border px-2 py-0.5 text-[10px] font-medium"
+                          style={{ borderColor: 'rgba(124, 58, 237, 0.12)', color: '#6d28d9' }}
                         >
                           {titleize(value)}
                         </span>
                       ))}
                   </div>
-
-                  <p className="line-clamp-2 text-sm leading-6 text-slate-600">
-                    {design.prompt || 'Prompt summary unavailable for this design.'}
-                  </p>
                 </div>
               </motion.div>
             ))}
