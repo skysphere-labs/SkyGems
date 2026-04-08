@@ -57,6 +57,19 @@ export const PromptPreviewResponseSchema = z.object({
   promptText: z.string().min(1).max(8000),
 });
 
+export const PromptEnhanceRequestSchema = z.object({
+  projectId: ProjectIdSchema,
+  freeText: z.string().trim().min(5).max(4000),
+});
+
+export const PromptEnhanceResponseSchema = z.object({
+  projectId: ProjectIdSchema,
+  originalText: z.string(),
+  enhancedText: z.string().min(1).max(8000),
+  source: z.enum(["live", "fallback"]),
+  errorMessage: z.string().optional(),
+});
+
 export const DevBootstrapRequestSchema = z.object({
   tenantSlug: z
     .string()
@@ -395,6 +408,8 @@ export const ProjectResponseSchema = z.object({
 
 export type PromptPreviewRequest = z.infer<typeof PromptPreviewRequestSchema>;
 export type PromptPreviewResponse = z.infer<typeof PromptPreviewResponseSchema>;
+export type PromptEnhanceRequest = z.infer<typeof PromptEnhanceRequestSchema>;
+export type PromptEnhanceResponse = z.infer<typeof PromptEnhanceResponseSchema>;
 export type DevBootstrapRequest = z.infer<typeof DevBootstrapRequestSchema>;
 export type DevLoginRequest = z.infer<typeof DevLoginRequestSchema>;
 export type DevBootstrapResponse = z.infer<typeof DevBootstrapResponseSchema>;

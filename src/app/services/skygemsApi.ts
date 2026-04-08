@@ -356,6 +356,35 @@ export async function fetchPromptPreview(
   }
 }
 
+// ── Prompt Enhancement ──
+
+export interface RootPromptEnhanceResult {
+  originalText: string;
+  enhancedText: string;
+  source: 'live' | 'fallback';
+  errorMessage?: string;
+}
+
+export async function enhancePrompt(freeText: string): Promise<RootPromptEnhanceResult> {
+  const session = await ensureSession();
+  try {
+    return await authedJson<RootPromptEnhanceResult>('/v1/prompt-enhance', {
+      method: 'POST',
+      body: JSON.stringify({
+        projectId: session.projectId,
+        freeText,
+      }),
+    });
+  } catch (error) {
+    return {
+      originalText: freeText,
+      enhancedText: freeText,
+      source: 'fallback',
+      errorMessage: error instanceof Error ? error.message : 'Enhancement unavailable',
+    };
+  }
+}
+
 // ── Generation ──
 
 async function generateSingleConcept(

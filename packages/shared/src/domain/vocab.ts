@@ -46,27 +46,27 @@ export const typeCompositionPrompts: Record<JewelryType, string> = {
 };
 
 export const metalDescriptions: Record<Metal, string> = {
-  gold: "18K polished yellow gold with warm reflections",
-  silver: "sterling silver with bright cool reflections",
-  platinum: "polished platinum with white metallic sheen",
-  "rose-gold": "14K rose gold with warm pink-copper tones",
+  gold: "18K yellow gold (750 fineness) with warm honey-amber mirror polish, rich specular highlights, and deep golden reflections that shift to warm bronze in shadow areas",
+  silver: "sterling silver (925) with bright cool-white reflections, crisp specular highlights, and a luminous platinum-like sheen when freshly polished",
+  platinum: "950 platinum with dense cool-white metallic luster, subtle blue-grey undertone in reflections, and naturally tarnish-resistant mirror finish",
+  "rose-gold": "14K rose gold with warm pink-copper tones, romantic blush reflections, and a soft sunset-amber glow where light catches the surface",
 };
 
 export const gemstoneDescriptions: Record<Gemstone, string> = {
-  diamond: "brilliant-cut clear diamond with rainbow fire",
-  ruby: "faceted deep red ruby",
-  emerald: "emerald-cut green emerald",
-  sapphire: "cushion-cut blue sapphire",
-  pearl: "round white Akoya pearl with lustre",
+  diamond: "round brilliant-cut diamond (57 facets) with exceptional white body color, strong rainbow fire dispersion, and pin-point scintillation flashes under directional light",
+  ruby: "faceted oval-cut ruby with deep pigeon-blood red saturation, warm inner fluorescent glow, and rich crimson reflections visible through the crown facets",
+  emerald: "emerald-cut emerald with vivid green saturation, characteristic jardine inclusions, step-cut facets creating a hall-of-mirrors depth effect",
+  sapphire: "cushion-cut blue sapphire with deep cornflower saturation, excellent light transmission, velvety body color, and soft blue glow under studio lighting",
+  pearl: "round white Akoya pearl (7-8mm) with high overtone lustre, subtle pink-rosé orient, mirror-like nacre surface reflecting ambient light as a soft halo",
 };
 
 export const styleDescriptions: Record<Style, string> = {
-  contemporary: "modern minimalist with clean lines and artistic asymmetry",
-  minimalist: "ultra-minimal, every element essential, no ornament",
-  vintage: "vintage-inspired with milgrain edges and filigree details",
-  temple: "traditional temple jewelry motifs with peacock, lotus, and paisley influence",
-  floral: "organic botanical forms with petals, leaves, and flowing vines",
-  geometric: "geometric and architectural with clean angles and structured symmetry",
+  contemporary: "modern contemporary design with clean architectural lines, deliberate asymmetry, mixed-finish contrasts (polished against matte), and restrained proportions that emphasize negative space",
+  minimalist: "ultra-minimal design where every element is essential — thin wire-gauge forms, unadorned surfaces, single focal point, geometric purity, negative space as a design element",
+  vintage: "vintage-inspired design with delicate milgrain edging along every border, hand-worked filigree scrollwork, split-shank detailing, and warm antique patina finishes",
+  temple: "traditional Indian temple jewelry with dense gold surface coverage, kundan and polki stone settings, peacock/lotus/paisley motifs in repousse relief, ornate granulation borders",
+  floral: "organic botanical forms with hand-sculpted petal clusters, twisting vine tendrils wrapping the band, textured leaf veining, and naturalistic bud-to-bloom progression",
+  geometric: "geometric and architectural design with precise mathematical forms — hexagonal bezels, triangular faceted surfaces, parallel linear channels, and sharp clean angles with structured bilateral symmetry",
 };
 
 export const defaultNegativePrompt =

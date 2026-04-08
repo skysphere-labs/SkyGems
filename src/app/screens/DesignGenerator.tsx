@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router';
 import { Sparkles, Copy, Check, Pencil, Wand2, Download, Share2, Eye, Undo, Redo, ZoomIn, ZoomOut, ChevronDown, Settings2, X, Crown, Gem, Palette, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { generateJewelryPrompt, RenderMode } from '../utils/promptGenerator';
-import { fetchPromptPreview } from '../services/skygemsApi';
+import { fetchPromptPreview, enhancePrompt } from '../services/skygemsApi';
 import { PipelineView } from '../components/pipeline/PipelineView';
 import { Slider } from '../components/ui/slider';
 import catalogData from '../../../jewelry-analysis-results.json';
@@ -225,6 +225,11 @@ export function DesignGenerator() {
   const [activeTab, setActiveTab] = useState<'generate' | 'prompt' | 'elegant'>('generate');
   const [hasGenerated, setHasGenerated] = useState(false);
 
+  // Prompt enhance state
+  const [freeTextInput, setFreeTextInput] = useState('');
+  const [isEnhancing, setIsEnhancing] = useState(false);
+  const [enhanceSource, setEnhanceSource] = useState<'live' | 'fallback' | null>(null);
+
   // Elegant tab state
   const [brandGuideEnabled, setBrandGuideEnabled] = useState(false);
   const [selectedCatalogRef, setSelectedCatalogRef] = useState<string | null>(null);
@@ -284,6 +289,22 @@ export function DesignGenerator() {
 
     setPipelineRunCount(cnt => cnt + 1);
     setHasGenerated(true);
+  };
+
+  const handleEnhancePrompt = async () => {
+    if (!freeTextInput.trim() || isEnhancing) return;
+    setIsEnhancing(true);
+    setEnhanceSource(null);
+    try {
+      const result = await enhancePrompt(freeTextInput);
+      setPromptText(result.enhancedText);
+      setPromptEdited(true);
+      setEnhanceSource(result.source);
+    } catch (err) {
+      console.error('[SkyGems] Prompt enhance failed:', err);
+    } finally {
+      setIsEnhancing(false);
+    }
   };
 
   const handleUndo = () => {
@@ -527,8 +548,9 @@ export function DesignGenerator() {
           <div className="p-4 border-b" style={{ borderColor: c.border }}>
             <h2 style={{ fontSize: 16, fontWeight: 600, color: c.fg, marginBottom: 12 }}>AI Design Generator</h2>
             <motion.button onClick={handleGenerate} whileTap={{ scale: 0.98 }}
+              disabled={isEnhancing}
               className="w-full py-2.5 rounded-md font-medium text-sm text-white flex items-center justify-center gap-2"
-              style={{ background: `linear-gradient(to right, ${c.gradFrom}, ${c.gradTo})` }}>
+              style={{ background: `linear-gradient(to right, ${c.gradFrom}, ${c.gradTo})`, opacity: isEnhancing ? 0.6 : 1, cursor: isEnhancing ? 'not-allowed' : 'pointer' }}>
               <Wand2 className="w-4 h-4" /> Generate with AI
             </motion.button>
           </div>
@@ -798,6 +820,40 @@ export function DesignGenerator() {
             ) : (
               /* Prompt tab */
               <div className="p-4 space-y-4">
+                {/* Describe Your Vision — free-text enhancement */}
+                <div className="space-y-1.5">
+                  <label style={{ fontSize: 14, fontWeight: 500, color: c.fg }}>Describe Your Vision</label>
+                  <textarea value={freeTextInput} onChange={e => setFreeTextInput(e.target.value)}
+                    placeholder="Describe your jewelry idea... e.g., 'A vintage rose gold ring with a large cushion-cut sapphire surrounded by tiny diamonds'"
+                    className="w-full min-h-[80px] px-3 py-2 text-xs leading-relaxed rounded-md border resize-none focus:outline-none focus:ring-2"
+                    style={{ backgroundColor: c.bgInput, borderColor: c.border, color: c.fg, '--tw-ring-color': c.ring } as React.CSSProperties} />
+                  <div className="flex items-center gap-2">
+                    <button onClick={handleEnhancePrompt}
+                      disabled={isEnhancing || !freeTextInput.trim()}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-white transition-all"
+                      style={{
+                        background: isEnhancing || !freeTextInput.trim() ? '#a0a0b0' : `linear-gradient(135deg, ${c.gradFrom}, ${c.gradTo})`,
+                        opacity: isEnhancing || !freeTextInput.trim() ? 0.6 : 1,
+                        cursor: isEnhancing || !freeTextInput.trim() ? 'not-allowed' : 'pointer',
+                      }}>
+                      {isEnhancing ? (
+                        <><span className="block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> Enhancing...</>
+                      ) : (
+                        <><Wand2 className="w-3 h-3" /> Enhance Prompt</>
+                      )}
+                    </button>
+                    {enhanceSource && (
+                      <span className="text-[10px] font-medium px-1.5 py-0.5 rounded" style={{
+                        backgroundColor: enhanceSource === 'live' ? '#dcfce7' : '#fef3c7',
+                        color: enhanceSource === 'live' ? '#166534' : '#92400e',
+                      }}>
+                        {enhanceSource === 'live' ? 'AI-enhanced' : 'Fallback'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="h-px" style={{ backgroundColor: c.border }} />
+                {/* Full Prompt */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <label style={{ fontSize: 14, fontWeight: 500, color: c.fg }}>Full Prompt</label>
@@ -809,11 +865,12 @@ export function DesignGenerator() {
                     </div>
                   </div>
                   <textarea value={promptText} onChange={e => handlePromptChange(e.target.value)}
-                    className="w-full min-h-[280px] px-3 py-2 text-xs leading-relaxed rounded-md border resize-none focus:outline-none focus:ring-2 font-mono"
+                    className="w-full min-h-[200px] px-3 py-2 text-xs leading-relaxed rounded-md border resize-none focus:outline-none focus:ring-2 font-mono"
                     style={{ backgroundColor: c.bgInput, borderColor: c.border, color: c.fg, '--tw-ring-color': c.ring } as React.CSSProperties} />
                   {promptEdited && <p style={{ fontSize: 10, color: c.gradFrom }}>Manually edited — config changes won't overwrite</p>}
                 </div>
                 <div className="h-px" style={{ backgroundColor: c.border }} />
+                {/* Current Config */}
                 <div className="space-y-1.5">
                   <label style={{ fontSize: 14, fontWeight: 500, color: c.fg }}>Current Config</label>
                   <div className="rounded-md border p-3 space-y-1.5 text-xs" style={{ backgroundColor: c.bgInput, borderColor: c.border }}>

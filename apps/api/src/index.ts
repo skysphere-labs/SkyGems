@@ -1,4 +1,4 @@
-import { createDefaultAgentExecutor, type CopilotAgentOutput } from "@skygems/agent-runtime";
+import { createDefaultAgentExecutor, enhanceFreeTextPrompt, getFullWikiContext, type CopilotAgentOutput } from "@skygems/agent-runtime";
 import {
   ArtifactPublicSchema,
   AuthSessionResponseSchema,
@@ -31,6 +31,8 @@ import {
   ProjectResponseSchema,
   PromptAgentOutputSchema,
   PromptBundleSchema,
+  PromptEnhanceRequestSchema,
+  PromptEnhanceResponseSchema,
   PromptPreviewRequestSchema,
   PromptPreviewResponseSchema,
   RefineRequestSchema,
@@ -993,6 +995,39 @@ async function handlePromptPreview(request: Request, env: ApiEnv, auth: AuthCont
       "x-skygems-prompt-provider": promptProvider.active,
       "x-skygems-prompt-provider-source": promptProvider.source,
     },
+  );
+}
+
+async function handlePromptEnhance(request: Request, env: ApiEnv, auth: AuthContext): Promise<Response> {
+  const payload = await parseJsonBody(request, PromptEnhanceRequestSchema);
+  await requireProjectAccess(env.SKYGEMS_DB, auth, payload.projectId);
+
+  const apiKey = env.XAI_API_KEY?.trim();
+  if (apiKey) {
+    const wikiContext = getFullWikiContext();
+    const result = await enhanceFreeTextPrompt(payload.freeText, wikiContext, apiKey);
+    if (result) {
+      return jsonResponse(
+        PromptEnhanceResponseSchema.parse({
+          projectId: payload.projectId,
+          originalText: payload.freeText,
+          enhancedText: result.enhancedText,
+          source: "live",
+        }),
+      );
+    }
+  }
+
+  // Fallback: wrap user text with standard jewelry prompt framing
+  const fallbackEnhanced = `${payload.freeText}. Professional studio jewelry photography, soft overhead lighting with rim lights, clean neutral background, full piece visible, nothing cropped, hyper-detailed textures, 8k resolution, photorealistic.`;
+  return jsonResponse(
+    PromptEnhanceResponseSchema.parse({
+      projectId: payload.projectId,
+      originalText: payload.freeText,
+      enhancedText: fallbackEnhanced,
+      source: "fallback",
+      errorMessage: apiKey ? "LLM enhancement failed" : "API key not configured",
+    }),
   );
 }
 
@@ -2404,6 +2439,10 @@ async function routeRequest(
 
   if (request.method === "POST" && url.pathname === "/v1/prompt-preview") {
     return handlePromptPreview(request, env, auth);
+  }
+
+  if (request.method === "POST" && url.pathname === "/v1/prompt-enhance") {
+    return handlePromptEnhance(request, env, auth);
   }
 
   if (request.method === "POST" && url.pathname === "/v1/generate-design") {

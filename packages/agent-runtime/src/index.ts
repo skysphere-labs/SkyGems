@@ -35,6 +35,7 @@ export * from "./skills/registry.ts";
 export * from "./skills/view-plan.ts";
 export * from "./types.ts";
 export * from "./validation.ts";
+export * from "./wiki/reader.ts";
 
 export function createDefaultAgentRegistry(): AgentRegistry {
   const registry = new AgentRegistry();

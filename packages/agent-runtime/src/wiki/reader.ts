@@ -1,42 +1,20 @@
 /**
  * WikiReader — Loads jewelry design knowledge from the wiki for agent context.
  *
- * Instead of hardcoded lookup tables, the agent reads rich wiki pages about
- * settings, stones, metals, styles, types, and manufacturing. This gives the
- * LLM deep domain knowledge to craft expert-quality prompts.
+ * Uses bundled content (static strings embedded at build time) instead of
+ * filesystem access, making it compatible with Cloudflare Workers and any
+ * other serverless environment without `node:fs`.
  *
  * The wiki follows Karpathy's LLM wiki pattern:
  * - Raw sources in knowledge/raw/ (immutable reference)
- * - Wiki pages in knowledge/wiki/ (LLM-maintained derivatives)
- * - Index at knowledge/wiki/index.md
+ * - Bundled into bundled-content.ts for runtime access
  */
 
-import { readFileSync, existsSync } from "node:fs";
-import { resolve, join } from "node:path";
 import type { DesignDna } from "@skygems/shared";
-
-// Find the knowledge directory relative to the project root
-function findKnowledgeDir(): string {
-  // Walk up from this file to find the project root (has wrangler.toml)
-  let dir = resolve(import.meta.dirname ?? __dirname, "../../../..");
-  for (let i = 0; i < 5; i++) {
-    if (existsSync(join(dir, "wrangler.toml"))) {
-      return join(dir, "knowledge");
-    }
-    dir = resolve(dir, "..");
-  }
-  // Fallback: assume CWD is project root
-  return resolve(process.cwd(), "knowledge");
-}
+import { WIKI_FILES } from "./bundled-content.ts";
 
 function readRawFile(filename: string): string {
-  const knowledgeDir = findKnowledgeDir();
-  const filePath = join(knowledgeDir, "raw", filename);
-  try {
-    return readFileSync(filePath, "utf-8");
-  } catch {
-    return "";
-  }
+  return WIKI_FILES[filename] ?? "";
 }
 
 /**
@@ -102,6 +80,24 @@ export function getWikiContextForDesign(designDna: DesignDna): string {
   }
 
   return sections.join("\n\n---\n\n");
+}
+
+/**
+ * Load ALL wiki files as a single context string.
+ * Used for free-text prompt enhancement where we don't have structured DNA to filter by.
+ * Total content is ~10K tokens — well within LLM context limits.
+ */
+export function getFullWikiContext(): string {
+  const files = [
+    "prompt-engineering-for-jewelry.md",
+    "jewelry-types-guide.md",
+    "metals-guide.md",
+    "gemstones-guide.md",
+    "design-styles-guide.md",
+    "gemstone-settings-guide.md",
+    "gemstone-shapes-guide.md",
+  ];
+  return files.map(f => readRawFile(f)).filter(Boolean).join("\n\n---\n\n");
 }
 
 /**
