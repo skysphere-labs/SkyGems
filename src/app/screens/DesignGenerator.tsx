@@ -229,6 +229,7 @@ export function DesignGenerator() {
   const [freeTextInput, setFreeTextInput] = useState('');
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [enhanceSource, setEnhanceSource] = useState<'live' | 'fallback' | null>(null);
+  const [enhanceError, setEnhanceError] = useState<string | null>(null);
 
   // Elegant tab state
   const [brandGuideEnabled, setBrandGuideEnabled] = useState(false);
@@ -295,12 +296,17 @@ export function DesignGenerator() {
     if (!freeTextInput.trim() || isEnhancing) return;
     setIsEnhancing(true);
     setEnhanceSource(null);
+    setEnhanceError(null);
     try {
       const result = await enhancePrompt(freeTextInput);
       setPromptText(result.enhancedText);
       setPromptEdited(true);
       setEnhanceSource(result.source);
+      if (result.source === 'fallback' && result.errorMessage) {
+        setEnhanceError(result.errorMessage);
+      }
     } catch (err) {
+      setEnhanceError(err instanceof Error ? err.message : 'Enhancement failed');
       console.error('[SkyGems] Prompt enhance failed:', err);
     } finally {
       setIsEnhancing(false);
@@ -829,12 +835,15 @@ export function DesignGenerator() {
                       </span>
                     )}
                   </div>
+                  {enhanceError && (
+                    <p className="text-[10px] mt-1" style={{ color: '#dc2626' }}>{enhanceError}</p>
+                  )}
                 </div>
                 <div className="h-px" style={{ backgroundColor: c.border }} />
                 {/* Full Prompt */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <label style={{ fontSize: 14, fontWeight: 500, color: c.fg }}>Full Prompt</label>
+                    <label style={{ fontSize: 14, fontWeight: 500, color: c.fg }}>Enhanced Prompt</label>
                     <div className="flex items-center gap-2">
                       {promptEdited && <button onClick={handleResetPrompt} style={{ fontSize: 10, fontWeight: 500, color: c.gradFrom }}>Reset</button>}
                       <button onClick={copyPromptToClipboard} className="flex items-center gap-1" style={{ fontSize: 10, fontWeight: 500, color: c.fgMuted }}>
@@ -843,31 +852,10 @@ export function DesignGenerator() {
                     </div>
                   </div>
                   <textarea value={promptText} onChange={e => handlePromptChange(e.target.value)}
+                    placeholder="Click 'Enhance Prompt' above to generate an expert prompt from your vision, or type directly here..."
                     className="w-full min-h-[200px] px-3 py-2 text-xs leading-relaxed rounded-md border resize-none focus:outline-none focus:ring-2 font-mono"
                     style={{ backgroundColor: c.bgInput, borderColor: c.border, color: c.fg, '--tw-ring-color': c.ring } as React.CSSProperties} />
                   {promptEdited && <p style={{ fontSize: 10, color: c.gradFrom }}>Manually edited — config changes won't overwrite</p>}
-                </div>
-                <div className="h-px" style={{ backgroundColor: c.border }} />
-                {/* Current Config */}
-                <div className="space-y-1.5">
-                  <label style={{ fontSize: 14, fontWeight: 500, color: c.fg }}>Current Config</label>
-                  <div className="rounded-md border p-3 space-y-1.5 text-xs" style={{ backgroundColor: c.bgInput, borderColor: c.border }}>
-                    {[
-                      ['Type', selectedType], ['Metal', selectedMetal],
-                      ['Stones', selectedStones.length > 0 ? selectedStones.join(', ') : 'None'],
-                      ['Style', selectedStyle], ['Render', renderMode],
-                      ['Complexity', `${complexity}%`], ['Variations', String(variations)],
-                      ...(designForm ? [['Form', designForm]] : []),
-                      ...(finish ? [['Finish', finish]] : []),
-                      ...(stoneCut ? [['Cut', stoneCut]] : []),
-                      ...(stoneSetting ? [['Setting', stoneSetting]] : []),
-                    ].map(([k, v]) => (
-                      <div key={k} className="flex justify-between">
-                        <span style={{ color: c.fgMuted }}>{k}</span>
-                        <span className="font-medium capitalize" style={{ color: c.fg }}>{v}</span>
-                      </div>
-                    ))}
-                  </div>
                 </div>
               </div>
             )}
