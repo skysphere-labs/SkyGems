@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   CalendarDays,
+  Check,
   Download,
   ExternalLink,
   Gem,
@@ -477,161 +478,57 @@ export function GenerationGalleryWorkspace({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div
-        className="border-b px-5 py-4"
-        style={{ borderColor: 'rgba(124, 58, 237, 0.12)', backgroundColor: 'rgba(255, 255, 255, 0.9)' }}
-      >
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ borderColor: 'rgba(124, 58, 237, 0.16)', color: '#6d28d9', backgroundColor: 'rgba(124, 58, 237, 0.06)' }}>
-              <Sparkles className="h-3.5 w-3.5" />
-              Profile Gallery
-            </div>
-            <h2 className="mt-3 text-2xl font-semibold text-slate-950">
-              Every new concept stays visible while you create
-            </h2>
-            <p className="mt-1 text-sm text-slate-500">
-              {session?.userDisplayName || session?.userEmail || 'Your account'} can browse all saved designs here, filter by date or jewelry type, and open any design in a popup.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {[
-              ['Saved', resultCountLabel],
-              ['Pending', pendingCountLabel],
-              ['Scope', 'My profile'],
-            ].map(([label, value]) => (
-              <div
-                key={label}
-                className="rounded-2xl border px-4 py-3"
-                style={{ borderColor: 'rgba(124, 58, 237, 0.12)', backgroundColor: 'rgba(248, 250, 252, 0.92)' }}
-              >
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</p>
-                <p className="mt-1 text-sm font-semibold text-slate-900">{value}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
+      {/* Compact activity bar — only shows during/after generation */}
       {(activity && activity.status !== 'idle') || pendingItems.length > 0 ? (
-        <div className="border-b px-5 py-4" style={{ borderColor: 'rgba(124, 58, 237, 0.12)' }}>
-          <div className="grid gap-4 xl:grid-cols-[1.25fr,0.95fr]">
-            <div
-              className="rounded-[28px] border p-5"
-              style={{
-                borderColor:
-                  activity?.status === 'error'
-                    ? 'rgba(239, 68, 68, 0.18)'
-                    : 'rgba(124, 58, 237, 0.12)',
-                background:
-                  activity?.status === 'error'
-                    ? 'linear-gradient(135deg, rgba(254,242,242,0.95), rgba(255,255,255,0.96))'
-                    : 'linear-gradient(135deg, rgba(124,58,237,0.08), rgba(37,99,235,0.06), rgba(255,255,255,0.98))',
-              }}
-            >
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-4">
-                  <div
-                    className="flex h-14 w-14 items-center justify-center rounded-2xl"
-                    style={{
-                      backgroundColor:
-                        activity?.status === 'error'
-                          ? 'rgba(239, 68, 68, 0.12)'
-                          : 'rgba(124, 58, 237, 0.12)',
-                      color: activity?.status === 'error' ? '#dc2626' : '#6d28d9',
-                    }}
-                  >
-                    {activity?.status === 'running' ? (
-                      <Loader2 className="h-7 w-7 animate-spin" />
-                    ) : (
-                      <Sparkles className="h-7 w-7" />
-                    )}
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: activity?.status === 'error' ? '#dc2626' : '#7c3aed' }}>
-                      Generation Activity
-                    </p>
-                    <h3 className="mt-1 text-xl font-semibold text-slate-950">
-                      {activity?.headline || 'Preparing gallery'}
-                    </h3>
-                    <p className="mt-1 text-sm text-slate-600">
-                      {activity?.detail || 'Your live placeholders and saved designs appear here.'}
-                    </p>
-                    {activity?.errorMessage ? (
-                      <p className="mt-2 text-sm font-medium text-red-600">{activity.errorMessage}</p>
-                    ) : null}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 sm:min-w-[240px]">
-                  {[
-                    ['Total', String(activity?.totalCount ?? pendingItems.length)],
-                    ['Ready', String(activity?.completedCount ?? 0)],
-                    ['Live', String(activity?.pendingCount ?? pendingItems.length)],
-                  ].map(([label, value]) => (
-                    <div
-                      key={label}
-                      className="rounded-2xl border px-3 py-3 text-center"
-                      style={{ borderColor: 'rgba(124, 58, 237, 0.12)', backgroundColor: 'rgba(255, 255, 255, 0.82)' }}
-                    >
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">{label}</p>
-                      <p className="mt-1 text-lg font-semibold text-slate-950">{value}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div
-              className="rounded-[28px] border p-5"
-              style={{ borderColor: 'rgba(124, 58, 237, 0.12)', backgroundColor: 'rgba(255,255,255,0.92)' }}
-            >
-              <div className="flex items-center gap-2">
-                <CalendarDays className="h-4 w-4 text-violet-600" />
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                  On-Screen Status
-                </p>
-              </div>
-              <div className="mt-4 space-y-3">
-                {activitySteps.map((step, index) => {
-                  const isComplete = currentActivityStep > index || activity?.status === 'completed';
-                  const isCurrent = currentActivityStep === index && activity?.status !== 'completed';
-
-                  return (
-                    <div key={step} className="flex items-center gap-3">
-                      <div
-                        className="flex h-7 w-7 items-center justify-center rounded-full border"
-                        style={{
-                          borderColor: isCurrent || isComplete ? 'rgba(124, 58, 237, 0.2)' : 'rgba(148, 163, 184, 0.24)',
-                          backgroundColor: isCurrent || isComplete ? 'rgba(124, 58, 237, 0.08)' : '#ffffff',
-                          color: isCurrent || isComplete ? '#6d28d9' : '#94a3b8',
-                        }}
-                      >
-                        {isCurrent ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <span className="text-[11px] font-semibold">{index + 1}</span>}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-slate-900">{step}</p>
-                        {index === 2 ? (
-                          <p className="text-xs text-slate-500">
-                            {pendingItems.length > 0
-                              ? `${pendingItems.length} placeholder${pendingItems.length === 1 ? '' : 's'} spinning in the gallery`
-                              : 'Every finished render is already landing in the grid below'}
-                          </p>
-                        ) : null}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+        <div
+          className="flex items-center gap-3 border-b px-5 py-2.5 flex-shrink-0"
+          style={{
+            borderColor: 'rgba(124, 58, 237, 0.12)',
+            background: activity?.status === 'error'
+              ? 'linear-gradient(135deg, rgba(254,242,242,0.95), rgba(255,255,255,0.96))'
+              : 'linear-gradient(135deg, rgba(124,58,237,0.04), rgba(255,255,255,0.98))',
+          }}
+        >
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            {activity?.status === 'running' ? (
+              <Loader2 className="h-4 w-4 animate-spin flex-shrink-0" style={{ color: '#6d28d9' }} />
+            ) : (
+              <Sparkles className="h-4 w-4 flex-shrink-0" style={{ color: activity?.status === 'error' ? '#dc2626' : '#6d28d9' }} />
+            )}
+            <span className="text-sm font-medium text-slate-900 truncate">
+              {activity?.headline || 'Preparing'}
+            </span>
+            {activity?.detail && (
+              <span className="text-xs text-slate-500 truncate hidden sm:inline">
+                — {activity.detail}
+              </span>
+            )}
+            {activity?.errorMessage && (
+              <span className="text-xs font-medium text-red-600 truncate">{activity.errorMessage}</span>
+            )}
+          </div>
+          <div className="flex items-center gap-3 flex-shrink-0 text-xs">
+            <span className="text-slate-500"><span className="font-semibold text-slate-900">{activity?.completedCount ?? 0}</span>/{activity?.totalCount ?? pendingItems.length} ready</span>
+            {activitySteps.map((step, index) => {
+              const isComplete = currentActivityStep > index || activity?.status === 'completed';
+              const isCurrent = currentActivityStep === index && activity?.status !== 'completed';
+              return (
+                <span
+                  key={step}
+                  className="hidden lg:inline-flex items-center gap-1"
+                  style={{ color: isComplete ? '#6d28d9' : isCurrent ? '#7c3aed' : '#94a3b8' }}
+                >
+                  {isCurrent ? <Loader2 className="h-3 w-3 animate-spin" /> : isComplete ? <Check className="h-3 w-3" /> : null}
+                  <span className="text-[11px]">{step}</span>
+                </span>
+              );
+            })}
           </div>
         </div>
       ) : null}
 
-      <div className="border-b px-5 py-4" style={{ borderColor: 'rgba(124, 58, 237, 0.12)', backgroundColor: 'rgba(255,255,255,0.82)' }}>
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
+      <div className="border-b px-5 py-2.5 flex-shrink-0" style={{ borderColor: 'rgba(124, 58, 237, 0.08)', backgroundColor: 'rgba(255,255,255,0.82)' }}>
+        <div className="flex flex-col gap-2 xl:flex-row xl:items-center">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
@@ -639,7 +536,7 @@ export function GenerationGalleryWorkspace({
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search prompts, rings, metals, styles, gemstones..."
-              className="w-full rounded-2xl border py-3 pl-10 pr-4 text-sm text-slate-900 outline-none transition-all focus:ring-2"
+              className="w-full rounded-xl border py-2 pl-10 pr-4 text-sm text-slate-900 outline-none transition-all focus:ring-2"
               style={{
                 borderColor: 'rgba(124, 58, 237, 0.12)',
                 backgroundColor: '#ffffff',
@@ -648,11 +545,11 @@ export function GenerationGalleryWorkspace({
             />
           </div>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2">
             <select
               value={typeFilter}
               onChange={(event) => setTypeFilter(event.target.value)}
-              className="rounded-2xl border px-4 py-3 text-sm text-slate-700 outline-none"
+              className="rounded-xl border px-3 py-2 text-sm text-slate-700 outline-none"
               style={{ borderColor: 'rgba(124, 58, 237, 0.12)', backgroundColor: '#ffffff' }}
             >
               <option value="all">All types</option>
@@ -666,7 +563,7 @@ export function GenerationGalleryWorkspace({
             <select
               value={granularity}
               onChange={(event) => setGranularity(event.target.value as DateGranularity)}
-              className="rounded-2xl border px-4 py-3 text-sm text-slate-700 outline-none"
+              className="rounded-xl border px-3 py-2 text-sm text-slate-700 outline-none"
               style={{ borderColor: 'rgba(124, 58, 237, 0.12)', backgroundColor: '#ffffff' }}
             >
               <option value="all">All dates</option>
