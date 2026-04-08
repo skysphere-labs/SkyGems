@@ -20,6 +20,7 @@ interface PipelineViewProps {
   promptText?: string;
   promptMode?: 'synced' | 'override';
   onComplete?: (results: any[]) => void;
+  onStatusChange?: (status: 'idle' | 'running' | 'completed', progress: number, currentStep?: string) => void;
   designConfigs?: any;
   layoutMode?: 'graph' | 'vertical';
 }
@@ -129,6 +130,7 @@ export const PipelineView: React.FC<PipelineViewProps> = ({
   promptText: externalPromptText = '',
   promptMode = 'synced',
   onComplete,
+  onStatusChange,
   designConfigs,
   layoutMode: _layoutMode = 'graph',
 }) => {
@@ -148,6 +150,14 @@ export const PipelineView: React.FC<PipelineViewProps> = ({
   const [selectedDesignIndex, setSelectedDesignIndex] = useState<number | null>(null);
   const [lastPromptText, setLastPromptText] = useState('');
   const pipelineStartTimeRef = React.useRef<number>(0);
+
+  // Emit status changes to parent (sidebar progress indicator)
+  React.useEffect(() => {
+    if (onStatusChange) {
+      const currentStep = steps.find(s => s.status === 'running');
+      onStatusChange(status, progress, currentStep?.name);
+    }
+  }, [status, progress, steps]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /**
    * HELPER: Delay utility
@@ -361,134 +371,7 @@ export const PipelineView: React.FC<PipelineViewProps> = ({
     );
   }
 
-  // RUNNING STATE — AI thinking with step-by-step reveal
-  if (status === 'running') {
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="h-full flex items-center justify-center"
-      >
-        <div className="w-full max-w-md px-6">
-          {/* AI Thinking header */}
-          <div className="flex flex-col items-center mb-8">
-            {/* Pulsing brain icon with orbiting ring */}
-            <div className="relative w-16 h-16 mb-4">
-              {/* Outer spinning ring */}
-              <motion.div
-                className="absolute inset-0 rounded-full border-2"
-                style={{ borderColor: 'transparent', borderTopColor: 'var(--accent-gold)', borderRightColor: 'var(--accent-gold-muted)' }}
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-              />
-              {/* Inner pulsing icon */}
-              <motion.div
-                className="absolute inset-2 rounded-lg flex items-center justify-center"
-                style={{ backgroundColor: 'var(--accent-gold-glow)' }}
-                animate={{ scale: [1, 1.08, 1] }}
-                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-              >
-                <Brain className="w-6 h-6" style={{ color: 'var(--accent-gold)' }} />
-              </motion.div>
-            </div>
-            <h2 className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>
-              AI is thinking...
-            </h2>
-            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-              Processing your design through the pipeline
-            </p>
-          </div>
-
-          {/* Steps list */}
-          <div className="space-y-1">
-            {steps.map((step, idx) => {
-              const StepIcon = STEP_ICONS[step.id] || Sparkles;
-              const isCompleted = step.status === 'completed';
-              const isRunningStep = step.status === 'running';
-              const isPending = step.status === 'pending';
-
-              return (
-                <motion.div
-                  key={step.id}
-                  initial={{ opacity: 0, x: -12 }}
-                  animate={{ opacity: isPending ? 0.35 : 1, x: 0 }}
-                  transition={{ delay: idx * 0.04, duration: 0.25 }}
-                  className="flex items-center gap-3 py-2 px-3 rounded-md transition-all"
-                  style={{
-                    backgroundColor: isRunningStep ? 'var(--accent-gold-glow)' : 'transparent',
-                  }}
-                >
-                  {/* Status indicator */}
-                  <div className="w-6 h-6 flex items-center justify-center flex-shrink-0">
-                    {isCompleted ? (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-                      >
-                        <Check className="w-4 h-4" style={{ color: 'var(--status-success)' }} />
-                      </motion.div>
-                    ) : isRunningStep ? (
-                      <Loader2 className="w-4 h-4 animate-spin" style={{ color: 'var(--accent-gold)' }} />
-                    ) : (
-                      <StepIcon className="w-3.5 h-3.5" style={{ color: 'var(--text-muted)' }} />
-                    )}
-                  </div>
-
-                  {/* Step name */}
-                  <span
-                    className="text-xs font-medium flex-1"
-                    style={{
-                      color: isRunningStep
-                        ? 'var(--accent-gold)'
-                        : isCompleted
-                          ? 'var(--text-primary)'
-                          : 'var(--text-muted)',
-                    }}
-                  >
-                    {step.name}
-                  </span>
-
-                  {/* Running message */}
-                  {isRunningStep && (
-                    <motion.span
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="text-[10px]"
-                      style={{ color: 'var(--accent-gold-muted)' }}
-                    >
-                      {step.message}
-                    </motion.span>
-                  )}
-                  {isCompleted && (
-                    <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Done</span>
-                  )}
-                </motion.div>
-              );
-            })}
-          </div>
-
-          {/* Progress bar at bottom */}
-          <div className="mt-6">
-            <div className="flex justify-between text-[10px] mb-1.5" style={{ color: 'var(--text-muted)' }}>
-              <span>Progress</span>
-              <span style={{ color: 'var(--accent-gold)' }}>{Math.round(progress)}%</span>
-            </div>
-            <div className="h-1 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--bg-hover)' }}>
-              <motion.div
-                className="h-full rounded-full"
-                style={{ backgroundColor: 'var(--accent-gold)' }}
-                initial={{ width: 0 }}
-                animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.4, ease: [0, 0, 0.2, 1] }}
-              />
-            </div>
-          </div>
-        </div>
-      </motion.div>
-    );
-  }
+  // RUNNING STATE — no fullscreen overlay; progress shown in sidebar via onStatusChange callback
 
   // Build design spec labels from config
   const metalLabel = designConfigs?.metal

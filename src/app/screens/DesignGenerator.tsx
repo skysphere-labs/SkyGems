@@ -230,6 +230,9 @@ export function DesignGenerator() {
   const [promptEdited, setPromptEdited] = useState(false);
   const [activeTab, setActiveTab] = useState<'generate' | 'prompt' | 'elegant'>('generate');
   const [hasGenerated, setHasGenerated] = useState(false);
+  const [pipelineStatus, setPipelineStatus] = useState<'idle' | 'running' | 'completed'>('idle');
+  const [pipelineProgress, setPipelineProgress] = useState(0);
+  const [pipelineStep, setPipelineStep] = useState<string | undefined>();
   const [pendingGalleryItems, setPendingGalleryItems] = useState<PendingGalleryItem[]>([]);
   const [generationActivity, setGenerationActivity] = useState<GenerationActivitySummary | null>(null);
   const [freeTextInput, setFreeTextInput] = useState('');
@@ -705,34 +708,7 @@ export function DesignGenerator() {
         <div className="w-80 border-r flex flex-col h-full min-h-0" style={{ backgroundColor: c.bg, borderColor: c.border }}>
           {/* Header */}
           <div className="p-4 border-b" style={{ borderColor: c.border }}>
-            <h2 style={{ fontSize: 16, fontWeight: 600, color: c.fg, marginBottom: 12 }}>AI Design Generator</h2>
-            <motion.button onClick={handleGenerate} whileTap={{ scale: 0.98 }}
-              disabled={isGenerating || isEnhancing}
-              className="w-full py-2.5 rounded-md font-medium text-sm text-white flex items-center justify-center gap-2 disabled:opacity-70"
-              style={{ background: `linear-gradient(to right, ${c.gradFrom}, ${c.gradTo})` }}>
-              <Wand2 className={`w-4 h-4 ${isGenerating || isEnhancing ? 'animate-pulse' : ''}`} />
-              {isGenerating
-                ? `Generating ${Math.max(1, Math.min(variations, 8))} Images...`
-                : isEnhancing
-                  ? 'Enhancing Prompt...'
-                  : 'Generate with AI'}
-            </motion.button>
-          </div>
-
-          {/* Quick Start Presets */}
-          <div className="px-4 py-3 border-b" style={{ borderColor: c.border }}>
-            <label style={{ fontSize: 11, fontWeight: 600, color: c.fgMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Quick Start</label>
-            <div className="flex flex-wrap gap-1 mt-2">
-              {PRESETS.map(preset => (
-                <button key={preset.label} onClick={() => applyPreset(preset)}
-                  className="px-2 py-1 rounded text-[10px] font-medium border transition-all"
-                  style={{ borderColor: c.border, color: c.fg }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = c.gradFrom; e.currentTarget.style.backgroundColor = `${c.gradFrom}06`; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = c.border; e.currentTarget.style.backgroundColor = 'transparent'; }}>
-                  {preset.label}
-                </button>
-              ))}
-            </div>
+            <h2 style={{ fontSize: 16, fontWeight: 600, color: c.fg }}>AI Design Generator</h2>
           </div>
 
           {/* Tabs */}
@@ -1061,6 +1037,28 @@ export function DesignGenerator() {
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Generate button + status — pinned to bottom */}
+          <div className="p-4 border-t flex-shrink-0 space-y-2" style={{ borderColor: c.border }}>
+            {isGenerating && generationActivity && (
+              <div className="flex items-center gap-2 text-xs" style={{ color: c.gradFrom }}>
+                <span className="block w-3 h-3 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: c.gradFrom, borderTopColor: 'transparent' }} />
+                <span className="font-medium truncate">{generationActivity.headline || 'Generating...'}</span>
+                <span className="ml-auto text-[10px]" style={{ color: c.fgMuted }}>{generationActivity.completedCount}/{generationActivity.totalCount}</span>
+              </div>
+            )}
+            <motion.button onClick={handleGenerate} whileTap={{ scale: 0.98 }}
+              disabled={isGenerating || isEnhancing}
+              className="w-full py-2.5 rounded-md font-medium text-sm text-white flex items-center justify-center gap-2 disabled:opacity-70"
+              style={{ background: `linear-gradient(to right, ${c.gradFrom}, ${c.gradTo})` }}>
+              <Wand2 className={`w-4 h-4 ${isGenerating || isEnhancing ? 'animate-pulse' : ''}`} />
+              {isGenerating
+                ? `Generating ${Math.max(1, Math.min(variations, 8))} Images...`
+                : isEnhancing
+                  ? 'Enhancing Prompt...'
+                  : 'Generate with AI'}
+            </motion.button>
           </div>
         </div>
 
