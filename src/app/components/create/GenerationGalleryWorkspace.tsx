@@ -189,49 +189,46 @@ function GenerationDetailModal({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: 12 }}
           transition={{ duration: 0.2 }}
-          className="flex h-full max-h-[calc(100vh-40px)] w-full max-w-6xl overflow-hidden rounded-[28px] border bg-white shadow-2xl"
+          className="relative w-full max-w-2xl max-h-[calc(100vh-40px)] overflow-y-auto rounded-[28px] border bg-white shadow-2xl"
           style={{ borderColor: 'rgba(124, 58, 237, 0.16)' }}
           onClick={(event) => event.stopPropagation()}
         >
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full border bg-white/85 transition-all hover:bg-white"
+            style={{ borderColor: 'rgba(124, 58, 237, 0.18)', color: '#374151' }}
+          >
+            <X className="h-4 w-4" />
+          </button>
+
+          {/* Image — full width at top */}
           <div
-            className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden p-6"
+            className="flex items-center justify-center p-6 pb-4"
             style={{ background: 'linear-gradient(135deg, #eef2ff 0%, #f8fafc 55%, #eff6ff 100%)' }}
           >
-            <button
-              type="button"
-              onClick={onClose}
-              className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border bg-white/85 transition-all hover:bg-white"
-              style={{ borderColor: 'rgba(124, 58, 237, 0.18)', color: '#374151' }}
-            >
-              <X className="h-4 w-4" />
-            </button>
-
             {design.imageUrl ? (
               <div
-                className="w-full max-w-3xl overflow-hidden rounded-[24px] border bg-white p-4 shadow-[0_32px_80px_rgba(15,23,42,0.12)]"
-                style={{ borderColor: 'rgba(124, 58, 237, 0.16)' }}
+                className="w-full overflow-hidden rounded-[18px] border bg-white shadow-[0_16px_48px_rgba(15,23,42,0.08)]"
+                style={{ borderColor: 'rgba(124, 58, 237, 0.12)' }}
               >
                 <ImageWithFallback
                   src={design.imageUrl}
                   alt={buildDesignTitle(design)}
-                  className="max-h-[70vh] w-full rounded-[18px] object-contain"
+                  className="max-h-[50vh] w-full rounded-[18px] object-contain"
                   style={{ backgroundColor: '#f8fafc' }}
                 />
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center gap-4 text-center">
-                <div className="flex h-20 w-20 items-center justify-center rounded-2xl" style={{ backgroundColor: 'rgba(124, 58, 237, 0.08)' }}>
-                  <Gem className="h-10 w-10" style={{ color: '#7c3aed' }} />
-                </div>
-                <div>
-                  <p className="text-base font-semibold text-slate-900">Image not available</p>
-                  <p className="mt-1 text-sm text-slate-500">The render may still be processing or the link has expired. Try opening the preview.</p>
-                </div>
+              <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
+                <Gem className="h-12 w-12" style={{ color: '#c4b5fd' }} />
+                <p className="text-sm text-slate-500">Image not available — try Open Preview</p>
               </div>
             )}
           </div>
 
-          <div className="w-full max-w-[380px] overflow-y-auto border-l p-6" style={{ borderColor: 'rgba(124, 58, 237, 0.12)' }}>
+          {/* Details — below image */}
+          <div className="p-6 pt-2">
             <div className="space-y-5">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.22em]" style={{ color: '#7c3aed' }}>
@@ -695,10 +692,10 @@ export function GenerationGalleryWorkspace({
                 <div className="space-y-3 p-4">
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-base font-semibold text-slate-950">
-                      {titleize(item.type)} Concept
+                      {titleize(item.type)} · {titleize(item.style)}
                     </p>
                     <span className="rounded-full bg-violet-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-violet-700">
-                      Live
+                      Generating
                     </span>
                   </div>
 
