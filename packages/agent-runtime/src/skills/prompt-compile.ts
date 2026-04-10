@@ -2,10 +2,12 @@ import {
   PromptBundleSchema,
   formatVariationsForPrompt,
   resolveView,
+  styleLightingPresets,
   type DesignDna,
   type JewelryType,
   type PromptBundle,
   type PromptPreviewProvider,
+  type Style,
 } from "@skygems/shared";
 
 import type { PromptPackRelease } from "../packs/types.ts";
@@ -55,13 +57,19 @@ IMPORTANT: This is a ${options.designDna.jewelryType.toUpperCase()}. ${content.w
     options.viewId,
   );
 
+  // Style-specific lighting preset for the render
+  const lightingPreset = styleLightingPresets[options.designDna.style as Style]
+    ?? styleLightingPresets.contemporary;
+
   const renderPrompt = `${view.compositionPrompt}
+
+Lighting: ${lightingPreset}
 
 This is a ${options.designDna.jewelryType} in ${content.metalDescriptions[
     options.designDna.metal
   ]} with ${describeGemstones(content, options.designDna.gemstones).toLowerCase()} Design DNA: ${options.designDna.bandStyle}, ${options.designDna.settingType}, ${options.designDna.stonePosition}, ${options.designDna.profile}, and ${options.designDna.motif}. Style direction: ${content.styleDescriptions[
     options.designDna.style
-  ]}. Complexity level: ${complexityDescription}. ${content.renderRenderingStyle}
+  ]}. Complexity: ${complexityDescription}. ${content.renderRenderingStyle}
 
 Provider targeting: ${providerDirectives.render}.${notesSuffix}`;
 
@@ -74,18 +82,18 @@ Provider targeting: ${providerDirectives.render}.${notesSuffix}`;
 
 function describeComplexity(complexity: number): string {
   if (complexity <= 25) {
-    return "simple and clean";
+    return "simple clean forms, smooth unadorned surfaces, single focal element, thin wire-gauge metal, maximum negative space";
   }
 
   if (complexity <= 50) {
-    return "moderate detail";
+    return "moderate detail, refined beveling and chamfers, one accent technique such as pavé border or milgrain edge, balanced visual weight";
   }
 
   if (complexity <= 75) {
-    return "intricate with filigree and texture";
+    return "intricate layered work, filigree scrollwork, multiple stone sizes, textured metalwork with hammered or engraved surfaces, visible gallery openwork";
   }
 
-  return "highly elaborate with dense ornamentation";
+  return "maximum craftsmanship density, micro-pavé coverage, repousse relief, granulation, multiple setting types in one piece, every surface carrying detail";
 }
 
 function describeGemstones(

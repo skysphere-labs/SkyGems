@@ -491,24 +491,24 @@ export const gemstoneDescriptions: Record<Gemstone, string> = {
   emerald: "emerald-cut emerald with vivid green saturation, characteristic jardine inclusions, step-cut facets creating a hall-of-mirrors depth effect",
   sapphire: "cushion-cut blue sapphire with deep cornflower saturation, excellent light transmission, velvety body color, and soft blue glow under studio lighting",
   pearl: "round white Akoya pearl (7-8mm) with high overtone lustre, subtle pink-rose orient, mirror-like nacre surface reflecting ambient light as a soft halo",
-  amethyst: "faceted purple amethyst with violet hues",
-  topaz: "faceted blue topaz with crisp brilliance",
-  garnet: "faceted deep red garnet with wine-dark tones",
-  aquamarine: "emerald-cut pale blue aquamarine with ocean clarity",
-  tourmaline: "faceted pink-green tourmaline with vivid saturation",
-  peridot: "faceted lime-green peridot with golden undertones",
-  citrine: "faceted warm golden citrine with amber glow",
-  tanzanite: "cushion-cut violet-blue tanzanite with trichroic flash",
-  coral: "polished natural red coral with organic warmth",
-  turquoise: "cabochon-cut robin-egg blue turquoise with matrix veining",
-  "lapis-lazuli": "polished deep blue lapis lazuli with golden pyrite flecks",
-  opal: "cabochon-cut white opal with play-of-color fire",
-  onyx: "polished jet-black onyx with mirror finish",
-  moonstone: "cabochon-cut rainbow moonstone with adularescent glow",
-  labradorite: "cabochon-cut labradorite with iridescent spectral flash",
-  moissanite: "brilliant-cut moissanite with exceptional fire and brilliance",
-  "cubic-zirconia": "brilliant-cut cubic zirconia with diamond-like sparkle",
-  "lab-diamond": "brilliant-cut lab-grown diamond with identical fire to natural",
+  amethyst: "faceted oval-cut amethyst with deep regal purple saturation, transparent quartz body, subtle violet-to-grape color zoning visible through crown facets, and cool lavender flash under studio lighting",
+  topaz: "faceted emerald-cut Swiss blue topaz with vivid sky-blue saturation, exceptional clarity and transparency, crisp step-cut reflections, and bright white scintillation highlights across the table facet",
+  garnet: "faceted round-cut pyrope garnet with deep wine-red saturation, warm inner glow from high refractive index (1.74), rich burgundy reflections through the pavilion, and subtle almandine undertones",
+  aquamarine: "emerald-cut aquamarine (50 facets) with serene pale blue-to-ocean-blue saturation, remarkable eye-clean transparency, cool water-tone reflections in step-cut facets, and gentle blue luminescence",
+  tourmaline: "faceted oval-cut Paraiba-type tourmaline with electric neon blue-green saturation, strong pleochroism shifting blue-to-green across crystal axes, vivid copper-bearing fluorescence, and intense light dispersion",
+  peridot: "faceted cushion-cut peridot with vivid chartreuse-green saturation and warm golden undertones, characteristic double-refraction creating a soft doubling of back facets, and oily vitreous luster",
+  citrine: "faceted oval-cut natural citrine with warm Madeira-amber saturation, golden honey transparency, subtle internal warmth like candlelight, and bright yellow fire under directional studio light",
+  tanzanite: "cushion-cut tanzanite (58 facets) with deep violet-blue saturation shifting to burgundy-purple under warm light, strong trichroic pleochroism visible across crystal axes, velvety body color, and blue fluorescent glow",
+  coral: "polished cabochon natural Mediterranean coral with deep ox-blood red saturation, smooth organic surface showing subtle growth texture, warm matte finish with soft waxy luster",
+  turquoise: "cabochon-cut Persian turquoise with intense robin-egg blue saturation, fine brown-black spiderweb matrix veining across the dome, smooth waxy polish, and opaque sky-blue body color",
+  "lapis-lazuli": "polished cabochon lapis lazuli with deep royal-blue saturation, scattered golden pyrite flecks catching light like embedded stars, smooth vitreous surface, and subtle sodalite color variation",
+  opal: "cabochon-cut Australian black opal with vivid play-of-color fire — shifting patches of red, green, blue, and violet dancing across the dome as viewing angle changes, dark body tone amplifying spectral flash",
+  onyx: "polished cabochon jet-black onyx with mirror-like surface, deep opaque body color absorbing all ambient light except crisp specular highlights, smooth chalcedony finish with no visible banding",
+  moonstone: "cabochon-cut rainbow moonstone with ethereal blue-white adularescent glow floating beneath the surface, semi-transparent milky body, and soft billowing light effect that shifts with viewing angle",
+  labradorite: "cabochon-cut spectrolite-grade labradorite with vivid iridescent labradorescence — electric blue, gold, and green spectral flash erupting across the polished surface as light angle shifts",
+  moissanite: "brilliant-cut moissanite (57 facets) with exceptional rainbow fire dispersion (0.104, nearly 2.5x diamond), strong double refraction creating visible facet doubling, and intense white-light scintillation",
+  "cubic-zirconia": "brilliant-cut cubic zirconia with bright diamond-like sparkle, high dispersion creating colorful fire flashes, flawless clarity with no inclusions, and crisp light return under studio conditions",
+  "lab-diamond": "brilliant-cut CVD lab-grown diamond (57 facets) with identical optical properties to natural — strong rainbow fire, pin-point scintillation, exceptional white body color, and crystalline depth",
   none: "",
 };
 
@@ -537,8 +537,33 @@ export const styleDescriptions: Record<Style, string> = {
   spiritual: "spiritual jewelry with sacred geometry, chakra symbols, and meditative elements",
 };
 
+export const styleLightingPresets: Record<Style, string> = {
+  contemporary: "Clean diffused studio lighting: large overhead softbox at 5500K daylight, subtle fill from left at 1:3 ratio, white seamless background, controlled reflections via light tent, no harsh shadows.",
+  minimalist: "Clinical precision lighting: dual softboxes at 45 degrees (5500K), zero shadows, pure white infinite background, perfectly even illumination, bounce card below for under-gallery fill.",
+  vintage: "Warm golden-hour atmosphere: key light at 4000K warm white from upper-right, antique brass tray surface, soft romantic bokeh in background, gentle amber fill, heirloom nostalgic mood.",
+  temple: "Rich palatial atmosphere: warm directional spotlight at 3200K from above-left, dark maroon velvet surface, amber fill light, chiaroscuro shadow play, golden ambient reflections suggesting palace interior.",
+  floral: "Soft botanical garden lighting: diffused natural daylight at 5000K through sheer fabric, cream linen surface, gentle dappled light suggesting garden shadows, fresh airy mood.",
+  geometric: "Precise architectural lighting: crisp 5500K key light with hard edge from upper-left, polished dark grey surface, sharp geometric shadow patterns, high contrast emphasizing form and angle.",
+  fine: "Classic luxury studio: overhead softbox at 5500K with silk diffuser, dark charcoal gradient background, gentle rim light from behind for metal edge separation, bounce card below, editorial quality.",
+  "art-deco": "Cool platinum-tone lighting: 6000K key light from above, polished black lacquer surface, geometric shadow patterns cast by stepped forms, crisp high-contrast, 1920s glamour atmosphere.",
+  "art-nouveau": "Dreamy ethereal lighting: soft diffused 4500K from overhead, flowing shadow patterns, ivory silk surface, gentle warm fill from below, romantic Pre-Raphaelite mood, painterly atmosphere.",
+  futuristic: "High-tech studio: cool 6500K key light, brushed steel surface, subtle blue-toned rim light, clean reflections, sci-fi atmosphere, razor-sharp specular highlights on metal.",
+  kundan: "Traditional Indian atelier: warm 3000K directional spotlight, rich burgundy velvet surface, golden fill light suggesting temple lamp glow, intimate opulent atmosphere, warm amber reflections.",
+  "middle-eastern": "Arabian luxury: warm 3500K key light, deep indigo silk surface with subtle gold thread, amber rim light, ornate shadow patterns suggesting arabesque screens, palatial warmth.",
+  "east-asian": "Zen minimalism with warmth: soft 4500K diffused light, dark lacquered wood surface, subtle warm fill, clean composition with breathing space, meditative calm atmosphere.",
+  "african-tribal": "Earth-toned natural lighting: warm 4000K key light, raw terracotta or woven raffia surface, warm directional fill suggesting savanna sun, organic textured shadows, grounded natural mood.",
+  bohemian: "Warm eclectic atmosphere: soft 4000K natural window light from the left, weathered wood surface, gentle dappled shadows, layered textile hints in background, earthy free-spirited mood.",
+  gothic: "Dramatic chiaroscuro: single hard spotlight from above-left at 5000K, polished black obsidian surface, deep noir shadows, moody atmosphere, high-contrast with dark negative space.",
+  punk: "Raw industrial lighting: hard 5500K overhead light, raw concrete or brushed steel surface, gritty shadows, high contrast, urban warehouse atmosphere, no softening.",
+  streetwear: "Urban editorial: bright even 5500K studio light, matte grey surface, clean modern shadows, high-contrast commercial photography aesthetic, sharp and bold.",
+  steampunk: "Victorian workshop: warm 3500K directional light suggesting gas lamp, aged brass tray surface, warm amber shadows, antique mechanical atmosphere, soft vignette.",
+  cyberpunk: "Neon-lit studio: cool 6500K key light with subtle purple-blue rim accent, glossy black surface with neon color reflections, futuristic high-tech atmosphere, sharp specular highlights.",
+  cottagecore: "Soft pastoral daylight: gentle 5000K diffused light through curtain, aged linen surface with dried wildflower hints, warm delicate shadows, romantic countryside atmosphere.",
+  spiritual: "Meditative golden hour: warm 4000K soft light, natural stone or marble surface, gentle even illumination, serene contemplative atmosphere, subtle warm halo around the piece.",
+};
+
 export const defaultNegativePrompt =
-  "cropped composition, incomplete jewelry, extra pieces, labels, captions, watermark, logo, hands, fingers, ears, neck, body parts, mannequin, packaging, low detail, blurry";
+  "cropped edges, incomplete piece, extra floating elements, disconnected parts, wrong jewelry type, flat dull metal, no reflections, muddy highlights, plastic-looking surface, cloudy stones, dead fire, milky transparency, merged facets, misaligned cut, dull lifeless gems, merged prongs, floating stones, gap between stone and metal, bent prongs, noise, grain, chromatic aberration, motion blur, color fringing, double exposure, text, watermark, logo, labels, hands, fingers, body parts, mannequin, packaging, cartoonish, painted, illustration, sketch-like, digital art, low-poly, anime";
 
 export const productRenderDirectives = {
   background:

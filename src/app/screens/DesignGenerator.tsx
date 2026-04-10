@@ -1,6 +1,6 @@
 import React from 'react';
 import { useState, useRef } from 'react';
-import { Sparkles, Copy, Check, Pencil, Wand2, Download, Share2, Eye, Undo, Redo, ZoomIn, ZoomOut, ChevronDown, Settings2, X, Crown, Gem, Palette, Shield } from 'lucide-react';
+import { Sparkles, Copy, Check, Pencil, Wand2, Download, Share2, Eye, Undo, Redo, ZoomIn, ZoomOut, ChevronDown, Settings2, X, Crown, Gem, Palette, Shield, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { generateJewelryPrompt, RenderMode } from '../utils/promptGenerator';
 import {
@@ -1035,6 +1035,70 @@ export function DesignGenerator() {
                     ))}
                   </div>
                 </div>
+
+                {/* Pipeline Status */}
+                {(generationActivity && generationActivity.status !== 'idle') || pendingGalleryItems.length > 0 ? (
+                  <>
+                    <div className="h-px" style={{ backgroundColor: c.border }} />
+                    <div className="space-y-1.5">
+                      <label style={{ fontSize: 14, fontWeight: 500, color: c.fg }}>Pipeline Status</label>
+                      <div className="rounded-md border p-3 space-y-2" style={{
+                        backgroundColor: generationActivity?.status === 'error' ? 'rgba(254,242,242,0.95)' : `${c.gradFrom}06`,
+                        borderColor: generationActivity?.status === 'error' ? 'rgba(239, 68, 68, 0.18)' : `${c.gradFrom}20`,
+                      }}>
+                        <div className="flex items-center gap-2">
+                          {generationActivity?.status === 'running' ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" style={{ color: c.gradFrom }} />
+                          ) : (
+                            <Sparkles className="w-3.5 h-3.5" style={{ color: generationActivity?.status === 'error' ? '#dc2626' : c.gradFrom }} />
+                          )}
+                          <span className="text-xs font-semibold" style={{ color: generationActivity?.status === 'error' ? '#dc2626' : c.gradFrom }}>
+                            {generationActivity?.headline || 'Preparing'}
+                          </span>
+                        </div>
+                        <p className="text-[10px]" style={{ color: c.fgMuted }}>{generationActivity?.detail || 'Starting generation...'}</p>
+                        {generationActivity?.errorMessage && (
+                          <p className="text-[10px] font-medium text-red-600">{generationActivity.errorMessage}</p>
+                        )}
+                        <div className="flex gap-2 text-[10px]">
+                          {[
+                            ['Total', String(generationActivity?.totalCount ?? pendingGalleryItems.length)],
+                            ['Ready', String(generationActivity?.completedCount ?? 0)],
+                            ['Live', String(generationActivity?.pendingCount ?? pendingGalleryItems.length)],
+                          ].map(([label, value]) => (
+                            <div key={label} className="flex-1 rounded border px-2 py-1.5 text-center" style={{ borderColor: `${c.gradFrom}15`, backgroundColor: 'rgba(255,255,255,0.8)' }}>
+                              <p className="font-semibold uppercase tracking-wider" style={{ fontSize: 9, color: c.fgMuted }}>{label}</p>
+                              <p className="font-semibold" style={{ color: c.fg }}>{value}</p>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="space-y-1.5 pt-1">
+                          {['Agent running', 'Generating concepts', 'Loading into gallery', 'Saved to your profile'].map((step, index) => {
+                            const stepIndex = !generationActivity || generationActivity.status === 'idle' ? -1
+                              : generationActivity.status === 'error' ? 1
+                              : generationActivity.status === 'completed' ? 3
+                              : generationActivity.completedCount === 0 ? 1
+                              : generationActivity.pendingCount > 0 ? 2 : 3;
+                            const isComplete = stepIndex > index || generationActivity?.status === 'completed';
+                            const isCurrent = stepIndex === index && generationActivity?.status !== 'completed';
+                            return (
+                              <div key={step} className="flex items-center gap-2">
+                                <div className="flex w-4 h-4 items-center justify-center rounded-full border" style={{
+                                  borderColor: isCurrent || isComplete ? `${c.gradFrom}30` : c.border,
+                                  backgroundColor: isCurrent || isComplete ? `${c.gradFrom}10` : 'transparent',
+                                  color: isCurrent || isComplete ? c.gradFrom : c.fgMuted,
+                                }}>
+                                  {isCurrent ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <span style={{ fontSize: 8, fontWeight: 600 }}>{index + 1}</span>}
+                                </div>
+                                <span className="text-[10px] font-medium" style={{ color: isCurrent || isComplete ? c.fg : c.fgMuted }}>{step}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : null}
               </div>
             )}
           </div>
