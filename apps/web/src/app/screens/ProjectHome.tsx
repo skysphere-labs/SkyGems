@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowRight, Clock3, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { Link, useParams } from "react-router";
 
 import { Button, ImageWithFallback } from "@skygems/ui";
@@ -99,6 +99,16 @@ export function ProjectHome() {
                 />
               </div>
               <div className="flex flex-col justify-center p-2">
+                <span
+                  className="inline-flex w-fit items-center rounded-full border px-3 py-1 text-[11px] font-medium"
+                  style={{
+                    borderColor: "rgba(76,175,80,0.18)",
+                    backgroundColor: "rgba(76,175,80,0.08)",
+                    color: "var(--status-success)",
+                  }}
+                >
+                  Active design
+                </span>
                 <h3 className="text-lg font-semibold text-[var(--text-primary)]">
                   {selectedDesign.displayName}
                 </h3>
@@ -170,7 +180,7 @@ export function ProjectHome() {
                     backgroundColor: "var(--bg-tertiary)",
                   }}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-3">
                     <p className="text-sm font-medium text-[var(--text-primary)]">
                       {gen.requestKind === "refine"
                         ? "Refinement"
@@ -180,20 +190,27 @@ export function ProjectHome() {
                       className="flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium"
                       style={{
                         backgroundColor:
-                          gen.readyPairs > 0
+                          gen.status === "completed" || gen.status === "succeeded"
                             ? "rgba(76,175,80,0.1)"
-                            : "rgba(255,255,255,0.04)",
+                            : gen.status === "failed"
+                              ? "rgba(239,83,80,0.1)"
+                              : "rgba(212,175,55,0.06)",
                         color:
-                          gen.readyPairs > 0
+                          gen.status === "completed" || gen.status === "succeeded"
                             ? "var(--status-success)"
-                            : "var(--text-muted)",
+                            : gen.status === "failed"
+                              ? "var(--status-error)"
+                              : "var(--accent-gold-light)",
                       }}
                     >
-                      {gen.readyPairs}/{gen.totalPairs} ready
+                      {gen.status}
                     </span>
                   </div>
                   <p className="mt-1 text-sm text-[var(--text-secondary)] line-clamp-1">
                     {gen.message}
+                  </p>
+                  <p className="mt-3 text-xs text-[var(--text-muted)]">
+                    {gen.readyPairs}/{gen.totalPairs} pair slots ready
                   </p>
                 </Link>
               ))}
@@ -232,9 +249,30 @@ export function ProjectHome() {
                     />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-[var(--text-primary)]">
-                      {design.displayName}
-                    </p>
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-medium text-[var(--text-primary)]">
+                        {design.displayName}
+                      </p>
+                      <span
+                        className="rounded-full border px-2.5 py-1 text-[11px] font-medium"
+                        style={{
+                          borderColor:
+                            design.selectionState === "selected"
+                              ? "rgba(76,175,80,0.18)"
+                              : "rgba(212,175,55,0.16)",
+                          backgroundColor:
+                            design.selectionState === "selected"
+                              ? "rgba(76,175,80,0.08)"
+                              : "rgba(212,175,55,0.06)",
+                          color:
+                            design.selectionState === "selected"
+                              ? "var(--status-success)"
+                              : "var(--accent-gold-light)",
+                        }}
+                      >
+                        {design.selectionState}
+                      </span>
+                    </div>
                     <p className="mt-0.5 text-xs text-[var(--text-secondary)] line-clamp-1">
                       {design.promptSummary}
                     </p>

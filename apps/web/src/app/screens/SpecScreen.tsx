@@ -80,11 +80,50 @@ export function SpecScreen() {
 
   const spec = design.specData;
   const isNotGenerated = spec.versionLabel === "Not generated";
+  const geometryFields =
+    spec.geometry.length > 0
+      ? spec.geometry
+      : [
+          { label: "Jewelry Type", value: design.designDna.jewelryType },
+          { label: "Complexity", value: `${design.designDna.complexity}%` },
+          { label: "Band Profile", value: design.designDna.profile },
+          { label: "Setting Type", value: design.designDna.settingType },
+        ];
+  const materialFields =
+    spec.materials.length > 0
+      ? spec.materials
+      : [
+          { label: "Primary Metal", value: design.designDna.metal },
+          { label: "Band Style", value: design.designDna.bandStyle },
+          { label: "Motif", value: design.designDna.motif },
+        ];
+  const gemstoneFields =
+    spec.gemstones.length > 0
+      ? spec.gemstones
+      : design.designDna.gemstones.map((gemstone, index) => ({
+          label: index === 0 ? "Primary Stone" : `Accent Stone ${index}`,
+          value: gemstone,
+        }));
   const sections = [
-    { label: "Geometry", fields: spec.geometry },
-    { label: "Materials", fields: spec.materials },
-    { label: "Gemstones", fields: spec.gemstones },
+    { label: "Geometry", fields: geometryFields },
+    { label: "Materials", fields: materialFields },
+    { label: "Gemstones", fields: gemstoneFields },
   ];
+  const constructionNotes =
+    spec.constructionNotes.length > 0
+      ? spec.constructionNotes
+      : [
+          `Use the ${design.designDna.settingType} language as the baseline for formal specification.`,
+          `Carry the ${design.designDna.profile} profile forward when technical sheets are generated.`,
+        ];
+  const missingInformation =
+    spec.missingInformation.length > 0
+      ? spec.missingInformation
+      : isNotGenerated
+        ? [
+            "Backend stage truth exists, but field-level spec artifact retrieval is still guarded.",
+          ]
+        : [];
 
   return (
     <div className="animate-entrance space-y-8">
@@ -130,147 +169,136 @@ export function SpecScreen() {
         </div>
       </div>
 
-      {/* Not generated state */}
-      {isNotGenerated ? (
+      {isNotGenerated && (
         <div
-          className="rounded-2xl border py-14 text-center"
+          className="rounded-2xl border px-5 py-4"
           style={{
-            borderColor: "var(--border-default)",
-            backgroundColor: "var(--bg-tertiary)",
+            borderColor: "rgba(212,175,55,0.14)",
+            backgroundColor: "rgba(212,175,55,0.04)",
           }}
         >
-          <Sparkles
-            className="mx-auto size-10 text-[var(--accent-gold)]"
-            style={{ opacity: 0.4 }}
-          />
-          <p className="mt-4 text-lg font-semibold text-[var(--text-primary)]">
-            Specification not generated yet
-          </p>
-          <p className="mt-2 text-sm text-[var(--text-secondary)]">
-            Generate a specification to review design parameters and risk
-            assessment.
-          </p>
-          <Button className="btn-gold mt-5" style={{ height: 44 }}>
-            <Sparkles className="size-4" />
-            Generate Specification
-          </Button>
+          <div className="flex items-start gap-3">
+            <Sparkles className="mt-0.5 size-4 text-[var(--accent-gold)]" />
+            <div>
+              <p className="text-sm font-medium text-[var(--text-primary)]">
+                Specification artifact is still pending
+              </p>
+              <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                This route now stays useful by surfacing live design DNA and current stage truth until the downstream spec artifact is exposed.
+              </p>
+            </div>
+          </div>
         </div>
-      ) : (
-        <>
-          {/* Version info */}
+      )}
+
+      <div
+        className="rounded-2xl border p-5"
+        style={{
+          borderColor: "var(--border-default)",
+          backgroundColor: "var(--bg-tertiary)",
+        }}
+      >
+        <p className="text-sm font-semibold text-[var(--text-primary)]">
+          {spec.versionLabel}
+        </p>
+        <p className="mt-2 text-sm text-[var(--text-secondary)]">
+          {spec.summary || design.stages.spec.summary}
+        </p>
+      </div>
+
+      {spec.riskFlags.length > 0 && (
+        <div className="space-y-2">
+          <p className="eyebrow">Risk Flags</p>
+          {spec.riskFlags.map((flag, i) => (
+            <RiskFlagBadge key={i} flag={flag} />
+          ))}
+        </div>
+      )}
+
+      <div className="stagger-children grid gap-5 lg:grid-cols-3">
+        {sections.map((section) => (
           <div
+            key={section.label}
             className="rounded-2xl border p-5"
             style={{
               borderColor: "var(--border-default)",
               backgroundColor: "var(--bg-tertiary)",
             }}
           >
-            <p className="text-sm font-semibold text-[var(--text-primary)]">
-              {spec.versionLabel}
-            </p>
-            <p className="mt-2 text-sm text-[var(--text-secondary)]">
-              {spec.summary}
-            </p>
-          </div>
-
-          {/* Risk flags */}
-          {spec.riskFlags.length > 0 && (
-            <div className="space-y-2">
-              <p className="eyebrow">Risk Flags</p>
-              {spec.riskFlags.map((flag, i) => (
-                <RiskFlagBadge key={i} flag={flag} />
-              ))}
-            </div>
-          )}
-
-          {/* Spec sections */}
-          <div className="stagger-children grid gap-5 lg:grid-cols-3">
-            {sections.map((section) => (
-              <div
-                key={section.label}
-                className="rounded-2xl border p-5"
-                style={{
-                  borderColor: "var(--border-default)",
-                  backgroundColor: "var(--bg-tertiary)",
-                }}
-              >
-                <p className="eyebrow mb-4">{section.label}</p>
-                {section.fields.length > 0 ? (
-                  <div className="space-y-3">
-                    {section.fields.map((field) => (
-                      <div
-                        key={field.label}
-                        className="flex items-start justify-between gap-3 text-sm"
-                      >
-                        <span className="text-[var(--text-secondary)]">
-                          {field.label}
-                        </span>
-                        <span className="text-right font-medium text-[var(--text-primary)]">
-                          {field.value}
-                        </span>
-                      </div>
-                    ))}
+            <p className="eyebrow mb-4">{section.label}</p>
+            {section.fields.length > 0 ? (
+              <div className="space-y-3">
+                {section.fields.map((field) => (
+                  <div
+                    key={field.label}
+                    className="flex items-start justify-between gap-3 text-sm"
+                  >
+                    <span className="text-[var(--text-secondary)]">
+                      {field.label}
+                    </span>
+                    <span className="text-right font-medium text-[var(--text-primary)]">
+                      {field.value}
+                    </span>
                   </div>
-                ) : (
-                  <p className="text-sm text-[var(--text-muted)]">
-                    Awaiting generation
-                  </p>
-                )}
+                ))}
               </div>
-            ))}
+            ) : (
+              <p className="text-sm text-[var(--text-muted)]">
+                Awaiting generation
+              </p>
+            )}
           </div>
+        ))}
+      </div>
 
-          {/* Notes */}
-          <div className="grid gap-5 lg:grid-cols-2">
-            <div
-              className="rounded-2xl border p-5"
-              style={{
-                borderColor: "var(--border-default)",
-                backgroundColor: "var(--bg-tertiary)",
-              }}
-            >
-              <p className="eyebrow mb-3">Construction Notes</p>
-              {spec.constructionNotes.length > 0 ? (
-                <ul className="space-y-2 text-sm text-[var(--text-secondary)]">
-                  {spec.constructionNotes.map((note) => (
-                    <li key={note} className="flex items-start gap-2">
-                      <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-[var(--status-success)]" />
-                      {note}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-[var(--text-muted)]">
-                  No construction notes yet.
-                </p>
-              )}
-            </div>
-            <div
-              className="rounded-2xl border p-5"
-              style={{
-                borderColor: "var(--border-default)",
-                backgroundColor: "var(--bg-tertiary)",
-              }}
-            >
-              <p className="eyebrow mb-3">Missing Information</p>
-              {spec.missingInformation.length > 0 ? (
-                <ul className="space-y-2 text-sm text-[var(--text-secondary)]">
-                  {spec.missingInformation.map((item) => (
-                    <li key={item} className="flex items-start gap-2">
-                      <Info className="mt-0.5 size-3.5 shrink-0 text-[var(--status-info)]" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-[var(--status-success)]">
-                  No missing information.
-                </p>
-              )}
-            </div>
-          </div>
-        </>
-      )}
+      <div className="grid gap-5 lg:grid-cols-2">
+        <div
+          className="rounded-2xl border p-5"
+          style={{
+            borderColor: "var(--border-default)",
+            backgroundColor: "var(--bg-tertiary)",
+          }}
+        >
+          <p className="eyebrow mb-3">Construction Notes</p>
+          {constructionNotes.length > 0 ? (
+            <ul className="space-y-2 text-sm text-[var(--text-secondary)]">
+              {constructionNotes.map((note) => (
+                <li key={note} className="flex items-start gap-2">
+                  <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-[var(--status-success)]" />
+                  {note}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-[var(--text-muted)]">
+              No construction notes yet.
+            </p>
+          )}
+        </div>
+        <div
+          className="rounded-2xl border p-5"
+          style={{
+            borderColor: "var(--border-default)",
+            backgroundColor: "var(--bg-tertiary)",
+          }}
+        >
+          <p className="eyebrow mb-3">Missing Information</p>
+          {missingInformation.length > 0 ? (
+            <ul className="space-y-2 text-sm text-[var(--text-secondary)]">
+              {missingInformation.map((item) => (
+                <li key={item} className="flex items-start gap-2">
+                  <Info className="mt-0.5 size-3.5 shrink-0 text-[var(--status-info)]" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-[var(--status-success)]">
+              No missing information.
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

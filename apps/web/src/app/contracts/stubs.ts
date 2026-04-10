@@ -27,6 +27,31 @@ import { buildDesignDna } from "../domain/variationEngine";
 import { generatePromptPreview } from "../domain/promptGenerator";
 
 let LAST_ACTIVE_PROJECT_ID = "prj_01JQZYG7M3N8K4R5T6V7W8X9YZ";
+const LAST_ACTIVE_PROJECT_STORAGE_KEY = "skygems.last-active-project.v1";
+
+function readPersistedLastActiveProjectId() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    return window.localStorage.getItem(LAST_ACTIVE_PROJECT_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writePersistedLastActiveProjectId(projectId: string) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(LAST_ACTIVE_PROJECT_STORAGE_KEY, projectId);
+  } catch {
+    // Ignore storage failures and keep the in-memory fallback working.
+  }
+}
 
 const DEFAULT_BOOTSTRAP_INPUT: CreateInput = {
   jewelryType: "ring",
@@ -789,11 +814,12 @@ export const stubGalleryResults: GallerySearchResult[] = Object.values(
 }));
 
 export function getLastActiveProjectId() {
-  return LAST_ACTIVE_PROJECT_ID;
+  return readPersistedLastActiveProjectId() ?? LAST_ACTIVE_PROJECT_ID;
 }
 
 export function rememberLastActiveProject(projectId: string) {
   LAST_ACTIVE_PROJECT_ID = projectId;
+  writePersistedLastActiveProjectId(projectId);
 }
 
 export function getProjectById(projectId: string) {

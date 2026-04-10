@@ -11,7 +11,7 @@ import { Link, useParams } from "react-router";
 
 import { Button, ImageWithFallback } from "@skygems/ui";
 
-import { fetchDesign } from "../contracts/api";
+import { fetchDesign, postSelectDesign } from "../contracts/api";
 import type { Design, StageStatus } from "../contracts/types";
 import { RefineDrawer } from "../components/RefineDrawer";
 import { appRoutes } from "../lib/routes";
@@ -199,6 +199,7 @@ function PipelineStage({
 export function SelectedDesignScreen() {
   const { designId, projectId } = useParams();
   const [design, setDesign] = useState<Design | null>(null);
+  const [isSelecting, setIsSelecting] = useState(false);
 
   useEffect(() => {
     if (!designId) return;
@@ -215,6 +216,8 @@ export function SelectedDesignScreen() {
       </div>
     );
   }
+
+  const isSelected = design.selectionState === "selected";
 
   const stages = [
     {
@@ -242,6 +245,22 @@ export function SelectedDesignScreen() {
       href: appRoutes.cad(projectId, design.id),
     },
   ];
+
+  async function handleSelectDesign() {
+    if (!design) {
+      return;
+    }
+
+    setIsSelecting(true);
+    try {
+      const next = await postSelectDesign(design.id);
+      setDesign(next);
+    } catch {
+      // Leave the current workspace visible if the explicit selection write fails.
+    } finally {
+      setIsSelecting(false);
+    }
+  }
 
   return (
     <div className="animate-entrance space-y-10">
@@ -323,7 +342,73 @@ export function SelectedDesignScreen() {
             </p>
           )}
         </div>
-        <RefineDrawer design={design} />
+        <div className="flex flex-wrap gap-3">
+          {!isSelected && (
+            <Button
+              onClick={handleSelectDesign}
+              disabled={isSelecting}
+              className="btn-gold"
+            >
+              {isSelecting ? "Promoting..." : "Make Active Design"}
+            </Button>
+          )}
+          {design.sourceGenerationId && (
+            <Button asChild variant="outline" className="border-[var(--border-default)]">
+              <Link to={appRoutes.generation(projectId, design.sourceGenerationId)}>
+                Open Generation
+              </Link>
+            </Button>
+          )}
+          <RefineDrawer design={design} />
+        </div>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+        <div
+          className="rounded-2xl border p-5"
+          style={{
+            borderColor: isSelected
+              ? "rgba(76,175,80,0.18)"
+              : "rgba(212,175,55,0.14)",
+            backgroundColor: "var(--bg-tertiary)",
+          }}
+        >
+          <p className="eyebrow mb-3">
+            {isSelected ? "Active Workspace Truth" : "Candidate Workspace"}
+          </p>
+          <p className="text-sm leading-6 text-[var(--text-secondary)]">
+            {isSelected
+              ? "This design currently owns the project workspace, downstream stage state, and production handoff."
+              : "This design can be reviewed and promoted into the active workspace without leaving the current route."}
+          </p>
+        </div>
+        <div
+          className="rounded-2xl border p-5"
+          style={{
+            borderColor: "var(--border-default)",
+            backgroundColor: "var(--bg-tertiary)",
+          }}
+        >
+          <p className="eyebrow mb-3">Design DNA</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <p className="text-xs uppercase tracking-[0.12em] text-[var(--text-muted)]">Setting</p>
+              <p className="mt-2 text-sm text-[var(--text-primary)]">{design.designDna.settingType}</p>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.12em] text-[var(--text-muted)]">Profile</p>
+              <p className="mt-2 text-sm text-[var(--text-primary)]">{design.designDna.profile}</p>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.12em] text-[var(--text-muted)]">Band</p>
+              <p className="mt-2 text-sm text-[var(--text-primary)]">{design.designDna.bandStyle}</p>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.12em] text-[var(--text-muted)]">Motif</p>
+              <p className="mt-2 text-sm text-[var(--text-primary)]">{design.designDna.motif}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Design DNA tags */}
@@ -371,6 +456,65 @@ export function SelectedDesignScreen() {
           ))}
         </div>
       </div>
+
+      {design.recentGenerations && design.recentGenerations.length > 0 && (
+        <div
+          className="rounded-2xl border p-5"
+          style={{
+            borderColor: "var(--border-default)",
+            backgroundColor: "var(--bg-tertiary)",
+          }}
+        >
+          <p className="eyebrow mb-4">Recent Design Cycles</p>
+          <div className="space-y-3">
+            {design.recentGenerations.slice(0, 3).map((generation) => (
+              <Link
+                key={generation.generationId}
+                to={appRoutes.generation(projectId, generation.generationId)}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3 transition-colors hover:border-[rgba(255,255,255,0.14)]"
+                style={{
+                  borderColor: "var(--border-default)",
+                  backgroundColor: "rgba(255,255,255,0.02)",
+                }}
+              >
+                <div>
+                  <p className="text-sm font-medium text-[var(--text-primary)]">
+                    {generation.requestKind === "refine" ? "Refinement cycle" : "Creation cycle"}
+                  </p>
+                  <p className="mt-1 text-xs text-[var(--text-secondary)]">
+                    {generation.createdAt}
+                  </p>
+                </div>
+                <span
+                  className="rounded-full border px-3 py-1 text-xs font-medium"
+                  style={{
+                    borderColor:
+                      generation.status === "completed" || generation.status === "succeeded"
+                        ? "rgba(76,175,80,0.18)"
+                        : generation.status === "failed"
+                          ? "rgba(239,83,80,0.18)"
+                          : "rgba(212,175,55,0.18)",
+                    color:
+                      generation.status === "completed" || generation.status === "succeeded"
+                        ? "var(--status-success)"
+                        : generation.status === "failed"
+                          ? "var(--status-error)"
+                          : "var(--accent-gold)",
+                    backgroundColor:
+                      generation.status === "completed" || generation.status === "succeeded"
+                        ? "rgba(76,175,80,0.08)"
+                        : generation.status === "failed"
+                          ? "rgba(239,83,80,0.08)"
+                          : "rgba(212,175,55,0.08)",
+                  }}
+                >
+                  {generation.status}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Lineage */}
       {design.lineageNotes.length > 0 && (

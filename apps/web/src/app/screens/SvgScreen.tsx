@@ -69,6 +69,21 @@ export function SvgScreen() {
         </div>
       </div>
 
+      <div
+        className="rounded-2xl border p-5"
+        style={{
+          borderColor: "var(--border-default)",
+          backgroundColor: "var(--bg-tertiary)",
+        }}
+      >
+        <p className="text-sm font-semibold text-[var(--text-primary)]">
+          Current SVG stage summary
+        </p>
+        <p className="mt-2 text-sm text-[var(--text-secondary)]">
+          {design.stages.svg.summary}
+        </p>
+      </div>
+
       {design.svgViews.length > 0 ? (
         <div className="stagger-children grid gap-6 lg:grid-cols-3">
           {design.svgViews.map((view) => (
@@ -135,12 +150,11 @@ export function SvgScreen() {
             No vector views yet
           </p>
           <p className="mt-2 text-sm text-[var(--text-secondary)]">
-            Complete the technical sheet stage first, then generate vector
-            views.
+            The route now stays aligned to backend truth, but vector artifact retrieval is still guarded until the SVG slice lands.
           </p>
-          <Button className="btn-gold mt-5" style={{ height: 44 }}>
+          <Button className="btn-gold mt-5" style={{ height: 44 }} disabled>
             <Sparkles className="size-4" />
-            Generate SVG Views
+            SVG generation pending
           </Button>
         </div>
       )}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Sparkles } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router";
 
 import { Button, ImageWithFallback } from "@skygems/ui";
@@ -10,22 +10,32 @@ import { appRoutes } from "../lib/routes";
 
 function PairUnveil({
   pair,
+  generation,
   projectId,
 }: {
   pair: Generation["pairs"][0];
+  generation: Generation;
   projectId: string;
 }) {
   const navigate = useNavigate();
   const [isSelecting, setIsSelecting] = useState(false);
+  const isActiveDesign =
+    generation.projectSelectedDesignId === pair.designId ||
+    generation.designSelectionState === "selected";
 
   async function handleSelect() {
+    if (isActiveDesign) {
+      navigate(appRoutes.design(projectId, pair.designId));
+      return;
+    }
+
     setIsSelecting(true);
     try {
       await postSelectDesign(pair.designId);
-      navigate(appRoutes.design(projectId, pair.designId));
     } catch {
-      navigate(appRoutes.design(projectId, pair.designId));
+      // Keep the flow moving even when the explicit selection endpoint is unavailable.
     } finally {
+      navigate(appRoutes.design(projectId, pair.designId));
       setIsSelecting(false);
     }
   }
@@ -87,6 +97,45 @@ function PairUnveil({
       {/* Select CTA */}
       {pair.status === "ready" && (
         <div className="mx-auto max-w-[960px] text-center">
+          <div
+            className="mx-auto mb-4 max-w-[760px] rounded-2xl border px-5 py-4 text-left"
+            style={{
+              borderColor: isActiveDesign
+                ? "rgba(76,175,80,0.2)"
+                : "rgba(212,175,55,0.16)",
+              backgroundColor: "var(--bg-tertiary)",
+            }}
+          >
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="eyebrow mb-2">
+                  {isActiveDesign ? "Active Workspace Design" : "Ready For Selection"}
+                </p>
+                <p className="text-sm text-[var(--text-secondary)]">
+                  {pair.note ??
+                    (isActiveDesign
+                      ? "This pair already owns the selected-design workspace."
+                      : "Promote this pair into the selected-design workspace to continue into spec and production.")}
+                </p>
+              </div>
+              <span
+                className="rounded-full border px-3 py-1 text-xs font-medium"
+                style={{
+                  borderColor: isActiveDesign
+                    ? "rgba(76,175,80,0.22)"
+                    : "rgba(212,175,55,0.2)",
+                  color: isActiveDesign
+                    ? "var(--status-success)"
+                    : "var(--accent-gold)",
+                  backgroundColor: isActiveDesign
+                    ? "rgba(76,175,80,0.08)"
+                    : "rgba(212,175,55,0.08)",
+                }}
+              >
+                {isActiveDesign ? "Selected" : "Candidate"}
+              </span>
+            </div>
+          </div>
           <Button
             onClick={handleSelect}
             disabled={isSelecting}
@@ -98,11 +147,17 @@ function PairUnveil({
               borderRadius: 8,
             }}
           >
-            <Sparkles className="size-4" />
-            {isSelecting ? "Selecting..." : "Select This Design"}
+            {isActiveDesign ? <CheckCircle2 className="size-4" /> : <Sparkles className="size-4" />}
+            {isSelecting
+              ? "Selecting..."
+              : isActiveDesign
+                ? "Open Active Design"
+                : "Select This Design"}
           </Button>
           <p className="mt-3 text-xs text-[var(--text-muted)]">
-            Promote this pair to your workspace
+            {isActiveDesign
+              ? "Continue into the selected-design workspace."
+              : "Promote this pair to your workspace."}
           </p>
         </div>
       )}
@@ -233,6 +288,7 @@ export function GenerationScreen() {
           <PairUnveil
             key={`${pair.designId}-${i}`}
             pair={pair}
+            generation={generation}
             projectId={projectId}
           />
         ))
@@ -263,7 +319,9 @@ export function GenerationScreen() {
             border: "1px solid rgba(76,175,80,0.12)",
           }}
         >
-          Generation complete
+          {generation.projectSelectedDesignId
+            ? "Generation complete. A design has already been selected for this project."
+            : "Generation complete. Select the pair to continue."}
         </div>
       )}
     </div>

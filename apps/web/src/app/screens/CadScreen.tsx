@@ -60,6 +60,21 @@ export function CadScreen() {
         </Button>
       </div>
 
+      <div
+        className="rounded-2xl border p-5"
+        style={{
+          borderColor: "var(--border-default)",
+          backgroundColor: "var(--bg-tertiary)",
+        }}
+      >
+        <p className="text-sm font-semibold text-[var(--text-primary)]">
+          Current CAD stage summary
+        </p>
+        <p className="mt-2 text-sm text-[var(--text-secondary)]">
+          {design.stages.cad.summary}
+        </p>
+      </div>
+
       {/* Format cards */}
       <div className="stagger-children grid gap-5 lg:grid-cols-3">
         {CAD_FORMAT_OPTIONS.map((format) => {
@@ -108,9 +123,12 @@ export function CadScreen() {
                   <Button
                     variant="outline"
                     className="w-full border-[var(--border-default)]"
+                    disabled
                   >
                     <Sparkles className="size-4" />
-                    Generate {format.label}
+                    {design.cadJobs.length > 0
+                      ? `Awaiting ${format.label}`
+                      : "CAD generation pending"}
                   </Button>
                 )}
               </div>

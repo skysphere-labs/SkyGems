@@ -195,6 +195,12 @@ function writeCachedLiveProjects(projects: ProjectWorkspace[]) {
   writeStorageItem(LIVE_PROJECT_CACHE_STORAGE_KEY, JSON.stringify(projects));
 }
 
+function isCachedLiveProject(projectId: string) {
+  return readCachedLiveProjects().some(
+    (candidate) => candidate.projectId === projectId,
+  );
+}
+
 function upsertCachedLiveProject(project: ProjectWorkspace) {
   const cachedProjects = readCachedLiveProjects();
   const existing = cachedProjects.find(
@@ -239,6 +245,26 @@ function syncProjectWorkspace(project: ProjectWorkspace) {
 
   rememberLastActiveProject(project.projectId);
   upsertCachedLiveProject(project);
+}
+
+if (typeof window !== "undefined") {
+  for (const cachedProject of readCachedLiveProjects()) {
+    const existingProject = stubProjects.find(
+      (candidate) => candidate.projectId === cachedProject.projectId,
+    );
+
+    if (existingProject) {
+      Object.assign(existingProject, cachedProject);
+    } else {
+      stubProjects.unshift(cachedProject);
+    }
+
+    if (!stubCreateDrafts[cachedProject.projectId]) {
+      stubCreateDrafts[cachedProject.projectId] = buildDefaultDraft(
+        cachedProject.projectId,
+      );
+    }
+  }
 }
 
 async function bootstrapLiveProject(projectName?: string): Promise<ProjectWorkspace | null> {
@@ -847,6 +873,7 @@ export async function postPromptPreview(input: {
     ...input.inputs,
     pairStandardVersion: "pair_v1" as const,
   };
+  const project = getProjectById(input.projectId);
 
   try {
     const payload = await requestJson<PromptPreviewResponse>("/v1/prompt-preview", {
@@ -860,6 +887,30 @@ export async function postPromptPreview(input: {
       source: "live",
     };
   } catch (error) {
+    if (project && isCachedLiveProject(input.projectId)) {
+      try {
+        const payload = await requestJson<PromptPreviewResponse>(
+          "/v1/prompt-preview",
+          {
+            method: "POST",
+            body: JSON.stringify(previewPayload),
+          },
+          {
+            authMode: "bootstrap",
+            bootstrapProjectName: project.name,
+          },
+        );
+
+        return {
+          promptText: payload.promptText,
+          promptSummary: payload.promptSummary,
+          source: "live",
+        };
+      } catch {
+        // Fall through to the local preview path.
+      }
+    }
+
     return buildFallbackPreview(
       input.inputs,
       error instanceof Error ? error.message : "Live prompt preview unavailable.",
@@ -874,6 +925,7 @@ export async function postGenerateDesign(input: {
 }): Promise<GenerateDesignResult> {
   const localPreview = generatePromptPreview(input.draft.inputs);
   const promptSummary = input.latestPreviewSummary ?? localPreview.summary;
+  const project = getProjectById(input.projectId);
   const requestBody: Record<string, unknown> = {
     projectId: input.projectId,
     ...input.draft.inputs,
@@ -943,6 +995,69 @@ export async function postGenerateDesign(input: {
       source: "live",
     };
   } catch (error) {
+    if (project && isCachedLiveProject(input.projectId)) {
+      try {
+        const payload = await requestJson<GenerateDesignResponse>(
+          "/v1/generate-design",
+          {
+            method: "POST",
+            headers: {
+              "Idempotency-Key": buildIdempotencyKey(),
+            },
+            body: JSON.stringify(requestBody),
+          },
+          {
+            authMode: "bootstrap",
+            bootstrapProjectName: project.name,
+          },
+        );
+
+        rememberLiveGenerationContext({
+          generationId: payload.generationId,
+          designId: payload.designId,
+          projectId: payload.projectId,
+          inputs: input.draft.inputs,
+          promptMode: input.draft.promptMode,
+          promptSummary,
+          promptText: input.draft.promptValue,
+          createdAt: payload.createdAt,
+        });
+        stubGenerations[payload.generationId] = {
+          id: payload.generationId,
+          projectId: payload.projectId,
+          requestKind: "create",
+          status: "queued",
+          pairStandardVersion: payload.pairStandardVersion,
+          createdAt: formatDisplayTimestamp(payload.createdAt),
+          message: "Generation request accepted and queued for execution.",
+          readyPairs: 0,
+          totalPairs: 1,
+          reconnecting: false,
+          pairs: [],
+          source: "live",
+          lastCheckedAt: new Date().toISOString(),
+        };
+        syncProjectWorkspace({
+          projectId: payload.projectId,
+          name: project.name,
+          description: project.description,
+          status: "active",
+          currentGenerationId: payload.generationId,
+          selectedDesignId: null,
+          designCount: project.designCount,
+          createdAt: project.createdAt,
+          updatedAt: formatDisplayTimestamp(payload.createdAt),
+        });
+
+        return {
+          generationId: payload.generationId,
+          source: "live",
+        };
+      } catch {
+        // Fall through to the local generation path.
+      }
+    }
+
     const generation = enqueueStubGeneration(input.projectId, "create");
     return {
       generationId: generation.id,

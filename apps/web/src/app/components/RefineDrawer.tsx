@@ -23,6 +23,8 @@ export function RefineDrawer({ design }: { design: Design }) {
   const [instruction, setInstruction] = useState("");
   const [selectedPresets, setSelectedPresets] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const canSubmit =
+    selectedPresets.length > 0 || instruction.trim().length > 0;
 
   const togglePreset = (preset: string) => {
     setSelectedPresets((current) =>
@@ -108,13 +110,16 @@ export function RefineDrawer({ design }: { design: Design }) {
               placeholder="Describe the changes you'd like..."
               onChange={(e) => setInstruction(e.target.value)}
             />
+            <p className="text-xs text-[var(--text-muted)]">
+              Refine requests queue a new generation from the current design workspace.
+            </p>
           </div>
         </div>
 
         <SheetFooter>
           <Button
             onClick={handleRefine}
-            disabled={isSubmitting}
+            disabled={isSubmitting || !canSubmit}
             className="btn-gold w-full"
             style={{ height: 44 }}
           >

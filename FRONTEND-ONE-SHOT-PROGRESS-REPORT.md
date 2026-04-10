@@ -1,201 +1,116 @@
-# Frontend One-Shot Premium Completion — Progress Report
+# Frontend One-Shot Progress Report
 
-**Date:** 2026-04-07
-**Branch:** `emdash/skygems-one-shot-premium-frontend-completion-1me`
-**Status:** Implementation pass complete — build, typecheck, and all 12 tests passing.
+Date: 2026-04-07
+Branch: `emdash/skygems-one-shot-premium-frontend-completion-1me`
+Status: Implementation-heavy frontend pass completed and validated.
 
----
+## 1. What I Implemented
 
-## 1. What Was Implemented
+### 1.1 Real dev-session + live-truth adoption in the frontend contract layer
+- Added a real frontend path for `POST /v1/dev/bootstrap` and cached the returned bearer session locally.
+- Hydrated cached live projects back into the in-memory workspace map on reload so route-based project pages no longer depend on hardcoded stub state.
+- Kept the stub path intact, but moved the frontend from “pretend live” headers toward actual backend auth/session truth.
 
-### Design System & Animation Layer (`packages/ui/src/styles/`)
-- **Refined skeleton shimmer** — Updated to `bg-elevated` + `rgba(255,255,255,0.04)` per design system spec.
-- **Entrance animations** — `animate-entrance` (400ms), `animate-unveil` (600ms signature pair reveal), `stagger-children` (50ms cascading grid items).
-- **Card hover** — `card-hover` utility for consistent border-brighten + micro-scale on interactive cards.
-- **Image hover zoom** — `img-hover-zoom` (1.03x scale, 400ms ease-out) per design spec.
-- **Hover overlay** — `hover-overlay` with bottom gradient for gallery-style image cards.
-- **Gold utilities** — `gold-ambient`, `gold-ring`, refined `btn-gold` to use solid gold (not gradient) with active `scale(0.98)`.
-- **Eyebrow refinement** — 11px/600 weight/0.1em tracking for sharper luxury signaling.
-- **Border tokens** — `--border-default` → `0.06` opacity, `--border-hover` → `0.12`, added `--border-gold`.
-- **Reduced motion** — All animations auto-disabled for `prefers-reduced-motion`.
+### 1.2 Stronger live backend reads and writes
+- Expanded the frontend contract layer to use backend truth for:
+  - `GET /v1/projects/:projectId`
+  - `GET /v1/projects/:projectId/designs`
+  - `GET /v1/designs/:designId`
+  - `POST /v1/designs/:designId/select`
+  - `GET /v1/generations/:generationId`
+  - `POST /v1/gallery/search`
+- Added live-to-local syncing so fetched projects/designs update the route shell, project selection state, and cached workspace state.
+- Added a recovery path for cached live projects so prompt preview and generate can re-bootstrap a dev session and stay live after reload instead of immediately dropping to fallback.
 
-### SelectedDesignScreen — The Emotional Center
-- Full-bleed hero pair viewer with gold border glow and hover zoom.
-- Vertical connected pipeline rail with icon indicators, status dots, processing pulse animation, gold completion indicators, and connecting lines.
-- Design DNA tag chips.
-- Entrance animation on mount.
+### 1.3 Explicit design selection flow polish
+- Generation results now distinguish between a ready candidate and an already-selected active design.
+- The generation CTA now attempts real explicit selection via `POST /v1/designs/:id/select` before routing into the workspace.
+- The selected-design route now supports promoting a candidate into the active workspace directly from the design page.
 
-### GenerationScreen — The Reveal Moment
-- Signature `animate-unveil` animation (opacity + translateY + scale, 600ms).
-- Gold-tinted polling indicator ("Crafting your design pair...").
-- Custom shimmer-based skeleton pair cards.
-- **Wired `postSelectDesign`** — "Select This Design" now calls `POST /v1/designs/:id/select` before navigating to workspace, with fallback navigation on error.
-- Loading state during selection.
+### 1.4 Stronger selected-design workspace
+- Added an “active workspace truth” vs “candidate workspace” state surface.
+- Added design DNA context cards so the workspace carries more actual product information, not just imagery.
+- Added recent generation-cycle links on the selected-design screen to make create/refine lineage easier to navigate.
 
-### CreateScreen
-- `btn-gold` CTA for Generate button.
-- `animate-entrance` on mount.
+### 1.5 Project and gallery surfaces tightened around selection truth
+- Project home now highlights the active design more clearly and shows selection-state/status context for recent designs and generations.
+- Gallery cards now surface selection state directly and include a loading state instead of feeling blank during search refreshes.
+- Project layout now fetches project truth instead of assuming every project already exists in the local stub map.
 
-### GalleryScreen — Museum Energy
-- Jewelry type filter chips (All/Ring/Necklace/Earrings/Bracelet/Pendant) with gold-active state.
-- Image hover overlay gradient with "Open design" action hint.
-- Design DNA tags on each card.
-- Staggered grid entrance.
-- `card-hover` on all cards.
+### 1.6 Downstream route shells made more useful without faking missing artifacts
+- Spec and Technical Sheet routes now stay informative even when downstream artifacts are not yet exposed by the backend.
+- Instead of dropping into near-empty placeholders, those routes now show live design-DNA-derived baseline fields, notes, and current stage-truth messaging.
+- SVG and CAD routes now include clearer stage-summary messaging and disable dead-end “generate” actions when the backend stage is still guarded.
 
-### ProjectsIndex (Your Studio)
-- Refined project card icons with gold-08 background + gold-12 border.
-- Staggered grid entrance.
-- `btn-gold` for all gold CTAs.
-- Stronger empty state with bordered icon container.
-
-### ProjectHome (Project Detail)
-- Design thumbnails in the recent designs list.
-- Generation status as colored pill badges.
-- Design DNA tags in selected design hero.
-- `img-hover-zoom` on hero sketch/render.
-- Staggered activity lists.
-
-### Downstream Screens (Spec / Technical Sheet / SVG / CAD)
-- **"Not generated" empty states** with centered gold "Generate" CTA buttons.
-- `animate-entrance` on all screens.
-- Staggered data sections.
-- Risk flag styling with severity-colored borders.
-- Conditional "Continue to next stage" CTA.
-
-### RefineDrawer
-- **Wired to `postRefineDesign`** with loading state.
-- `btn-gold` CTA.
-
-### AppShell & ProjectLayout
-- Rounded nav links and active indicators.
-- **Contextual breadcrumbs** — Shows current screen name (Create, Results, Workspace, Specification, Technical Sheet, SVG Export, CAD Export).
-
-### LandingPage
-- `btn-gold` CTAs.
-- `animate-entrance` with stagger.
-- `card-hover` on feature cards.
-- Reduced decorative glow intensity.
-
-### PromptPreviewStatusCard
-- **Source indicator** — Green/gray dot with "Live preview" / "Local preview" label.
-- Styled mode indicator cards with subtle borders.
-- Warning message borders.
-
-### API Layer
-- Fixed `buildRequestHeaders` return type to `Record<string, string>`.
-- The concurrent linter/hook pass extended api.ts with significant live-truth adoption:
-  - `fetchDesign` → tries `GET /v1/designs/:id` first
-  - `fetchSelectedDesign` → tries `GET /v1/projects/:id` first
-  - `fetchProjectDesigns` → tries `GET /v1/projects/:id/designs` first
-  - `bootstrapProject` → tries `bootstrapLiveProject` (real `/v1/dev/bootstrap`) first
-  - `postSelectDesign` → calls `POST /v1/designs/:id/select`
-
----
+### 1.7 Refine entry tightened
+- The refine drawer now requires an actual instruction/preset before submission.
+- Refine still falls back to the local queued-generation path, but the UX now behaves like a real queued action instead of a loose link-out.
 
 ## 2. What Flows Are Now Truly Live vs Still Guarded
 
-### Live-first with guarded fallback
-| Endpoint | Status |
-|----------|--------|
-| `POST /v1/prompt-preview` | Tries real API first |
-| `POST /v1/generate-design` | Tries real API first |
-| `GET /v1/generations/:id` | Tries real API first |
-| `GET /v1/projects/:id` | Tries real API first |
-| `GET /v1/projects/:id/designs` | Tries real API first |
-| `GET /v1/designs/:id` | Tries real API first |
-| `POST /v1/designs/:id/select` | **Wired** (called on pair selection) |
-| `POST /v1/gallery/search` | Tries real API first |
-| `POST /v1/dev/bootstrap` | Tries real API first |
+### Truly live when a dev bootstrap session is available
+- Project bootstrap via `POST /v1/dev/bootstrap`
+- Prompt preview via `POST /v1/prompt-preview`
+- Generate via `POST /v1/generate-design`
+- Generation polling via `GET /v1/generations/:generationId`
+- Project detail via `GET /v1/projects/:projectId`
+- Project design list via `GET /v1/projects/:projectId/designs`
+- Design detail via `GET /v1/designs/:designId`
+- Explicit design selection via `POST /v1/designs/:designId/select`
+- Gallery search via `POST /v1/gallery/search`
 
-### Still stub/fallback only
-| Endpoint | Status |
-|----------|--------|
-| `GET /v1/projects` (list) | Returns stub/cached projects |
-| `POST /v1/designs/:id/spec` | CTA present, not wired |
-| `POST /v1/designs/:id/technical-sheet` | CTA present, not wired |
-| `POST /v1/designs/:id/svg` | CTA present, not wired |
-| `POST /v1/designs/:id/cad` | CTA present, not wired |
-| `POST /v1/designs/:id/refine` | Uses local stub generation |
-
----
+### Still guarded or partially local
+- Projects index remains a merged cached-live + stub surface because there is still no canonical `GET /v1/projects` list route in main.
+- Project generation history on Project Home still depends on local/stub state because there is no dedicated per-project generation list route exposed to the frontend.
+- Refine submission still falls back to the local queued-generation path because the backend refine route is still intentionally stubbed.
+- Spec / technical sheet / SVG / CAD execution is still guarded because those backend routes remain stubbed for execution and field-level artifact retrieval is not exposed.
+- SVG/CAD download actions remain shell-level unless actual artifacts already exist in local state.
 
 ## 3. Exact Files Changed
 
-### Design system (2 files)
-- `packages/ui/src/styles/theme.css` — Refined border tokens, added --border-gold
-- `packages/ui/src/styles/utilities.css` — Complete rewrite: entrance/unveil/stagger animations, card-hover, img-hover-zoom, hover-overlay, gold utilities, reduced-motion support
+- `apps/web/src/app/components/RefineDrawer.tsx`
+- `apps/web/src/app/contracts/api.ts`
+- `apps/web/src/app/contracts/stubs.ts`
+- `apps/web/src/app/layouts/ProjectLayout.tsx`
+- `apps/web/src/app/screens/CadScreen.tsx`
+- `apps/web/src/app/screens/GalleryScreen.tsx`
+- `apps/web/src/app/screens/GenerationScreen.tsx`
+- `apps/web/src/app/screens/ProjectHome.tsx`
+- `apps/web/src/app/screens/SelectedDesignScreen.tsx`
+- `apps/web/src/app/screens/SpecScreen.tsx`
+- `apps/web/src/app/screens/SvgScreen.tsx`
+- `apps/web/src/app/screens/TechnicalSheetScreen.tsx`
+- `FRONTEND-ONE-SHOT-PROGRESS-REPORT.md`
 
-### Screens (11 files)
-- `apps/web/src/app/screens/SelectedDesignScreen.tsx` — Full rewrite: hero viewer, vertical pipeline rail
-- `apps/web/src/app/screens/GenerationScreen.tsx` — Unveil animation, gold polling, selection API wiring
-- `apps/web/src/app/screens/CreateScreen.tsx` — btn-gold, entrance animation
-- `apps/web/src/app/screens/GalleryScreen.tsx` — Filter chips, hover overlay, stagger, tags
-- `apps/web/src/app/screens/ProjectsIndex.tsx` — Refined cards, stagger, btn-gold
-- `apps/web/src/app/screens/ProjectHome.tsx` — Thumbnails, badges, tags, stagger
-- `apps/web/src/app/screens/SpecScreen.tsx` — Empty state CTA, entrance, stagger, risk borders
-- `apps/web/src/app/screens/TechnicalSheetScreen.tsx` — Empty state CTA, entrance, stagger
-- `apps/web/src/app/screens/SvgScreen.tsx` — Empty state CTA, entrance, stagger
-- `apps/web/src/app/screens/CadScreen.tsx` — Gold borders, entrance, stagger
-- `apps/web/src/app/screens/LandingPage.tsx` — btn-gold, entrance, card-hover
+## 4. Design / UX Decisions Made
 
-### Layouts (2 files)
-- `apps/web/src/app/layouts/AppShell.tsx` — Rounded nav links, rounded active indicator
-- `apps/web/src/app/layouts/ProjectLayout.tsx` — Contextual breadcrumbs
-
-### Components (2 files)
-- `apps/web/src/app/components/RefineDrawer.tsx` — Wired to API, loading state, btn-gold
-- `apps/web/src/app/components/status/PromptPreviewStatusCard.tsx` — Source indicator, styled borders
-
-### API (1 file)
-- `apps/web/src/app/contracts/api.ts` — Fixed buildRequestHeaders return type
-
----
-
-## 4. Design/UX Decisions Made
-
-1. **Solid gold over gradients for CTAs** — Per design system spec.
-2. **Vertical pipeline rail** — Connected-stage layout with icons, status dots, and gold completion instead of flat 4-card grid.
-3. **Kept separate downstream routes** — Workspace pipeline rail links to them; preserves URL addressability.
-4. **Gold-tinted polling** — Generation waiting state uses gold accent instead of blue.
-5. **Filter chips in gallery** — Quick jewelry type filtering without search.
-6. **Design thumbnails in project home** — Visual recognition over text-only cards.
-7. **Contextual breadcrumbs** — Third segment shows current screen name for orientation.
-8. **"Generate" CTAs on empty stages** — Clear gold CTA when stage has no data.
-9. **`prefers-reduced-motion`** — All animations auto-disabled.
-10. **Live/fallback source indicator** — Users see whether they're hitting real backend.
-11. **Selection calls real API** — `postSelectDesign` wired before workspace navigation.
-
----
+- Kept the route-based premium shell intact and pushed it closer to “selected design as the center of truth” instead of reviving workspace-tab behavior.
+- Preferred explicit active/candidate labeling over hidden selection state so the generation-to-workspace handoff feels intentional.
+- Chose live design-DNA baseline content for downstream routes rather than empty placeholders or fake generated artifacts.
+- Disabled dead-end downstream actions where the backend is still stubbed instead of presenting misleading clickable CTAs.
+- Preserved the dark luxury / gold system and kept the flow visually image-first rather than turning the app back into a dashboard.
 
 ## 5. Remaining Blockers
 
-1. **Pipeline stage triggers** — Generate Spec/Tech Sheet/SVG/CAD buttons need `POST /v1/designs/:id/{stage}` wiring.
-2. **Refine still stub** — `postRefineDesign` creates local stub generation.
-3. **Gallery images are stubs** — Inline SVG poster placeholders, not real R2-served images.
-4. **Bundle size** — ~477 KB JS (141 KB gzip). Code splitting by route would improve initial load.
-5. **No auth flow** — No Auth0 integration. Placeholder auth headers.
-6. **Old workspace files** — Deleted in working tree but not staged.
-
----
+- No canonical live projects list endpoint exposed to the frontend.
+- No dedicated live per-project generation list endpoint.
+- `POST /v1/designs/:id/refine` is still intentionally stubbed in the backend.
+- Downstream execution routes for spec / technical sheet / SVG / CAD are still intentionally stubbed.
+- Field-level downstream artifact/detail reads are still missing, so the frontend can only show baseline context plus stage truth.
 
 ## 6. Exact Next Recommended Work Item
 
-**Wire pipeline stage triggers to real backend endpoints.**
+Implement the real downstream pipeline slice:
+- expose frontend-safe reads for generated spec / technical sheet / SVG / CAD artifacts
+- wire the existing downstream route screens to those artifact/detail reads
+- then enable the corresponding POST stage triggers and polling so the selected-design workspace can drive the full production lane without guarded shells
 
-1. Wire "Generate Specification" → `POST /v1/designs/:id/spec` with polling
-2. Wire "Generate Technical Sheet" → `POST /v1/designs/:id/technical-sheet` with polling
-3. Wire "Generate SVG" → `POST /v1/designs/:id/svg` with polling
-4. Wire "Generate CAD" per-format → `POST /v1/designs/:id/cad` with format selection and polling
-5. Wire refine → real `POST /v1/designs/:id/refine` instead of stub
-6. Add route-level code splitting to reduce initial bundle
+## 7. Validation
 
----
-
-## Validation
-
-```
-npm run typecheck    ✓ (all 3 workspaces pass)
-npm run build:web    ✓ (1805 modules, 1.13s, no errors)
-npm test             ✓ (12/12 tests pass, 0 failures)
-```
+- `npm run typecheck --workspace @skygems/web`
+  - Passed.
+- `npm run build:web`
+  - Passed.
+  - Output:
+    - `dist/assets/index-Bg1VUPvK.css` `48.06 kB`
+    - `dist/assets/index-CTHeIxFa.js` `491.59 kB`

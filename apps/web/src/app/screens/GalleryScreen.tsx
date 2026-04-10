@@ -14,12 +14,17 @@ export function GalleryScreen() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<GallerySearchResult[]>([]);
   const [activeFilter, setActiveFilter] = useState<string>("All");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
 
+    setIsLoading(true);
     postGallerySearch({ query }).then((items) => {
-      if (mounted) setResults(items);
+      if (mounted) {
+        setResults(items);
+        setIsLoading(false);
+      }
     });
 
     return () => {
@@ -136,6 +141,27 @@ export function GalleryScreen() {
                 <div className="pointer-events-none absolute bottom-3 left-4 flex items-center gap-1.5 text-sm font-medium text-[var(--accent-gold)] opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                   Open design
                 </div>
+                <div className="absolute right-3 top-3">
+                  <span
+                    className="rounded-full border px-2.5 py-1 text-[10px] font-medium backdrop-blur-sm"
+                    style={{
+                      borderColor:
+                        result.selectionState === "selected"
+                          ? "rgba(76,175,80,0.2)"
+                          : "rgba(212,175,55,0.22)",
+                      backgroundColor:
+                        result.selectionState === "selected"
+                          ? "rgba(76,175,80,0.14)"
+                          : "rgba(10,10,10,0.45)",
+                      color:
+                        result.selectionState === "selected"
+                          ? "var(--status-success)"
+                          : "var(--accent-gold-light)",
+                    }}
+                  >
+                    {result.selectionState}
+                  </span>
+                </div>
               </div>
               {/* Card info */}
               <div className="p-4">
@@ -167,18 +193,29 @@ export function GalleryScreen() {
         </div>
       ) : (
         <div className="mt-20 text-center">
-          <Sparkles
-            className="mx-auto size-10 text-[var(--accent-gold)]"
-            style={{ opacity: 0.4 }}
-          />
-          <p className="mt-4 text-lg font-semibold text-[var(--text-primary)]">
-            No designs found
-          </p>
-          <p className="mt-2 text-sm text-[var(--text-secondary)]">
-            {query
-              ? "Try a different search term."
-              : "Start creating to build your gallery."}
-          </p>
+          {isLoading ? (
+            <>
+              <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[var(--accent-gold)] border-t-transparent" />
+              <p className="mt-4 text-sm text-[var(--text-secondary)]">
+                Loading gallery...
+              </p>
+            </>
+          ) : (
+            <>
+              <Sparkles
+                className="mx-auto size-10 text-[var(--accent-gold)]"
+                style={{ opacity: 0.4 }}
+              />
+              <p className="mt-4 text-lg font-semibold text-[var(--text-primary)]">
+                No designs found
+              </p>
+              <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                {query
+                  ? "Try a different search term."
+                  : "Start creating to build your gallery."}
+              </p>
+            </>
+          )}
         </div>
       )}
     </div>
