@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { SpecAgentOutputSchema, TechSheetAgentOutputSchema } from "./agents.ts";
+import { CadPrepAgentOutputSchema, SpecAgentOutputSchema, SvgAgentOutputSchema, TechSheetAgentOutputSchema } from "./agents.ts";
 
 import {
   CadFormatEnum,
@@ -259,6 +259,8 @@ export const DesignDetailResponseSchema = z.object({
   design: z.object(DesignSummarySchema.shape),
   latestSpec: SpecAgentOutputSchema.nullable(),
   latestTechSheet: TechSheetAgentOutputSchema.nullable(),
+  latestSvgAsset: SvgAgentOutputSchema.nullable().optional(),
+  latestCadJob: CadPrepAgentOutputSchema.nullable().optional(),
   recentGenerations: z.array(DesignGenerationSummarySchema),
 });
 

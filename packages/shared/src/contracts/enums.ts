@@ -125,7 +125,7 @@ export const manufacturingIntentValues = [
   "production_ready",
 ] as const;
 export const svgViewValues = ["front", "side", "top"] as const;
-export const cadFormatValues = ["step", "dxf", "stl"] as const;
+export const cadFormatValues = ["step", "dxf", "stl", "cdr"] as const;
 export const readinessValues = [
   "pair_ready",
   "spec_ready",

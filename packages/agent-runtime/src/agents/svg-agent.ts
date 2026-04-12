@@ -10,7 +10,7 @@ import {
 } from "@skygems/shared";
 import { z } from "zod";
 
-import type { AgentDefinition } from "../types.ts";
+import type { AgentContext, AgentDefinition } from "../types.ts";
 
 export const SvgAgentInputSchema = z.object({
   techSheetOutput: TechSheetAgentOutputSchema,
@@ -31,8 +31,6 @@ const svgDimensionsByType: Record<string, { widthMm: number; heightMm: number }>
   pendant: { widthMm: 35, heightMm: 50 },
 };
 
-// ── Stroke count estimation based on design complexity ──
-
 function estimateStrokeCount(designDna: DesignDna, viewType: string): number {
   const base = viewType === "front" ? 120 : viewType === "side" ? 80 : 60;
   const complexityFactor = 1 + designDna.complexity / 100;
@@ -40,11 +38,8 @@ function estimateStrokeCount(designDna: DesignDna, viewType: string): number {
   return Math.round((base + gemBonus) * complexityFactor);
 }
 
-// ── View description generator ──
-
 function buildViewDescription(
   designDna: DesignDna,
-  techSheetOutput: TechSheetAgentOutput,
   viewType: "front" | "side" | "top",
 ): string {
   const type = designDna.jewelryType;
@@ -75,36 +70,119 @@ function buildViewDescription(
     },
   };
 
-  return (
-    descriptions[viewType]?.[type] ??
-    `${viewType.charAt(0).toUpperCase() + viewType.slice(1)} view of ${style} ${metal} ${type}.`
-  );
+  return descriptions[viewType]?.[type] ?? `${viewType} view of ${style} ${metal} ${type}.`;
+}
+
+async function generateSvgWithLLM(
+  techSheetOutput: TechSheetAgentOutput,
+  designDna: DesignDna,
+  viewType: "front" | "side" | "top",
+  apiKey: string,
+): Promise<string | null> {
+  const dims = svgDimensionsByType[designDna.jewelryType] ?? svgDimensionsByType.ring;
+  const viewWidth = viewType === "top" ? dims.heightMm : dims.widthMm;
+  const viewHeight = viewType === "top" ? dims.widthMm : dims.heightMm;
+
+  const dimensionSummary = techSheetOutput.geometryAndDimensions
+    .map(d => `${d.label}: ${d.value}`)
+    .join("\n");
+
+  const systemPrompt = `You are a technical jewelry illustrator. Generate clean SVG technical drawings for manufacturing.
+
+## Rules
+- Use a viewBox appropriate for the piece (e.g., "0 0 ${viewWidth * 10} ${viewHeight * 10}")
+- Draw clean lines using <path>, <line>, <circle>, <ellipse>, <rect> elements
+- Use stroke="#333" fill="none" stroke-width="1" for outlines
+- Use stroke="#999" stroke-dasharray="4 2" for dimension lines
+- Use stroke="#666" for internal details (settings, facets)
+- Include dimension annotations as <text> elements
+- Keep the SVG clean and professional — no gradients, no fills, just line work
+- The drawing should be a technical orthographic view, not artistic
+- Include centerlines where appropriate (stroke-dasharray="8 4")
+
+## Output
+Return ONLY the SVG markup starting with <svg and ending with </svg>. No markdown, no explanation.`;
+
+  const userMessage = `Draw a ${viewType} view technical drawing of a ${designDna.style} ${designDna.jewelryType} in ${designDna.metal}.
+
+Dimensions:
+${dimensionSummary}
+
+Setting: ${designDna.settingType}
+Gemstones: ${designDna.gemstones.join(", ") || "none"}
+Profile: ${designDna.profile}
+Complexity: ${designDna.complexity}/100`;
+
+  try {
+    const response = await fetch("https://api.x.ai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "grok-3-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userMessage },
+        ],
+        temperature: 0.3,
+        max_tokens: 4000,
+      }),
+    });
+
+    if (!response.ok) return null;
+
+    const data = (await response.json()) as {
+      choices?: Array<{ message?: { content?: string } }>;
+    };
+
+    const text = data.choices?.[0]?.message?.content?.trim();
+    if (!text) return null;
+
+    // Extract SVG content
+    const svgMatch = text.match(/<svg[\s\S]*<\/svg>/i);
+    return svgMatch ? svgMatch[0] : null;
+  } catch {
+    return null;
+  }
 }
 
 export const svgAgentDefinition: AgentDefinition<SvgAgentInput, SvgAgentOutput> = {
   agentId: "svg-agent",
-  version: "0.1.0",
-  description:
-    "Produces structured SVG view metadata (front, side, top) from tech-sheet output for CAD handoff.",
+  version: "2.0.0",
+  description: "Uses LLM to produce SVG technical drawings (front, side, top) from tech-sheet data. Falls back to metadata-only output if LLM unavailable.",
   requiredPacks: ["prompt-pack", "view-pack"],
   requiredProviders: [],
   skills: ["view-plan"],
   inputSchema: SvgAgentInputSchema,
   outputSchema: SvgAgentOutputSchema,
-  timeoutMs: 5_000,
-  retryable: false,
-  executionKind: "deterministic",
-  async execute(input) {
+  timeoutMs: 45_000,
+  retryable: true,
+  executionKind: "hybrid",
+  async execute(input, ctx) {
     const { techSheetOutput, designDna, specId, techSheetId } = input;
     const dims = svgDimensionsByType[designDna.jewelryType] ?? svgDimensionsByType.ring;
-
     const viewTypes = ["front", "side", "top"] as const;
+    const apiKey = ctx.env?.XAI_API_KEY?.trim();
 
-    const views = viewTypes.map((view) => ({
-      view,
-      artifactId: `svg-${view}-${designDna.jewelryType}-${designDna.metal}`,
-      description: buildViewDescription(designDna, techSheetOutput, view),
-    }));
+    // Generate SVG content for each view (sequentially to avoid rate limits)
+    const views = [];
+    for (const view of viewTypes) {
+      let svgContent: string | undefined;
+
+      if (apiKey) {
+        const content = await generateSvgWithLLM(techSheetOutput, designDna, view, apiKey);
+        if (content) svgContent = content;
+      }
+
+      views.push({
+        view,
+        artifactId: `svg-${view}-${designDna.jewelryType}-${designDna.metal}`,
+        description: buildViewDescription(designDna, view),
+        svgContent,
+      });
+    }
 
     const manifestViews = viewTypes.map((view) => ({
       view,

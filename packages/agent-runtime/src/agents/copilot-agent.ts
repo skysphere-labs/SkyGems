@@ -1,6 +1,7 @@
 import { z } from "zod";
 
-import type { AgentDefinition } from "../types.ts";
+import { getFullWikiContext } from "../wiki/reader.ts";
+import type { AgentContext, AgentDefinition } from "../types.ts";
 
 // ── Input / Output schemas ──
 
@@ -49,10 +50,93 @@ export const CopilotAgentOutputSchema = z.object({
 
 export type CopilotAgentOutput = z.infer<typeof CopilotAgentOutputSchema>;
 
-// ── Intent classification (keyword-based for Phase B4) ──
+// ── LLM-powered copilot ──
+
+async function generateCopilotResponseWithLLM(
+  message: string,
+  designContext: CopilotAgentInput["designContext"],
+  apiKey: string,
+): Promise<CopilotAgentOutput | null> {
+  const wikiContext = getFullWikiContext();
+
+  const systemPrompt = `You are an expert jewelry design assistant helping a designer work on their piece. You have deep knowledge of jewelry manufacturing, gemstones, metals, and design styles.
+
+## Jewelry Knowledge Base (abridged)
+${wikiContext.slice(0, 6000)}
+
+## Current Design
+- Type: ${designContext.jewelryType}
+- Metal: ${designContext.metal}
+- Gemstones: ${designContext.gemstones.join(", ") || "none"}
+- Style: ${designContext.style}
+- Name: ${designContext.displayName}
+- Has specification: ${designContext.hasSpec ? "yes" : "no"}
+- Has technical sheet: ${designContext.hasTechnicalSheet ? "yes" : "no"}
+- Status: ${designContext.selectionState}
+
+## Your Role
+- Answer questions about this specific design with domain expertise
+- Suggest refinements when asked, being specific about what to change
+- Explain design decisions using the knowledge base
+- Recommend next steps (generate spec, refine, etc.)
+
+## Output
+Return ONLY valid JSON — no markdown:
+{
+  "intent": "refine|spec|explain|suggest|general",
+  "response": "your detailed response to the user",
+  "suggestedAction": { "type": "refine|spec|technical-sheet", "instruction": "optional instruction" } or null,
+  "designContext": "brief summary of the current design"
+}
+
+For the intent field:
+- "refine" if the user wants to change the design
+- "spec" if the user is asking about specifications or wants to generate one
+- "explain" if the user wants to understand something about the design
+- "suggest" if the user wants ideas or improvements
+- "general" for anything else`;
+
+  try {
+    const response = await fetch("https://api.x.ai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "grok-3-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: message },
+        ],
+        temperature: 0.6,
+        max_tokens: 1500,
+      }),
+    });
+
+    if (!response.ok) return null;
+
+    const data = (await response.json()) as {
+      choices?: Array<{ message?: { content?: string } }>;
+    };
+
+    const text = data.choices?.[0]?.message?.content?.trim();
+    if (!text) return null;
+
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return null;
+
+    const parsed = JSON.parse(jsonMatch[0]);
+    return CopilotAgentOutputSchema.parse(parsed);
+  } catch {
+    return null;
+  }
+}
+
+// ── Deterministic fallback (keyword-based) ──
 
 const REFINE_KEYWORDS = [
-  "change", "modify", "refine", "adjust", "tweak", "simplify", "simplify",
+  "change", "modify", "refine", "adjust", "tweak", "simplify",
   "make it", "could you", "try", "switch", "replace", "remove", "add",
   "thinner", "thicker", "bigger", "smaller", "different", "more", "less",
   "update", "alter", "redo", "rework",
@@ -78,171 +162,53 @@ const SUGGEST_KEYWORDS = [
 
 function classifyIntent(message: string): CopilotIntent {
   const lower = message.toLowerCase();
+  const scores: Record<CopilotIntent, number> = { refine: 0, spec: 0, explain: 0, suggest: 0, general: 1 };
 
-  const scores: Record<CopilotIntent, number> = {
-    refine: 0,
-    spec: 0,
-    explain: 0,
-    suggest: 0,
-    general: 1,
-  };
-
-  for (const keyword of REFINE_KEYWORDS) {
-    if (lower.includes(keyword)) scores.refine += 2;
-  }
-  for (const keyword of SPEC_KEYWORDS) {
-    if (lower.includes(keyword)) scores.spec += 2;
-  }
-  for (const keyword of EXPLAIN_KEYWORDS) {
-    if (lower.includes(keyword)) scores.explain += 2;
-  }
-  for (const keyword of SUGGEST_KEYWORDS) {
-    if (lower.includes(keyword)) scores.suggest += 2;
-  }
+  for (const keyword of REFINE_KEYWORDS) { if (lower.includes(keyword)) scores.refine += 2; }
+  for (const keyword of SPEC_KEYWORDS) { if (lower.includes(keyword)) scores.spec += 2; }
+  for (const keyword of EXPLAIN_KEYWORDS) { if (lower.includes(keyword)) scores.explain += 2; }
+  for (const keyword of SUGGEST_KEYWORDS) { if (lower.includes(keyword)) scores.suggest += 2; }
 
   let maxIntent: CopilotIntent = "general";
   let maxScore = 0;
   for (const [intent, score] of Object.entries(scores) as [CopilotIntent, number][]) {
-    if (score > maxScore) {
-      maxScore = score;
-      maxIntent = intent;
-    }
+    if (score > maxScore) { maxScore = score; maxIntent = intent; }
   }
-
   return maxIntent;
 }
 
-// ── Template-based response generation ──
-
-function buildRefineResponse(
+function buildFallbackResponse(
   message: string,
   ctx: CopilotAgentInput["designContext"],
 ): Pick<CopilotAgentOutput, "response" | "suggestedAction"> {
-  const instruction = message.trim();
-  return {
-    response:
-      `I understand you'd like to refine the ${ctx.jewelryType} design. ` +
-      `The current design uses ${ctx.metal} with ${ctx.gemstones.join(", ")} in a ${ctx.style} style. ` +
-      `I've prepared a refinement instruction based on your request. ` +
-      `Click "Apply" below to open the Refine panel with this instruction pre-filled.`,
-    suggestedAction: {
-      type: "refine",
-      instruction,
-    },
-  };
-}
+  const intent = classifyIntent(message);
 
-function buildSpecResponse(
-  ctx: CopilotAgentInput["designContext"],
-): Pick<CopilotAgentOutput, "response" | "suggestedAction"> {
-  if (ctx.hasSpec) {
+  if (intent === "refine") {
     return {
-      response:
-        `This ${ctx.jewelryType} design already has a specification generated. ` +
-        `It covers the ${ctx.metal} construction with ${ctx.gemstones.join(", ")} gemstone details. ` +
-        `You can view the full spec on the Specification screen, or regenerate it if the design has changed.`,
+      response: `I understand you'd like to refine the ${ctx.jewelryType} design. The current design uses ${ctx.metal} with ${ctx.gemstones.join(", ")} in a ${ctx.style} style. Click "Apply" to open the Refine panel.`,
+      suggestedAction: { type: "refine", instruction: message.trim() },
+    };
+  }
+  if (intent === "spec") {
+    if (ctx.hasSpec) {
+      return { response: `This ${ctx.jewelryType} already has a specification. You can view it on the Specification screen.`, suggestedAction: undefined };
+    }
+    return { response: `No specification yet. Generating one will produce dimensions, materials, and construction details.`, suggestedAction: { type: "spec" } };
+  }
+  if (intent === "explain") {
+    return {
+      response: `**Type:** ${ctx.jewelryType}\n**Metal:** ${ctx.metal}\n**Gemstones:** ${ctx.gemstones.join(", ")}\n**Style:** ${ctx.style}\n**Status:** ${ctx.selectionState}`,
       suggestedAction: undefined,
     };
   }
-
-  return {
-    response:
-      `No specification has been generated yet for this ${ctx.jewelryType} design. ` +
-      `Generating a spec will produce structured details about dimensions, materials (${ctx.metal}), ` +
-      `gemstone settings (${ctx.gemstones.join(", ")}), and construction notes. ` +
-      `Click "Apply" to start the specification generation.`,
-    suggestedAction: {
-      type: "spec",
-    },
-  };
-}
-
-function buildExplainResponse(
-  ctx: CopilotAgentInput["designContext"],
-): Pick<CopilotAgentOutput, "response" | "suggestedAction"> {
-  const gemstoneDescription =
-    ctx.gemstones.length === 1
-      ? `a ${ctx.gemstones[0]} gemstone`
-      : `${ctx.gemstones.slice(0, -1).join(", ")} and ${ctx.gemstones[ctx.gemstones.length - 1]} gemstones`;
-
-  return {
-    response:
-      `Here's what I see in this design:\n\n` +
-      `**Type:** ${ctx.jewelryType}\n` +
-      `**Metal:** ${ctx.metal}\n` +
-      `**Gemstones:** ${gemstoneDescription}\n` +
-      `**Style:** ${ctx.style}\n` +
-      `**Status:** ${ctx.selectionState}\n\n` +
-      `This is a ${ctx.style}-style ${ctx.jewelryType} crafted in ${ctx.metal}, ` +
-      `featuring ${gemstoneDescription}. ` +
-      (ctx.hasSpec
-        ? "A specification has been generated — check the Spec screen for full construction details."
-        : "No specification has been generated yet. Consider generating one to get detailed construction parameters.") +
-      (ctx.hasTechnicalSheet
-        ? " A technical sheet is also available with manufacturing-ready data."
-        : ""),
-    suggestedAction: undefined,
-  };
-}
-
-function buildSuggestResponse(
-  ctx: CopilotAgentInput["designContext"],
-): Pick<CopilotAgentOutput, "response" | "suggestedAction"> {
-  const suggestions: string[] = [];
-
-  if (ctx.gemstones.length === 1) {
-    suggestions.push(
-      `Consider adding accent stones alongside the ${ctx.gemstones[0]} to create more visual depth.`,
-    );
+  if (intent === "suggest") {
+    return {
+      response: `Some ideas for your ${ctx.style} ${ctx.jewelryType}:\n1. Experiment with the silhouette\n2. ${!ctx.hasSpec ? "Generate a specification for exact measurements" : "Review the spec for refinement opportunities"}`,
+      suggestedAction: { type: "refine", instruction: `Improve the ${ctx.style} aesthetic` },
+    };
   }
-
-  if (ctx.style === "contemporary") {
-    suggestions.push(
-      "You could try a minimalist refinement to emphasize clean lines and negative space.",
-    );
-  } else if (ctx.style === "minimalist") {
-    suggestions.push(
-      "Adding a subtle texture or engraving detail could enhance the minimalist aesthetic without overwhelming it.",
-    );
-  }
-
-  if (!ctx.hasSpec) {
-    suggestions.push(
-      "Generate a specification to get exact dimension and material estimates before further refinement.",
-    );
-  }
-
-  suggestions.push(
-    `Experiment with the silhouette — tightening or loosening the profile can dramatically change the feel of a ${ctx.jewelryType}.`,
-  );
-
-  const bestSuggestion = suggestions[0];
-
   return {
-    response:
-      `Here are some ideas to improve your ${ctx.style} ${ctx.jewelryType} design:\n\n` +
-      suggestions.map((s, i) => `${i + 1}. ${s}`).join("\n") +
-      `\n\nWould you like me to apply any of these as a refinement?`,
-    suggestedAction: {
-      type: "refine",
-      instruction: bestSuggestion,
-    },
-  };
-}
-
-function buildGeneralResponse(
-  message: string,
-  ctx: CopilotAgentInput["designContext"],
-): Pick<CopilotAgentOutput, "response" | "suggestedAction"> {
-  return {
-    response:
-      `I'm your AI design assistant for this ${ctx.jewelryType} project. ` +
-      `I can help you with:\n\n` +
-      `- **Refining** the design (describe what you'd like to change)\n` +
-      `- **Explaining** the current design details\n` +
-      `- **Suggesting** improvements\n` +
-      `- **Generating specifications** for manufacturing\n\n` +
-      `Just describe what you need, and I'll assist you.`,
+    response: `I'm your AI design assistant for this ${ctx.jewelryType}. I can help with refining, explaining, suggesting improvements, or generating specifications.`,
     suggestedAction: undefined,
   };
 }
@@ -251,46 +217,34 @@ function buildGeneralResponse(
 
 export const copilotAgentDefinition: AgentDefinition<CopilotAgentInput, CopilotAgentOutput> = {
   agentId: "copilot-agent",
-  version: "0.1.0",
-  description:
-    "Interprets user messages about a design and classifies intent into actionable responses (refine, spec, explain, suggest, general).",
+  version: "2.0.0",
+  description: "Uses LLM intelligence to interpret user messages and provide expert jewelry design advice. Falls back to keyword-based responses if LLM unavailable.",
   requiredPacks: ["prompt-pack", "view-pack"],
   requiredProviders: [],
   skills: [],
   inputSchema: CopilotAgentInputSchema,
   outputSchema: CopilotAgentOutputSchema,
-  timeoutMs: 3_000,
-  retryable: false,
-  executionKind: "deterministic",
+  timeoutMs: 15_000,
+  retryable: true,
+  executionKind: "hybrid",
 
-  async execute(input) {
-    const intent = classifyIntent(input.message);
-    const ctx = input.designContext;
+  async execute(input, ctx) {
+    const apiKey = ctx.env?.XAI_API_KEY?.trim();
 
-    let result: Pick<CopilotAgentOutput, "response" | "suggestedAction">;
-
-    switch (intent) {
-      case "refine":
-        result = buildRefineResponse(input.message, ctx);
-        break;
-      case "spec":
-        result = buildSpecResponse(ctx);
-        break;
-      case "explain":
-        result = buildExplainResponse(ctx);
-        break;
-      case "suggest":
-        result = buildSuggestResponse(ctx);
-        break;
-      case "general":
-      default:
-        result = buildGeneralResponse(input.message, ctx);
-        break;
+    // Try LLM-powered response first
+    if (apiKey) {
+      const llmResult = await generateCopilotResponseWithLLM(
+        input.message,
+        input.designContext,
+        apiKey,
+      );
+      if (llmResult) return llmResult;
     }
 
-    const designSummary =
-      `${ctx.style} ${ctx.jewelryType} in ${ctx.metal} with ${ctx.gemstones.join(", ")} ` +
-      `(${ctx.selectionState})`;
+    // Deterministic fallback
+    const intent = classifyIntent(input.message);
+    const result = buildFallbackResponse(input.message, input.designContext);
+    const designSummary = `${input.designContext.style} ${input.designContext.jewelryType} in ${input.designContext.metal} with ${input.designContext.gemstones.join(", ")} (${input.designContext.selectionState})`;
 
     return CopilotAgentOutputSchema.parse({
       intent,

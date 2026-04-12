@@ -114,6 +114,7 @@ export const SvgAgentOutputSchema = z.object({
       view: SvgViewEnum,
       artifactId: z.string().min(1).max(120),
       description: z.string().min(1).max(240),
+      svgContent: z.string().max(50000).optional(),
     }),
   ),
   annotationsArtifactId: z.string().nullable(),

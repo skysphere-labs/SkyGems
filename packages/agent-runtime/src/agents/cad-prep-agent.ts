@@ -14,7 +14,7 @@ import {
 } from "@skygems/shared";
 import { z } from "zod";
 
-import type { AgentDefinition } from "../types.ts";
+import type { AgentContext, AgentDefinition } from "../types.ts";
 
 export const CadPrepAgentInputSchema = z.object({
   svgAgentOutput: SvgAgentOutputSchema,
@@ -23,12 +23,12 @@ export const CadPrepAgentInputSchema = z.object({
   specId: SpecIdSchema,
   techSheetId: TechSheetIdSchema,
   svgAssetId: SvgAssetIdSchema,
-  requestedFormats: z.array(z.enum(["step", "dxf", "stl"])).min(1),
+  requestedFormats: z.array(z.enum(["step", "dxf", "stl", "cdr"])).min(1),
 });
 
 export type CadPrepAgentInput = z.infer<typeof CadPrepAgentInputSchema>;
 
-// ── Cleanup operation selection based on SVG analysis ──
+// ── Cleanup operation selection ──
 
 function selectCleanupOperations(svgOutput: SvgAgentOutput): CadPrepAgentOutput["modelingPlan"]["cleanupOperations"] {
   const ops: CadPrepAgentOutput["modelingPlan"]["cleanupOperations"] = [
@@ -47,7 +47,6 @@ function selectCleanupOperations(svgOutput: SvgAgentOutput): CadPrepAgentOutput[
   }
 
   ops.push("close_open_paths");
-
   return ops;
 }
 
@@ -89,7 +88,11 @@ function buildModelingSteps(
   steps.push("Verify manifold geometry and non-zero thickness on all bodies.");
 
   for (const format of formats) {
-    steps.push(`Export to ${format.toUpperCase()} format with production-ready tolerances.`);
+    if (format === "cdr") {
+      steps.push("Export SVG to CDR format via CorelDraw conversion with proper layer mapping.");
+    } else {
+      steps.push(`Export to ${format.toUpperCase()} format with production-ready tolerances.`);
+    }
   }
 
   return steps;
@@ -110,7 +113,6 @@ function selectQaChecks(designDna: DesignDna): CadPrepAgentOutput["modelingPlan"
   }
 
   checks.push("export_roundtrip");
-
   return checks;
 }
 
@@ -123,7 +125,6 @@ function detectBlockers(
 ): CadPrepAgentOutput["blockers"] {
   const blockers: CadPrepAgentOutput["blockers"] = [];
 
-  // Check for missing dimensions
   const hasAnyDimension =
     specOutput.dimensions.overallLength?.value != null ||
     specOutput.dimensions.overallWidth?.value != null ||
@@ -137,7 +138,6 @@ function detectBlockers(
     });
   }
 
-  // Check for ambiguous profile
   if (!specOutput.construction.profile) {
     blockers.push({
       code: "ambiguous_profile",
@@ -146,7 +146,6 @@ function detectBlockers(
     });
   }
 
-  // High complexity warning
   if (designDna.complexity > 85) {
     blockers.push({
       code: "unsupported_geometry",
@@ -155,7 +154,6 @@ function detectBlockers(
     });
   }
 
-  // SVG view count check
   if (svgOutput.views.length < 2) {
     blockers.push({
       code: "svg_invalid",
@@ -167,20 +165,85 @@ function detectBlockers(
   return blockers;
 }
 
+async function generateCadPlanWithLLM(
+  svgAgentOutput: SvgAgentOutput,
+  specOutput: SpecAgentOutput,
+  designDna: DesignDna,
+  requestedFormats: CadFormat[],
+  apiKey: string,
+): Promise<{ modelingSteps?: string[]; cleanupOperations?: string[]; qaChecks?: string[] } | null> {
+  const systemPrompt = `You are a CAD engineer specializing in jewelry manufacturing. Given a jewelry design's specs, SVG views, and requested output formats, produce a detailed modeling plan.
+
+## Output
+Return ONLY valid JSON — no markdown:
+{
+  "modelingSteps": ["step 1", "step 2", ...],
+  "cleanupOperations": ["operation 1", ...],
+  "qaChecks": ["check 1", ...]
+}
+
+Make steps specific to this jewelry piece — reference actual dimensions, settings, and materials. Include CDR conversion steps if CDR format is requested.`;
+
+  const specSummary = [
+    `Type: ${specOutput.jewelryType}, Metal: ${specOutput.materials.metal}`,
+    `Setting: ${specOutput.construction.settingType}, Profile: ${specOutput.construction.profile}`,
+    `Manufacturing: ${specOutput.construction.manufacturingMethod}`,
+    `Gemstones: ${specOutput.materials.gemstones.map(g => g.stoneType).join(", ") || "none"}`,
+    `Complexity: ${designDna.complexity}/100`,
+    `SVG views: ${svgAgentOutput.views.map(v => v.view).join(", ")}`,
+    `Has SVG content: ${svgAgentOutput.views.some(v => v.svgContent) ? "yes" : "metadata only"}`,
+    `Formats requested: ${requestedFormats.join(", ")}`,
+  ].join("\n");
+
+  try {
+    const response = await fetch("https://api.x.ai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "grok-3-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `Create a CAD modeling plan for this jewelry design:\n\n${specSummary}` },
+        ],
+        temperature: 0.3,
+        max_tokens: 2000,
+      }),
+    });
+
+    if (!response.ok) return null;
+
+    const data = (await response.json()) as {
+      choices?: Array<{ message?: { content?: string } }>;
+    };
+
+    const text = data.choices?.[0]?.message?.content?.trim();
+    if (!text) return null;
+
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return null;
+
+    return JSON.parse(jsonMatch[0]);
+  } catch {
+    return null;
+  }
+}
+
 export const cadPrepAgentDefinition: AgentDefinition<CadPrepAgentInput, CadPrepAgentOutput> = {
   agentId: "cad-prep-agent",
-  version: "0.1.0",
-  description:
-    "Analyzes SVG assets and spec to produce a CAD modeling plan with QA checks and blocker detection.",
+  version: "2.0.0",
+  description: "Uses LLM intelligence to produce detailed CAD modeling plans with QA checks and blocker detection. Supports CDR format. Falls back to deterministic planning if LLM unavailable.",
   requiredPacks: ["prompt-pack", "view-pack"],
   requiredProviders: [],
   skills: ["jewelry-rules"],
   inputSchema: CadPrepAgentInputSchema,
   outputSchema: CadPrepAgentOutputSchema,
-  timeoutMs: 5_000,
-  retryable: false,
-  executionKind: "deterministic",
-  async execute(input) {
+  timeoutMs: 20_000,
+  retryable: true,
+  executionKind: "hybrid",
+  async execute(input, ctx) {
     const {
       svgAgentOutput,
       specOutput,
@@ -191,9 +254,16 @@ export const cadPrepAgentDefinition: AgentDefinition<CadPrepAgentInput, CadPrepA
       requestedFormats,
     } = input;
 
-    const cleanupOperations = selectCleanupOperations(svgAgentOutput);
-    const modelingSteps = buildModelingSteps(designDna, specOutput, requestedFormats);
-    const qaChecks = selectQaChecks(designDna);
+    const apiKey = ctx.env?.XAI_API_KEY?.trim();
+    let llmPlan: { modelingSteps?: string[]; cleanupOperations?: string[]; qaChecks?: string[] } | null = null;
+
+    if (apiKey) {
+      llmPlan = await generateCadPlanWithLLM(svgAgentOutput, specOutput, designDna, requestedFormats, apiKey);
+    }
+
+    const cleanupOperations = llmPlan?.cleanupOperations ?? selectCleanupOperations(svgAgentOutput);
+    const modelingSteps = llmPlan?.modelingSteps ?? buildModelingSteps(designDna, specOutput, requestedFormats);
+    const qaChecks = llmPlan?.qaChecks ?? selectQaChecks(designDna);
     const blockers = detectBlockers(designDna, specOutput, svgAgentOutput);
 
     const requiresHumanReview =

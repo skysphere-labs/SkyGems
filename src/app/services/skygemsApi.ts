@@ -613,6 +613,30 @@ export async function generateBackendSpec(designId: string) {
   });
 }
 
+export async function generateBackendTechSheet(designId: string) {
+  return authedJson<any>(`/v1/designs/${designId}/technical-sheet`, {
+    method: 'POST',
+    headers: { 'Idempotency-Key': `tech-sheet-${designId}-${Date.now()}` },
+    body: JSON.stringify({ includePdf: true, forceRegenerate: true }),
+  });
+}
+
+export async function generateBackendSvg(designId: string) {
+  return authedJson<any>(`/v1/designs/${designId}/svg`, {
+    method: 'POST',
+    headers: { 'Idempotency-Key': `svg-${designId}-${Date.now()}` },
+    body: JSON.stringify({ views: ['front', 'side', 'top'], includeAnnotations: true, forceRegenerate: true }),
+  });
+}
+
+export async function generateBackendCad(designId: string, formats: string[] = ['step', 'dxf', 'stl']) {
+  return authedJson<any>(`/v1/designs/${designId}/cad`, {
+    method: 'POST',
+    headers: { 'Idempotency-Key': `cad-${designId}-${Date.now()}` },
+    body: JSON.stringify({ formats, includeQaReport: true, forceRegenerate: true }),
+  });
+}
+
 export async function postCopilotMessage(designId: string, message: string) {
   return authedJson<{ intent: string; response: string; suggestedAction?: any; designContext: string }>(
     `/v1/designs/${designId}/copilot`,

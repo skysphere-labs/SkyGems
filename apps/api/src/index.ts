@@ -545,6 +545,46 @@ async function loadLatestTechSheet(db: D1Database, techSheetId: string | null) {
   return TechSheetAgentOutputSchema.parse(JSON.parse(sheet.sheet_json));
 }
 
+async function loadLatestSvgAsset(db: D1Database, svgAssetId: string | null) {
+  if (!svgAssetId) {
+    return null;
+  }
+
+  const svgAsset = await queryFirst<{ id: string; agent_output_json: string | null; manifest_json: string | null; views_json: string | null }>(
+    db,
+    `SELECT id, agent_output_json, manifest_json, views_json
+     FROM svg_assets
+     WHERE id = ?`,
+    [svgAssetId],
+  );
+
+  if (!svgAsset?.agent_output_json) {
+    return null;
+  }
+
+  return SvgAgentOutputSchema.parse(JSON.parse(svgAsset.agent_output_json));
+}
+
+async function loadLatestCadJob(db: D1Database, cadJobId: string | null) {
+  if (!cadJobId) {
+    return null;
+  }
+
+  const cadJob = await queryFirst<{ id: string; agent_output_json: string | null; requested_formats_json: string | null; blockers_json: string | null }>(
+    db,
+    `SELECT id, agent_output_json, requested_formats_json, blockers_json
+     FROM cad_jobs
+     WHERE id = ?`,
+    [cadJobId],
+  );
+
+  if (!cadJob?.agent_output_json) {
+    return null;
+  }
+
+  return CadPrepAgentOutputSchema.parse(JSON.parse(cadJob.agent_output_json));
+}
+
 async function loadLatestGenerationForDesign(
   db: D1Database,
   designId: string,
@@ -963,6 +1003,8 @@ async function buildDesignDetailResponse(
   const workflow = await loadWorkflow(db, design.latest_workflow_run_id);
   const latestSpec = await loadLatestSpec(db, design.latest_spec_id);
   const latestTechSheet = await loadLatestTechSheet(db, design.latest_technical_sheet_id);
+  const latestSvgAsset = await loadLatestSvgAsset(db, design.latest_svg_asset_id);
+  const latestCadJob = await loadLatestCadJob(db, design.latest_cad_job_id);
 
   return DesignDetailResponseSchema.parse({
     projectId: project.id,
@@ -971,6 +1013,8 @@ async function buildDesignDetailResponse(
     design: await buildDesignSummary(env, db, design, workflow, origin, currentUserId),
     latestSpec,
     latestTechSheet,
+    latestSvgAsset,
+    latestCadJob,
     recentGenerations: await loadRecentDesignGenerations(db, design),
   });
 }
@@ -1478,7 +1522,7 @@ async function handleSpecStage(
   const specAgentRun = await agentExecutor.run<SpecAgentOutput>("spec-agent", {
     promptAgentOutput,
     pairId: design.latest_pair_id,
-  });
+  }, { env: { XAI_API_KEY: env.XAI_API_KEY } });
   const specOutput = SpecAgentOutputSchema.parse(specAgentRun.output);
   const completedAt = nowIso();
 
@@ -1653,7 +1697,7 @@ async function handleTechSheetStage(
     specOutput,
     designDna,
     specId: design.latest_spec_id,
-  });
+  }, { env: { XAI_API_KEY: env.XAI_API_KEY } });
   const techSheetOutput = TechSheetAgentOutputSchema.parse(techSheetRun.output);
   const completedAt = nowIso();
 
@@ -1812,7 +1856,7 @@ async function handleSvgStage(
     techSheetOutput, designDna,
     specId: design.latest_spec_id,
     techSheetId: design.latest_technical_sheet_id,
-  });
+  }, { env: { XAI_API_KEY: env.XAI_API_KEY } });
   const svgOutput = SvgAgentOutputSchema.parse(svgAgentRun.output);
   const completedAt = nowIso();
 
@@ -1954,7 +1998,7 @@ async function handleCadStage(
     techSheetId: design.latest_technical_sheet_id,
     svgAssetId: design.latest_svg_asset_id,
     requestedFormats: payload.formats,
-  });
+  }, { env: { XAI_API_KEY: env.XAI_API_KEY } });
   const cadOutput = CadPrepAgentOutputSchema.parse(cadPrepRun.output);
   const completedAt = nowIso();
 
@@ -2023,7 +2067,7 @@ async function handleCopilot(
       hasSpec: Boolean(design.latest_spec_id),
       hasTechnicalSheet: Boolean(design.latest_technical_sheet_id),
     },
-  });
+  }, { env: { XAI_API_KEY: env.XAI_API_KEY } });
 
   return jsonResponse(copilotResult.output);
 }
